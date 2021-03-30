@@ -71,9 +71,8 @@ S=rop./row;     D_=((g*(abs(S-1))/nuw^2).^(1/3))*D;
 Ws=eval(['Vitesse' cell2mat(Nom(indNom)) '(D,S,D_);']);
 u=Ws; u(rop<row)=-Ws(rop<row);
 
-%C0 = sum(C)*Ws/(Ks*(1-exp(-Ws*L/Ks)));
-C0 = sum(C)/sum(exp(-Ws*x_/Ks));
-Ccalc = C0*exp(-Ws*x_/Ks);
+% Analytical solution at equilibrium
+Ccalc = C_analytical(Ws, Ks,x_, C);
 
 u0_=max(u);Nu0_=max(Nu);
 if u0_~=0 & Nu0_~=0; 
@@ -113,3 +112,5 @@ while OnContinue
        pause(0.01)
    end
 end
+
+disp(['MSE analytical // model : ', num2str( MSE(C,Ccalc) ), ' kg.m^-3'])
