@@ -15,7 +15,6 @@ Nom=[...
     ;{'Ahrens'}...%Ahrens (2000)
    ];
 
-% Initilisation 
 D=350e-6; %m : Diametre
 ModeleHydro='2012RHOMA_arome_003.nc';
 indNom=3;
@@ -31,7 +30,7 @@ dConcMax=5E-6; % C(t+dt)-C(t) threshold for the system to be considered at equil
 
 clear Concentration err
 
-% Paramètres de la colone d'eau
+% Water column parameters
 dh=0.15; % depth of the net
 L = 50; % depth
 N=2000;  dx= L/N;  x=0:dx:L; % x : boundaries of the meshes
@@ -48,10 +47,8 @@ ZMes=[1 10 15 40 L]; % Depth of each measure
 C = interp1(ZMes,CMes,x(1:end-1)+dx/2,'pchip'); % interpolation on x
 C=max(0*C,C); % negative values set to 0
 
-% Particuls initialisation 
+% Particules position initialisation
 n = round(C/dx); % number of particules per mesh
-
-% Initialisation des positions de chaque particule
 N_part = sum(n); % Total number of part in the water column
 x_part = ones(1, N_part); % Position of each part ; space allocation
 i_part = 0; % Part index
