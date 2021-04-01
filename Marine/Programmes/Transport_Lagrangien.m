@@ -25,7 +25,7 @@ load(SauvegardeModeleHydro)
 % Equilibrium test parameters
 tf= 100*86400; % maximum simulation time
 dtmax=0.01; % maximun time interval
-Tdes=60; % time interval between equilirium tests
+Tdes=6; % time interval between equilirium tests
 dConcMax=5E-6; % C(t+dt)-C(t) threshold for the system to be considered at equilibrium
 
 clear Concentration err
@@ -93,13 +93,13 @@ else
    dt=dtmax;
 end
 
-index = max(1, cast(part(1,:)/dx, 'uint32'));
-part = [part; u(index)];
-part = [part ; Nu(index)];
-
+index = max(1, cast(x_part/dx, 'uint32'));
+u_part = u(index);
+Nu_part = Nu(index);
 % part = [x1  x2 ... xn ; 
 %         u1  u2 ... un ;
 %        Nu1 Nu2 ... Nu3]
+part = [x_part ; u_part ; Nu_part];
 
 t=0; OnContinue=true;
 while OnContinue
@@ -110,11 +110,13 @@ while OnContinue
    part(3,:) = Nu(index);
 
    temp_part = part; % part(t-1)
-
+   %disp("gggggn");
    part(1,:) = arrayfun(@(i) Step_Lagrangien(part(2,i), part(3,i), part(1,i)), 1:size(part,2));
-   
+   %disp("nnniééé");
 
    if (mod(t,Tdes)<=dt/2 || Tdes-mod(t,Tdes)<=dt/2 )
+       
+       disp("test");
 
        Ecart = abs(part(1,:) - temp_part(1,:));
        
@@ -131,7 +133,18 @@ while OnContinue
        %      ' Compartiment : ' num2str(index)  ...
        %      ' - x : ' num2str(part(1,:)) ...
        %      ' - Ecart : ' num2str(Ecart)])
-       disp(part)
+       %disp(part)
+       
+       figure(3)
+       h = histogram(part(1,:), "BinEdges", x);
+       C = h.Values*dx;
+       
+       figure(2)
+       clf, hold on,
+       plot(C/dx, -x_)
+       %plot(C/dx,-x_,'r',CMes/dx,-ZMes,'og', n, -x_, 'b')
+       %plot(CMes,-ZMes,'og')
+       pause(0.01)
    end
 end
 
