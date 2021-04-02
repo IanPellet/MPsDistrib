@@ -22,9 +22,9 @@ indNom=3;
 
 SauvegardeModeleHydro=['DonneeBase' ModeleHydro(1:end-3)];
 load(SauvegardeModeleHydro)
-%[I0,J0,D0]=ReperePoint(Lon,Lat,Lon0,Lat0);
+%[I0,J0]=ReperePoint(Lon,Lat,Lon0,Lat0);
 
-tf= 100*86400; dtmax=0.01; Tdes=5*60*60; %s 
+tf= 100*86400; dtmax=0.01; 
 Tdes=60*60; dConcMax=5E-5; % Tdes : intervalle de temps entre les tests d'équilibre 
 % dConcMax : seuil de delta de concentration à partir duquel on de considère à l'équilibre 
 dh=0.15; % profondeur sur laquelle le filet prélève
@@ -56,9 +56,9 @@ row = 1000;
 
 % Determiner rho eau
 DensiteFevrierRhoma
-%Nu=interp1(z0,KZ_Fev10,-x_,'pchip');
-Ks = 0.01;
-Nu = ones(1,2000)*Ks;
+Nu=interp1(z0,KZ_Fev10,-x_,'pchip');
+%Ks = 0.01;
+%Nu = ones(1,2000)*Ks;
 
 figure(4),
     subplot(1,2,1), plot(row,-x)
@@ -102,7 +102,8 @@ while OnContinue
        disp([' Temps : ' num2str(t/3600/24) 'j -' ...
              ' Numero de sauvegarde : ' num2str(index)  ...
              ' - Concentration Totale : ' num2str(sum(C)) ...
-             ' - Ecart : ' num2str(Ecart(index,:))])
+             ' - Ecart : ' num2str(Ecart(index,:)) ...
+             ' - Vitesse : ' num2str(u)])
        TempsConc(index)=t;
 
        figure(2)
