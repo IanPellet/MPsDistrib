@@ -2,7 +2,7 @@
 % 
 % 
 
-global dt
+global dt L
 clear Concentration err
 
 %% Speed computation formulas
@@ -21,7 +21,7 @@ load(SauvegardeModeleHydro)
 %% Equilibrium test parameters
 tf= 100*86400; % maximum simulation time
 dt_max=0.01; % maximun time interval
-dt_test = 60*30; % time interval between equilirium tests
+dt_test = 60; % time interval between equilirium tests
 dC_min = 5E-5; % C(t+dt)-C(t) threshold for the system to be considered at equilibrium
 
 %% Water column parameters
@@ -67,7 +67,7 @@ figure(1),clf,plot(C/dz,-z_,'r',CMes/dz,-ZMes,'og', n, -z_, 'b');
 
 %% Speed initialisation
 DensiteFevrierRhoma 
-Nu=interp1(z0,KZ_Fev10,-z_,'pchip'); % Diffusivity
+[K,dK] = wcp_interpolation(z0,KZ_Fev10,-z_); % Diffusivity
 InitialisationVitesseTransport
 S=rop./row;     D_=((g*(abs(S-1))/nuw^2).^(1/3))*D;
 Ws=eval(['Vitesse' cell2mat(Nom(indNom)) '(D,S,D_);']);
@@ -77,11 +77,13 @@ u=Ws; u(rop<row)=-Ws(rop<row);
 %% Particules matrix definition
 % part = [z1 z2 ... zn ; 
 %         u1 u2 ... un ;
-%         K1 K2 ... kn]
+%         K1 K2 ... Kn ;
+%        dK1 dK2...dK3]
 index = max(1, cast(z_part/dz, 'uint32'));
 u_part = u(index);
-Nu_part = Nu(index);
-part = [z_part ; u_part ; Nu_part];
+K_part = K(index);
+dK_part = dK(index);
+part = [z_part ; u_part ; K_part ; dK_part];
 
 %% Setting dt
 u0_=max(u);Nu0_=max(Nu);
@@ -96,7 +98,7 @@ else
 end
 
 %% Simulation
-C_history = [];
+% C_history = [];
 z_past = part(1,:);
 t=0; OnContinue=true;
 while OnContinue
@@ -106,15 +108,16 @@ while OnContinue
     
     % Particules update
     temp_part = part; % part(t-1)
-    part(1,:) = Step_Lagrangien(part(1,:), part(2,:), part(3,:));
+    part(1,:) = Step_Lagrangien(part(1,:), part(2,:), part(3,:), part(4,:));
     index = max(1, cast(part(1,:)/dz, 'uint32'));
     part(2,:) = u(index);
-    part(3,:) = Nu(index);
+    part(3,:) = K(index);
+    part(4,:) = dK(index);
 
     if (mod(t,dt_test)<=dt/2 || dt_test-mod(t,dt_test)<=dt/2 )
         
         % Save state to history
-        C_history = [C_history ; part(1,:)];
+        % C_history = [C_history ; part(1,:)];
         
         
         % Equilibrium test
@@ -145,7 +148,7 @@ while OnContinue
         plot(C/dz, -z_)
         figure(4)
         clf
-        plot(-part(1,:))
+        plot(-part(1,:),'x')
         %plot(C/dz,-z_,'r',CMes/dz,-ZMes,'og', n, -z_, 'b')
         %plot(CMes,-ZMes,'og')
         pause(0.01)
