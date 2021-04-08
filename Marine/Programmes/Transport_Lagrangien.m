@@ -19,9 +19,9 @@ SauvegardeModeleHydro=['DonneeBase' ModeleHydro(1:end-3)];
 load(SauvegardeModeleHydro)
 
 %% Equilibrium test parameters
-tf= 100*86400; % maximum simulation time
+tf= 0.05*86400; % maximum simulation time
 dt_max=0.01; % maximun time interval
-dt_test = 60; % time interval between equilirium tests
+dt_test = 60*30; % time interval between equilirium tests
 dC_min = 5E-5; % C(t+dt)-C(t) threshold for the system to be considered at equilibrium
 
 %% Water column parameters
@@ -43,8 +43,8 @@ C=max(0*C,C); % negative values set to 0
 
 %% Particules initialisation
 D=350e-6; %m : Diametre
-rop=1011.4;
-n = round(C/dz/2); % number of particules per mesh
+rop=1010.5;
+n = round(C/dz/4); % number of particules per mesh
 N_part = sum(n); % Total number of part in the water column
 z_part = ones(1, N_part); % Position of each part ; space allocation
 i_part = 0; % Part index
@@ -61,7 +61,7 @@ end
 %h = histogram(part(1,:), "BinEdges", z);
 %C = h.Values*dz;
 
-figure(1),clf,plot(C/dz,-z_,'r',CMes/dz,-ZMes,'og', n, -z_, 'b');
+figure(1),clf,plot(C/dz,-z_,'r',CMes/dz,-ZMes,'og', n, -z_, 'b')
 
 
 
@@ -86,19 +86,23 @@ dK_part = dK(index);
 part = [z_part ; u_part ; K_part ; dK_part];
 
 %% Setting dt
-u0_=max(u);Nu0_=max(Nu);
+u0_=max(u);Nu0_=max(K);
 if (u0_~=0 && Nu0_~=0) 
    dt=min(dz/abs(u0_)*0.5,dz*dz/(2*Nu0_)*0.5); 
 elseif (u0_==0 && Nu0_~=0) 
    dt=dz*dz/(2*Nu0_)*0.5;
 elseif (u0_~=0 && Nu0_==0)
-   dt=min(dz/abs(u0_)*0.5,dz*dz/(2*Nu0_)*0.5); 
+   dt=dz/abs(u0_)*0.5; 
 else
    dt=dt_max;
 end
 
+
 %% Simulation
-% C_history = [];
+figure(2), clf
+h_init = histogram(part(1,:), "BinEdges", z).Values;
+C_init = h_init*dz;
+C_history = [C_init];
 z_past = part(1,:);
 t=0; OnContinue=true;
 while OnContinue
@@ -117,7 +121,7 @@ while OnContinue
     if (mod(t,dt_test)<=dt/2 || dt_test-mod(t,dt_test)<=dt/2 )
         
         % Save state to history
-        % C_history = [C_history ; part(1,:)];
+        
         
         
         % Equilibrium test
@@ -127,6 +131,7 @@ while OnContinue
         h_present = histogram(z_present, "BinEdges", z).Values;
         C_past = h_past*dz;
         C_present = h_present*dz;
+        C_history = [C_history ; C_present];
                 
         dC = max(abs(C_present - C_past)/dt_test);
         
@@ -145,7 +150,7 @@ while OnContinue
 
         figure(2)
         clf, hold on,
-        plot(C/dz, -z_)
+        plot(C, -z_)
         figure(4)
         clf
         plot(-part(1,:),'x')
@@ -158,4 +163,4 @@ while OnContinue
 end
 
 %% Results
-
+figure(5), clf, plot(C_history(end,:), -z_)
