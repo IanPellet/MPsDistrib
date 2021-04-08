@@ -38,7 +38,7 @@ clear Concentration err
 %L=H0(I0,J0);   %m
 L = 50; % Profondeur (arbitraire)
 N=2000;  dx= L/N;  z=0:dx:L; % x : boundaries of the meshes
-x_=(z(1:end-1)+z(2:end))/2; % milieu de chaque maille
+z_=(z(1:end-1)+z(2:end))/2; % milieu de chaque maille
 Xmin=0;Xmax=L;Cmin=-1;Cmax=2;
         %z0=H0(I0,J0)*Sigma;
         z0=L*Sigma;
@@ -51,7 +51,7 @@ ZMes=[1 10 15 40 L]; % profondeur de chaque mesure
 C = interp1(ZMes,CMes,z(1:end-1)+dx/2,'pchip'); % interpolation sur x
 C=max(0*C,C); C_init = C;
 
-figure(1),clf,plot(C,-x_,'r',CMes,-ZMes,'og'),xlabel('Concentration (kg.m^-^3)'), ylabel('Depth (m)')
+figure(1),clf,plot(C,-z_,'r',CMes,-ZMes,'og'),xlabel('Concentration (kg.m^-^3)'), ylabel('Depth (m)')
 
 
     
@@ -67,7 +67,7 @@ Nu = ones(1,2000)*Ks;
 
 figure(4),
     subplot(1,2,1), plot(row,-z)
-    subplot(1,2,2), plot(Nu,-x_)
+    subplot(1,2,2), plot(Nu,-z_)
 
 InitialisationVitesseTransport
 
@@ -118,6 +118,6 @@ while OnContinue
    end
 end
 
-Ccalc = C_analytical(mean(Ws), mean(Ks), x_, sum(C_init*dx), L);
+Ccalc = C_analytical(mean(Ws), mean(Ks), z_, sum(C_init*dx), L);
 disp(['MSE analytical // model : ', num2str( MSE(C,Ccalc) ), ' MP.m^-3'])
-plot(Ccalc, -x_, 'g')
+plot(Ccalc, -z_, 'g')
