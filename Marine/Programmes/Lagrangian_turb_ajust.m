@@ -1,7 +1,7 @@
 % Values taken by alpha
 min_a = 0.5;
-max_a = 2.5;
-n_a = 10;
+max_a = 1;
+n_a = 2;
 alpha = linspace(min_a, max_a, n_a);
 %alpha = 1.3:0.01:1.5;
 %alpha = [0];
@@ -13,12 +13,14 @@ DensiteFevrierRhoma
 [K,~] = wcp_interpolation(z0,KZ_Fev10,-z_); % Diffusivity
 min_K = min(K);
 max_K = max(K);
-n_K = 3; % number of k tested 
+n_K = 1; % number of k tested 
 K_test = linspace(min_K, max_K, n_K);
 
 % Initialisation of the error values list
 mse_list = ones(size(K_test,2),size(alpha,2));
 
+% date format
+formatOut = 'mmdd';
 
 i_K = 0;
 for k = K_test
@@ -29,16 +31,30 @@ for k = K_test
     for a = alpha
         i_a = i_a+1;
         fprintf(['\n\n--------------------- Alpha = ' num2str(a) ' ---------------------\n\n'])
+        figure(1); clf;
         [Ca, MSEa, z] = transport(a, k);
         mse_list(i_K,i_a) = MSEa;
     end
    
-    figure(i_K), clf;
+    f = figure(i_K+1); clf;
     semilogy(alpha, mse_list(i_K,:))
     title("Mean square error between Lagrangian model and Analytical solution",...
-        ['z(n+1) = z(n) + ws*dt + a*R*sqrt[2*Ks*dt], Kz = ',num2str(k),' m².s⁻¹'])
+        ['Kz = ',num2str(k),' m².s⁻¹'])
     xlabel('a')
     ylabel('Error')
+        
+    % Export figure as eps file
+    f_name = ['../../Ian/Results/MSE_alpha/',datestr(now,formatOut),'_mse-a_',num2str(min_a),'-',...
+        num2str(max_a),'_',num2str(i_K),'-',num2str(n_K),'_0','.eps'];
+    
+    i_f = 0;
+    while exist(f_name, 'file')
+        i_f = i_f+1;
+        f_name = ['../../Ian/Results/MSE_alpha/',datestr(now,formatOut),'_mse-a_',num2str(min_a),'-',...
+        num2str(max_a),'_',num2str(i_K),'-',num2str(n_K),'_',num2str(i_f),'.eps'];
+    end
+    removeToolbarExplorationButtons(f);
+    exportgraphics(f,f_name,'ContentType','vector');
 end
 
 
@@ -84,7 +100,7 @@ function [C, mse, z_] = transport(alpha, K_val)
     %% Equilibrium test parameters
     tf= 0.2*86400; % maximum simulation time
     dt_max=0.01; % maximun time interval
-    dt_test = 60*30; % time interval between equilirium tests
+    dt_test = 60*60; % time interval between equilirium tests
 
     %% Water column parameters
     Lon0= 5.29;Lat0=43.24; %point Somlit
@@ -156,7 +172,6 @@ function [C, mse, z_] = transport(alpha, K_val)
 
 
     %% Simulation
-    figure(4), clf
     h_init = histogram(part(1,:), "BinEdges", z).Values;
     C_init = h_init*dz;
     C_history = [C_init];
