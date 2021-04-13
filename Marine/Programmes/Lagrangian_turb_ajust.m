@@ -1,26 +1,44 @@
 % Values taken by alpha
 min_a = 0.5;
-max_a = 1;
-n_a = 2;
+max_a = 1.5;
+n_a = 50;
 alpha = linspace(min_a, max_a, n_a);
-%alpha = 1.3:0.01:1.5;
-%alpha = [0];
-%alpha = 1.45;
-%leg_a = arrayfun(@(i) num2str(i), alpha, 'UniformOutput', false);
 
 % Values taken by Kz
+ModeleHydro='2012RHOMA_arome_003.nc';
+SauvegardeModeleHydro=['DonneeBase' ModeleHydro(1:end-3)];
+load(SauvegardeModeleHydro)
+L = 50; % depth
+N=100;  dz= L/N;  z=0:dz:L; % z : boundaries of the meshes
+z_=(z(1:end-1)+z(2:end))/2; % middle of each mesh
 DensiteFevrierRhoma 
 [K,~] = wcp_interpolation(z0,KZ_Fev10,-z_); % Diffusivity
+
 min_K = min(K);
-max_K = max(K);
-n_K = 1; % number of k tested 
+%max_K = max(K);
+max_K = 0.04;
+n_K = 10; % number of k tested 
 K_test = linspace(min_K, max_K, n_K);
 
 % Initialisation of the error values list
 mse_list = ones(size(K_test,2),size(alpha,2));
+min_alpha = zeros(1,size(K_test,2));
+min_error = zeros(1,size(K_test,2));
 
-% date format
+% file name format
 formatOut = 'mmdd';
+f_0 = ['../../Ian/Results/MSE_alpha/',datestr(now,formatOut),'_mse-a_a',num2str(min_a),'-',...
+        num2str(max_a),'_Np'];
+
+i_f = 0;
+f_test = fullfile([f_0,'*',num2str(n_K),'_0','.*']);
+while exist(f_test, 'file')
+    i_f = i_f+1;
+    f_test = fullfile([f_0,'*',num2str(n_K),'_',num2str(i_f),'.*']);
+end
+
+f_end = ['-',num2str(n_K),'_',num2str(i_f)];
+
 
 i_K = 0;
 for k = K_test
@@ -32,31 +50,32 @@ for k = K_test
         i_a = i_a+1;
         fprintf(['\n\n--------------------- Alpha = ' num2str(a) ' ---------------------\n\n'])
         figure(1); clf;
-        [Ca, MSEa, z] = transport(a, k);
+        [Ca, MSEa, z, Np] = transport(a, k);
         mse_list(i_K,i_a) = MSEa;
     end
    
     f = figure(i_K+1); clf;
-    semilogy(alpha, mse_list(i_K,:))
-    title("Mean square error between Lagrangian model and Analytical solution",...
-        ['Kz = ',num2str(k),' m².s⁻¹'])
-    xlabel('a')
-    ylabel('Error')
+    semilogy(alpha,sqrt(mse_list(i_K,:)))
+    title("Error between Lagrangian model and Analytical solution",...
+        ['K_s = ',num2str(k),' m².s⁻¹, N_p_a_r_t = ',num2str(Np)])
+    xlabel('Alpha')
+    ylabel('Error (MPs.m⁻¹)')
         
     % Export figure as eps file
-    f_name = ['../../Ian/Results/MSE_alpha/',datestr(now,formatOut),'_mse-a_',num2str(min_a),'-',...
-        num2str(max_a),'_',num2str(i_K),'-',num2str(n_K),'_0','.eps'];
-    
-    i_f = 0;
-    while exist(f_name, 'file')
-        i_f = i_f+1;
-        f_name = ['../../Ian/Results/MSE_alpha/',datestr(now,formatOut),'_mse-a_',num2str(min_a),'-',...
-        num2str(max_a),'_',num2str(i_K),'-',num2str(n_K),'_',num2str(i_f),'.eps'];
-    end
+    f_name = [f_0,num2str(Np),'_K',num2str(i_K),f_end,'.eps'];
     removeToolbarExplorationButtons(f);
     exportgraphics(f,f_name,'ContentType','vector');
+    
+    min_a_k = min(alpha(mse_list(i_K,:) == min(mse_list(i_K,:))));
+    disp(min_a_k)
+    min_alpha(i_K) = min_a_k;
+    min_error(i_K) = min(mse_list(i_K,:));
 end
 
+min_a_Ks = [K_test ; min_alpha ; min_error];
+fvar_name = [f_0,num2str(Np),'_K',num2str(i_K),f_end,'.mat'];
+save(fvar_name, 'min_a_Ks')
+disp(min_a_Ks)
 
 %% STEP 
 function [new_z] = step(z, u, Kz, dKz, alpha, dz)
@@ -78,7 +97,7 @@ end
 
 
 %% MODEL
-function [C, mse, z_] = transport(alpha, K_val)
+function [C, mse, z_, N_part] = transport(alpha, K_val)
 %TRANSPORT Lagrangian transportation model 
 
     global dt L
@@ -103,10 +122,11 @@ function [C, mse, z_] = transport(alpha, K_val)
     dt_test = 60*60; % time interval between equilirium tests
 
     %% Water column parameters
-    Lon0= 5.29;Lat0=43.24; %point Somlit
-    [I0,J0] = ReperePoint(Lon,Lat,Lon0,Lat0); % indices corresponding to the location
-    L = H0(I0,J0); % depth
-    N=300;  dz= L/N;  z=0:dz:L; % z : boundaries of the meshes
+    %Lon0= 5.29;Lat0=43.24; %point Somlit
+    %[I0,J0] = ReperePoint(Lon,Lat,Lon0,Lat0); % indices corresponding to the location
+    L = 50; % depth
+    N=L;  
+    dz= L/N;  z=0:dz:L; % z : boundaries of the meshes
     z_=(z(1:end-1)+z(2:end))/2; % middle of each mesh
     z0=L*Sigma; 
 
@@ -119,8 +139,13 @@ function [C, mse, z_] = transport(alpha, K_val)
     %% Particules initialisation
     D=350e-6; %m : Diametre
     rop=1010.5;
-    n = round(C/dz); % number of particules per mesh
-    N_part = sum(n); % Total number of part in the water column
+    N_part0 = 1000;
+    P_part = C*dz/sum(C*dz);
+    n = round(N_part0*P_part);
+    %n = round(C*N_part0/sum(C));
+    N_part = sum(n);
+    %n = round(C/dz); % number of particules per mesh
+    %N_part = sum(n); % Total number of part in the water column
     disp(['Total nbr of particles : ', num2str(N_part)])
     z_part = ones(1, N_part); % Position of each part ; space allocation
     i_part = 0; % Part index
@@ -173,7 +198,7 @@ function [C, mse, z_] = transport(alpha, K_val)
 
     %% Simulation
     h_init = histogram(part(1,:), "BinEdges", z).Values;
-    C_init = h_init*dz;
+    C_init = h_init/dz;
     C_history = [C_init];
     z_past = part(1,:);
     t=0; OnContinue=true;
@@ -201,8 +226,8 @@ function [C, mse, z_] = transport(alpha, K_val)
             % Computation of the concentration of MPs in each mesh
             h_past = histogram(z_past, "BinEdges", z).Values;
             h_present = histogram(z_present, "BinEdges", z).Values;
-            C_past = h_past*dz;
-            C_present = h_present*dz;
+            C_past = h_past/dz;
+            C_present = h_present/dz;
             C_history = [C_history ; C_present];
 
             dC = max(abs(C_present - C_past)/dt_test);
@@ -212,8 +237,8 @@ function [C, mse, z_] = transport(alpha, K_val)
                OnContinue = false;
             end
 
-            disp([' Temps : ' num2str(t/3600/24) 'j -' ...
-                  ' - Ecart : ' num2str(dC)])
+            %disp([' Temps : ' num2str(t/3600/24) 'j -' ...
+            %      ' - Ecart : ' num2str(dC)])
 
             z_past = z_present;
         end
@@ -221,7 +246,10 @@ function [C, mse, z_] = transport(alpha, K_val)
 
     C = C_history(end,:);
 
-    Ccalc = C_analytical(mean(Ws), mean(K), z_, sum(C*dz), L);
+    Ccalc = C_analytical(mean(Ws), mean(K_val), z_, N_part, L);
+    disp(sum(Ccalc*dz))
+    plot(Ccalc, -z_, C, -z_)
+    title(["alpha = ",alpha])
     mse = MSE(C,Ccalc) ;
-    disp(['MSE analytical // model : ', num2str( mse ), ' MP.m^-3'])
+    disp(['MSE analytical // model : ', num2str(sqrt(mse)), ' MPs.m⁻¹'])
 end
