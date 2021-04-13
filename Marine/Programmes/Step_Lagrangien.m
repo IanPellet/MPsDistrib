@@ -10,12 +10,12 @@ d = 1;
 pd = makedist('Normal', 'mu', 0, 'sigma', d);
 R = random(pd,size(x));
 new_x = x + dt*u + dKz*dt + R.*(2/d*Kz*dt).^(1/2);
-%new_x = max(0,new_x);
-%new_x = min(L, new_x);
+new_x = max(0,new_x);
+new_x = min(L, new_x);
 
 % Reflective boundary conditions
-new_x(new_x < 0) = -new_x(new_x < 0);
-new_x(new_x > L) = L-new_x(new_x > L) + L;
+%new_x(new_x < 0) = -new_x(new_x < 0);
+%new_x(new_x > L) = L-new_x(new_x > L) + L;
 
 end
 
