@@ -1,7 +1,9 @@
-function [T, MSEh] = Ajust_model(dt, nPart, tf)
+function [T, MSEh] = Ajust_model(dt, nPart, tf, cKs)
 % Lagrangian transportation model 
-% 
-% 
+% dt : time step
+% nPart : total number of particles in the model
+% tf : time of simulation
+% cKs : coefficient multipling Ks
 
 global L
 clear Concentration err
@@ -35,10 +37,13 @@ z_part = sort(z_part)';
 
 %% Speed initialisation
 DensiteFevrierRhoma 
-[K,dK] = wcp_interpolation(z0,KZ_Fev10,-z_); % Diffusivity
-%K_val = 0.01;
-%K = ones(size(z))*K_val;
-%dK = zeros(size(z));
+[K,dK] = wcp_interpolation(z0,KZ_Fev10*cKs,-z_); % Diffusivity
+% K_val = 0.01;
+% K = ones(size(z))*K_val;
+% dK = zeros(size(z));
+% K = K*cKs;
+
+
 InitialisationVitesseTransport
 S=rop./row;     
 Ws=eval(['Vitesse' cell2mat(Nom(indNom)) '(D,S,D_);']);
@@ -62,30 +67,30 @@ h_init = histogram(part(1,:), "BinEdges", z, 'Visible', 'off').Values;
 disp(class(h_init))
 CiNorm = h_init/dz/nPart;
 
-if false
-    figure(1), clf
-    ax1 = subplot(1,3,1);
-    plot(ax1,-part(1,:),'x')
-    ylim([-L 0])
-    grid on
-    inv = z(end:-1:1);
-    yticks(-inv)
-
-    lim = [0.5 1.5];
-    ax2 = subplot(1,3,2);
-    plot(ax2,CiNorm,-z_)
-    xlim(lim)
-    ylim([-L 0])
-    grid on
-    yticks(-inv)
-
-    ax3 = subplot(1,3,3);
-    plot(ax3,(2/d*K(1:end-1)*dt).^(1/2), -z)
-    ylim([-L 0])
-    grid on
-    yticks(-inv)
-    pause(1)
-end
+% if false
+%     figure(1), clf
+%     ax1 = subplot(1,3,1);
+%     plot(ax1,-part(1,:),'x')
+%     ylim([-L 0])
+%     grid on
+%     inv = z(end:-1:1);
+%     yticks(-inv)
+% 
+%     lim = [0.5 1.5];
+%     ax2 = subplot(1,3,2);
+%     plot(ax2,CiNorm,-z_)
+%     xlim(lim)
+%     ylim([-L 0])
+%     grid on
+%     yticks(-inv)
+% 
+%     ax3 = subplot(1,3,3);
+%     plot(ax3,(2/d*K(1:end-1)*dt).^(1/2), -z)
+%     ylim([-L 0])
+%     grid on
+%     yticks(-inv)
+%     pause(1)
+% end
 
 %% Simulation
 nStep = tf/dt+1;
@@ -140,31 +145,31 @@ while OnContinue
             disp([' Temps : ' num2str(t/tf*100) '% - Ecart : ' num2str(dC)])
         end
         
-        if false
-            ax1 = subplot(1,3,1);
-            plot(ax1,-part(1,:),'x')
-            ylim([-L 0])
-            grid on
-            inv = z(end:-1:1);
-            yticks(-inv)
-
-            ax2 = subplot(1,3,2);
-            plot(ax2,CpresentNorm,-z_)
-            ylim([-L 0])
-            xlim(lim)
-            grid on
-            inv = z(end:-1:1);
-            yticks(-inv)
-
-            ax3 = subplot(1,3,3);
-            plot(ax3,(2/d*K(1:end-1)*dt).^(1/2), -z)
-            ylim([-L 0])
-            grid on
-            inv = z(end:-1:1);
-            yticks(-inv)
-
-            pause(0.1)
-        end
+%         if false
+%             ax1 = subplot(1,3,1);
+%             plot(ax1,-part(1,:),'x')
+%             ylim([-L 0])
+%             grid on
+%             inv = z(end:-1:1);
+%             yticks(-inv)
+% 
+%             ax2 = subplot(1,3,2);
+%             plot(ax2,CpresentNorm,-z_)
+%             ylim([-L 0])
+%             xlim(lim)
+%             grid on
+%             inv = z(end:-1:1);
+%             yticks(-inv)
+% 
+%             ax3 = subplot(1,3,3);
+%             plot(ax3,(2/d*K(1:end-1)*dt).^(1/2), -z)
+%             ylim([-L 0])
+%             grid on
+%             inv = z(end:-1:1);
+%             yticks(-inv)
+% 
+%             pause(0.1)
+%         end
         
         z_past = z_present;
     end
@@ -172,14 +177,35 @@ end
 
 %% Plot end profile
 prof = figure(1);
-plot(CpresentNorm,-z_)
+clf
+hold on
+
+ax1 = subplot(1,2,1);
+hold on
+plot(ax1, CiNorm,-z_, 'DisplayName','t = 0')
+plot(ax1, CpresentNorm,-z_, 'DisplayName',['t = ', num2str(tf)])
+legend('Location','best')
 ylim([-L 0])
+xlim([0.7 1.3])
 grid on
 inv = z(end:-1:1);
 yticks(-inv)
 xlabel("Normed concentration")
 ylabel("Depth (m)")
-prof_name = ['../../Ian/Results/dt', num2str(dt), '_nPart', num2str(nPart), '_tf', num2str(tf), '.eps'];
+
+ax2 = subplot(1,2,2);
+plot(ax2, K(1:end-1), -z, 'DisplayName',['cKs = ', num2str(cKs)])
+ylim([-L 0])
+grid on
+inv = z(end:-1:1);
+yticks(-inv)
+xlabel("Turbulent diffusion (m².s⁻¹)")
+legend('Location','best')
+
+
+hold off
+prof_name = ['../../Ian/Results/dt', num2str(dt), '_nPart', num2str(nPart),...
+    '_tf', num2str(tf), '_cKs', num2str(cKs), '_var.eps'];
 exportgraphics(prof,prof_name,'ContentType','vector');
 %error = 
 %Delta = [T mean(ChNorm,2) min(ChNorm,[],2) max(ChNorm,[],2)];
