@@ -169,5 +169,17 @@ while OnContinue
         z_past = z_present;
     end
 end
+
+%% Plot end profile
+prof = figure(1);
+plot(CpresentNorm,-z_)
+ylim([-L 0])
+grid on
+inv = z(end:-1:1);
+yticks(-inv)
+xlabel("Normed concentration")
+ylabel("Depth (m)")
+prof_name = ['../../Ian/Results/dt', num2str(dt), '_nPart', num2str(nPart), '_tf', num2str(tf), '.eps'];
+exportgraphics(prof,prof_name,'ContentType','vector');
 %error = 
 %Delta = [T mean(ChNorm,2) min(ChNorm,[],2) max(ChNorm,[],2)];
