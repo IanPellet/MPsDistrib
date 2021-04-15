@@ -31,9 +31,7 @@ z0=L*Sigma;
 D=350e-6; % Particle diametre
 rop=1010.5; % Particle density
 
-z_part = z_' * ones(1,nPart);
-z_part = reshape(z_part, size(z_part,2)*size(z_part,1),1);
-z_part = sort(z_part)';
+z_part = linspace(0, L, nPart);
 
 %% Speed initialisation
 DensiteFevrierRhoma 
@@ -65,7 +63,7 @@ part = [z_part ; u_part ; K_part ; dK_part];
 %% Plot initial conditions
 h_init = histogram(part(1,:), "BinEdges", z, 'Visible', 'off').Values;
 disp(class(h_init))
-CiNorm = h_init/dz/nPart;
+CiNorm = h_init/dz*N/nPart;
 
 % if false
 %     figure(1), clf
@@ -128,8 +126,8 @@ while OnContinue
         % Computation of the concentration of MPs in each mesh
         h_past = histogram(z_past, "BinEdges", z, 'Visible', 'off').Values;
         h_present = histogram(z_present, "BinEdges", z, 'Visible', 'off').Values;
-        CpastNorm = h_past/dz/nPart;
-        CpresentNorm = h_present/dz/nPart;
+        CpastNorm = h_past/dz*N/nPart;
+        CpresentNorm = h_present/dz*N/nPart;
         ChNorm(step,:) = CpresentNorm;
         
         MSEh(step,1) = MSE(CpresentNorm,test);
@@ -141,7 +139,7 @@ while OnContinue
            OnContinue = false;
         end
         
-        if mod(t,30)<dt/2
+        if mod(t,60)<dt/2
             disp([' Temps : ' num2str(t/tf*100) '% - Ecart : ' num2str(dC)])
         end
         
@@ -184,6 +182,9 @@ ax1 = subplot(1,2,1);
 hold on
 plot(ax1, CiNorm,-z_, 'DisplayName','t = 0')
 plot(ax1, CpresentNorm,-z_, 'DisplayName',['t = ', num2str(tf)])
+% hold on
+% plot(CiNorm,-z_, 'DisplayName','t = 0')
+% plot(CpresentNorm,-z_, 'DisplayName',['t = ', num2str(tf)])
 legend('Location','best')
 ylim([-L 0])
 xlim([0.7 1.3])
@@ -192,6 +193,7 @@ inv = z(end:-1:1);
 yticks(-inv)
 xlabel("Normed concentration")
 ylabel("Depth (m)")
+% title(["dt = ",num2str(dt)])
 
 ax2 = subplot(1,2,2);
 plot(ax2, K(1:end-1), -z, 'DisplayName',['cKs = ', num2str(cKs)])
@@ -207,5 +209,3 @@ hold off
 prof_name = ['../../Ian/Results/dt', num2str(dt), '_nPart', num2str(nPart),...
     '_tf', num2str(tf), '_cKs', num2str(cKs), '_var.eps'];
 exportgraphics(prof,prof_name,'ContentType','vector');
-%error = 
-%Delta = [T mean(ChNorm,2) min(ChNorm,[],2) max(ChNorm,[],2)];
