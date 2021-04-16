@@ -1,4 +1,4 @@
-function [T, errorh] = Ajust_model(dt, nPart, tf, Ks)
+function [T, errorh] = Ajust_model(dt, nPart, tf, Ks, v, dt_test)
 % Lagrangian transportation model 
 % dt : time step
 % nPart : total number of particles in the model
@@ -45,7 +45,8 @@ InitialisationVitesseTransport
 S=rop./row;     
 Ws=eval(['Vitesse' cell2mat(Nom(indNom)) '(D,S,D_);']);
 %u=Ws; u(rop<row)=-Ws(rop<row);
-u = Ws*0;
+% u(1) = 0; u(end) = 0;
+u = -ones(size(Ws))*v;
 
 %% Particules matrix definition
 % part = [z1 z2 ... zn ; 
@@ -61,43 +62,18 @@ part = [z_part ; u_part ; K_part ; dK_part];
 
 %% Plot initial conditions
 h_init = histogram(part(1,:), "BinEdges", z, 'Visible', 'off').Values;
-disp(class(h_init))
 CiNorm = h_init/dz*N/nPart;
 
-% if false
-%     figure(1), clf
-%     ax1 = subplot(1,3,1);
-%     plot(ax1,-part(1,:),'x')
-%     ylim([-L 0])
-%     grid on
-%     inv = z(end:-1:1);
-%     yticks(-inv)
-% 
-%     lim = [0.5 1.5];
-%     ax2 = subplot(1,3,2);
-%     plot(ax2,CiNorm,-z_)
-%     xlim(lim)
-%     ylim([-L 0])
-%     grid on
-%     yticks(-inv)
-% 
-%     ax3 = subplot(1,3,3);
-%     plot(ax3,(2/d*K(1:end-1)*dt).^(1/2), -z)
-%     ylim([-L 0])
-%     grid on
-%     yticks(-inv)
-%     pause(1)
-% end
-
 %% Simulation
-nStep = tf/dt+1;
+%nStep = tf/dt+1;
+nStep = tf/dt_test+1;
 if cast(nStep, 'uint32') ~= nStep
     nStep = cast(nStep+1, 'uint32');
 end
 T = ones(nStep,1);
 ChNorm = ones(nStep,N);
 errorh = ones(nStep,1);
-test = CiNorm;
+test = C_analytical(v, Ks, z_, nPart, L)*N/nPart;
 
 z_past = part(1,:);
 step = 1;
@@ -107,10 +83,10 @@ errorh(step,1) = totalError(CiNorm,test);
 t=0; OnContinue=true;
 T(step,1) = t;
 while OnContinue
-    step = step+1;
+    
     % Time update
     t=t+dt;
-    T(step,1) = t;
+    
     % Particules update
     part(1,:) = Step_Lagrangien(part(1,:), part(2,:), part(3,:), part(4,:), dt);
     index = max(1, cast(part(1,:)/dz, 'uint32'));
@@ -118,8 +94,10 @@ while OnContinue
     part(3,:) = K(index);
     part(4,:) = dK(index);
     
-    if true
-
+    if (mod(t,dt_test)<=dt/2 || dt_test-mod(t,dt_test)<=dt/2 ) 
+    %if true
+        step = step+1;
+        T(step,1) = t;
         z_present = part(1,:);
         
         % Computation of the concentration of MPs in each mesh
@@ -142,32 +120,6 @@ while OnContinue
             disp([' Temps : ' num2str(t/tf*100) '% - Ecart : ' num2str(dC/sum(CpresentNorm)*100), '%'])
         end
         
-%         if false
-%             ax1 = subplot(1,3,1);
-%             plot(ax1,-part(1,:),'x')
-%             ylim([-L 0])
-%             grid on
-%             inv = z(end:-1:1);
-%             yticks(-inv)
-% 
-%             ax2 = subplot(1,3,2);
-%             plot(ax2,CpresentNorm,-z_)
-%             ylim([-L 0])
-%             xlim(lim)
-%             grid on
-%             inv = z(end:-1:1);
-%             yticks(-inv)
-% 
-%             ax3 = subplot(1,3,3);
-%             plot(ax3,(2/d*K(1:end-1)*dt).^(1/2), -z)
-%             ylim([-L 0])
-%             grid on
-%             inv = z(end:-1:1);
-%             yticks(-inv)
-% 
-%             pause(0.1)
-%         end
-        
         z_past = z_present;
     end
 end
@@ -184,17 +136,17 @@ clf
 % plot(ax1, CiNorm,-z_, 'DisplayName','t = 0')
 % plot(ax1, CpresentNorm,-z_, 'DisplayName',['t = ', num2str(tf)])
 hold on
-plot(CiNorm,-z_, 'DisplayName','t = 0')
-plot(CpresentNorm,-z_, 'DisplayName',['t = ', num2str(tf)])
+plot(test,-z_, 'DisplayName','Analytical Solution')
+plot(CpresentNorm,-z_, 'DisplayName','Lagrangian Model')
 legend('Location','best')
 ylim([-L 0])
-xlim([0.7 1.3])
+% xlim([0.7 1.3])
 grid on
 inv = z(end:-1:1);
 yticks(-inv)
-xlabel("Normed concentration (mps.m⁻³")
+xlabel("Normed concentration (mps.m⁻³)")
 ylabel("Depth (m)")
-title("Reflective boundary conditions")
+% title("Reflective boundary conditions")
 
 % ax2 = subplot(1,2,2);
 % plot(ax2, K(1:end-1), -z, 'DisplayName',['Ks = ', num2str(Ks)])
@@ -208,5 +160,5 @@ title("Reflective boundary conditions")
 
 hold off
 prof_name = ['../../Ian/Results/dt', num2str(dt), '_nPart', num2str(nPart),...
-    '_tf', num2str(tf), '_Ks', num2str(Ks), '_Kcst_reflect.eps'];
+    '_tf', num2str(tf), '_Ks', num2str(Ks), '_v', num2str(v),'_dtest', num2str(dt_test), '_profile.eps'];
 exportgraphics(prof,prof_name,'ContentType','vector');
