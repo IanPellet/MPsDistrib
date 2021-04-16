@@ -1,9 +1,9 @@
-function [T, MSEh] = Ajust_model(dt, nPart, tf, cKs)
+function [T, errorh] = Ajust_model(dt, nPart, tf, Ks)
 % Lagrangian transportation model 
 % dt : time step
 % nPart : total number of particles in the model
 % tf : time of simulation
-% cKs : coefficient multipling Ks
+% Ks : coefficient multipling Ks
 
 global L
 clear Concentration err
@@ -35,11 +35,10 @@ z_part = linspace(0, L, nPart);
 
 %% Speed initialisation
 DensiteFevrierRhoma 
-[K,dK] = wcp_interpolation(z0,KZ_Fev10*cKs,-z_); % Diffusivity
-% K_val = 0.01;
-% K = ones(size(z))*K_val;
-% dK = zeros(size(z));
-% K = K*cKs;
+% [K,dK] = wcp_interpolation(z0,KZ_Fev10*cKs,-z_); % Diffusivity
+K_val = Ks;
+K = ones(size(z))*K_val;
+dK = zeros(size(z));
 
 
 InitialisationVitesseTransport
@@ -97,13 +96,13 @@ if cast(nStep, 'uint32') ~= nStep
 end
 T = ones(nStep,1);
 ChNorm = ones(nStep,N);
-MSEh = ones(nStep,1);
-test = ones(size(CiNorm));
+errorh = ones(nStep,1);
+test = CiNorm;
 
 z_past = part(1,:);
 step = 1;
 ChNorm(step,:) = [CiNorm];
-MSEh(step,1) = MSE(CiNorm,test);
+errorh(step,1) = totalError(CiNorm,test);
 
 t=0; OnContinue=true;
 T(step,1) = t;
@@ -130,7 +129,7 @@ while OnContinue
         CpresentNorm = h_present/dz*N/nPart;
         ChNorm(step,:) = CpresentNorm;
         
-        MSEh(step,1) = MSE(CpresentNorm,test);
+        errorh(step,1) = totalError(CpresentNorm,test);
         
                 
         dC = max(abs(CpresentNorm - CpastNorm)/dt);
@@ -140,7 +139,7 @@ while OnContinue
         end
         
         if mod(t,60)<dt/2
-            disp([' Temps : ' num2str(t/tf*100) '% - Ecart : ' num2str(dC)])
+            disp([' Temps : ' num2str(t/tf*100) '% - Ecart : ' num2str(dC/sum(CpresentNorm)*100), '%'])
         end
         
 %         if false
@@ -173,39 +172,41 @@ while OnContinue
     end
 end
 
+errorh = errorh/N;
+
 %% Plot end profile
 prof = figure(1);
 clf
-hold on
-
-ax1 = subplot(1,2,1);
-hold on
-plot(ax1, CiNorm,-z_, 'DisplayName','t = 0')
-plot(ax1, CpresentNorm,-z_, 'DisplayName',['t = ', num2str(tf)])
 % hold on
-% plot(CiNorm,-z_, 'DisplayName','t = 0')
-% plot(CpresentNorm,-z_, 'DisplayName',['t = ', num2str(tf)])
+
+% ax1 = subplot(1,2,1);
+% hold on
+% plot(ax1, CiNorm,-z_, 'DisplayName','t = 0')
+% plot(ax1, CpresentNorm,-z_, 'DisplayName',['t = ', num2str(tf)])
+hold on
+plot(CiNorm,-z_, 'DisplayName','t = 0')
+plot(CpresentNorm,-z_, 'DisplayName',['t = ', num2str(tf)])
 legend('Location','best')
 ylim([-L 0])
 xlim([0.7 1.3])
 grid on
 inv = z(end:-1:1);
 yticks(-inv)
-xlabel("Normed concentration")
+xlabel("Normed concentration (mps.m⁻³")
 ylabel("Depth (m)")
-% title(["dt = ",num2str(dt)])
+title(["Ks = ",num2str(Ks)])
 
-ax2 = subplot(1,2,2);
-plot(ax2, K(1:end-1), -z, 'DisplayName',['cKs = ', num2str(cKs)])
-ylim([-L 0])
-grid on
-inv = z(end:-1:1);
-yticks(-inv)
-xlabel("Turbulent diffusion (m².s⁻¹)")
-legend('Location','best')
+% ax2 = subplot(1,2,2);
+% plot(ax2, K(1:end-1), -z, 'DisplayName',['Ks = ', num2str(Ks)])
+% ylim([-L 0])
+% grid on
+% inv = z(end:-1:1);
+% yticks(-inv)
+% xlabel("Turbulent diffusion (m².s⁻¹)")
+% legend('Location','best')
 
 
 hold off
 prof_name = ['../../Ian/Results/dt', num2str(dt), '_nPart', num2str(nPart),...
-    '_tf', num2str(tf), '_cKs', num2str(cKs), '_var.eps'];
+    '_tf', num2str(tf), '_Ks', num2str(Ks), '_Kcst.eps'];
 exportgraphics(prof,prof_name,'ContentType','vector');
