@@ -39,7 +39,7 @@ inter = [];
 f = figure(2); clf;
 hold on
 xlabel('Time (s)');
-ylabel('Difference with initial condition (%)');
+ylabel('DeltaC (%)');
 for i=1:size(results,1)
     
     if results{i,1}(end) == 1 && results{i,2}(end) == 1

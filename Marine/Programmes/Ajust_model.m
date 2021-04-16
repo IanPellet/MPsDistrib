@@ -194,7 +194,7 @@ inv = z(end:-1:1);
 yticks(-inv)
 xlabel("Normed concentration (mps.m⁻³")
 ylabel("Depth (m)")
-title(["Ks = ",num2str(Ks)])
+title("Reflective boundary conditions")
 
 % ax2 = subplot(1,2,2);
 % plot(ax2, K(1:end-1), -z, 'DisplayName',['Ks = ', num2str(Ks)])
@@ -208,5 +208,5 @@ title(["Ks = ",num2str(Ks)])
 
 hold off
 prof_name = ['../../Ian/Results/dt', num2str(dt), '_nPart', num2str(nPart),...
-    '_tf', num2str(tf), '_Ks', num2str(Ks), '_Kcst.eps'];
+    '_tf', num2str(tf), '_Ks', num2str(Ks), '_Kcst_reflect.eps'];
 exportgraphics(prof,prof_name,'ContentType','vector');
