@@ -1,11 +1,11 @@
-function [C, z_, mse] = Transport_Eulerian(N, L)
+function [error] = Transport_Eulerian(N, Ks, v)
 %UNTITLED3 Summary of this function goes here
 %   Detailed explanation goes here
 
 global dt dz
 global nuw g row 
 
-fprintf(['\n\n--------------------- N = ' num2str(N) ' ---------------------\n'])
+fprintf(['\n\n--------------------- Ks = ' num2str(Ks) ' -- N = ' num2str(N) ' ---------------------\n'])
 
 Nom=[... 
     ;{'Nielsen'}...%Nielsen (1992)
@@ -28,14 +28,9 @@ Tdes=60*60; dConcMax=5E-5; % Tdes : intervalle de temps entre les tests d'équil
 % dConcMax : seuil de delta de concentration à partir duquel on de considère à l'équilibre 
 dh=0.15; % profondeur sur laquelle le filet prélève
 
-% Eulerien vs Lagrangien
-%tf= 100*86400; % maximum simulation time
-%dt_max=0.01; % maximun time interval
-%dt_test = 60*30; % time interval between equilirium tests
-
 clear Concentration err
 %L=H0(I0,J0);   %m
-%L = 50; % Profondeur (arbitraire)
+L = 50; % Profondeur 
 dz= L/N;  z=0:dz:L; % x : boundaries of the meshes
 z_=(z(1:end-1)+z(2:end))/2; % milieu de chaque maille
 Xmin=0;Xmax=L;Cmin=-1;Cmax=2;
@@ -59,7 +54,6 @@ row = 1000;
 % Determiner rho eau
 DensiteFevrierRhoma
 %Nu=interp1(z0,KZ_Fev10,-x_,'pchip');
-Ks = 0.01;
 Nu = ones(size(z_))*Ks;
 
 InitialisationVitesseTransport
@@ -67,7 +61,8 @@ InitialisationVitesseTransport
 rop=1010.5;
 S=rop./row;     D_=((g*(abs(S-1))/nuw^2).^(1/3))*D;
 Ws=eval(['Vitesse' cell2mat(Nom(indNom)) '(D,S,D_);']);
-u=Ws; u(rop<row)=-Ws(rop<row);
+%u=Ws; u(rop<row)=-Ws(rop<row);
+u = -ones(size(Ws))*v;
 
 % Analytical solution at equilibrium
 %Ccalc = C_analytical(Ws, Ks,x_, C);
@@ -108,9 +103,9 @@ while OnContinue
 end
 
 
-Ccalc = C_analytical(mean(Ws), mean(Ks), z_, sum(C*dz), L);
-mse = MSE(C,Ccalc) ;
-disp(['MSE analytical // model : ', num2str( mse ), ' MP.m^-3'])
+Ccalc = C_analytical(v, Ks, z_, sum(C*dz), L);
+error = totalError(C,Ccalc) ;
+disp(['Error analytical // model : ', num2str( error*100), '%'])
 
 end
 
