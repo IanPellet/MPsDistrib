@@ -16,22 +16,26 @@ nPart = 50e3;
 tf = 1e5;
 % tf_test = [60*60*24];
 
-Ks = 0.01;
-% Ks_test = [0 0.001 0.005 0.01 0.05 0.1 0.5 1];
+% Ks = 0.01;
+Ks_test = [0.001 0.01 0.1 1];
 %Ks_test = [0];
 
-v_test = [1e-4 1e-3 1e-2 1e-1];
+%v_test = [1e-4 1e-3 1e-2 1e-1];
+%v_test = linspace(1e-2, 1e-1, 4);
+v = 1e-3;
+
 dtest = 60*60*2;
 
 dt = fix(1/max(v_test));
+disp(["dt = ",num2str(dt),"s"])
 
 results = {};
 i = 0;
 % for tf = tf_test
 % for dt=dt_test
 % for nPart = nPart_test
-% for Ks = Ks_test
-for v = v_test
+for Ks = Ks_test
+% for v = v_test
     i = i+1;
     disp(class(nPart))
     disp(["nPart = ", num2str(nPart)])
@@ -62,10 +66,10 @@ for i=1:size(results,1)
 %     inter = [inter,'-', num2str(dt_test(i))];
 %     leg(i) = {['nPart = ',num2str(nPart_test(i))]};
 %     inter = [inter,'-', num2str(nPart_test(i))];
-%     leg(i) = {['Ks = ',num2str(Ks_test(i))]};
-%     inter = [inter,'-', num2str(Ks_test(i))];
-    leg(i) = {['v = ',num2str(v_test(i)),'m.s⁻¹']};
-    inter = [inter,'-', num2str(v_test(i))];
+    leg(i) = {['Ks = ',num2str(Ks_test(i)), 'm².s⁻¹']};
+    inter = [inter,'-', num2str(Ks_test(i))];
+%     leg(i) = {['v = ',num2str(v_test(i)),'m.s⁻¹']};
+%     inter = [inter,'-', num2str(v_test(i))];
 
 end
 legend(leg, 'Location','best');
@@ -77,10 +81,10 @@ hold off
 %      num2str(tf),'_Ks', num2str(Ks),'_v', num2str(v),'_dtest', num2str(dtest),'_error.eps'];
 % f_name = ['../../Ian/Results/nPart', inter,'_dt',num2str(dt),'_tf',num2str(tf),...
 %     '_Ks', num2str(Ks),'_v', num2str(v),'_dtest', num2str(dtest),'_error.eps'];
-% f_name = ['../../Ian/Results/nPart', num2str(nPart),'_dt',num2str(dt),'_tf',...
-%     num2str(tf),'_Ks', inter,'_v', num2str(v),'_dtest', num2str(dtest),'_error.eps'];
 f_name = ['../../Ian/Results/nPart', num2str(nPart),'_dt',num2str(dt),'_tf',...
-     num2str(tf),'_Ks', num2str(Ks),'_v', inter,'_dtest', num2str(dtest),'_error.eps'];
+    num2str(tf),'_Ks', inter,'_v', num2str(v),'_dtest', num2str(dtest),'_error.eps'];
+% f_name = ['../../Ian/Results/nPart', num2str(nPart),'_dt',num2str(dt),'_tf',...
+%      num2str(tf),'_Ks', num2str(Ks),'_v', inter,'_dtest', num2str(dtest),'_error.eps'];
 
 exportgraphics(f,f_name,'ContentType','vector');
 
@@ -92,6 +96,8 @@ exportgraphics(f,f_name,'ContentType','vector');
 %      num2str(tf),'_Ks', num2str(Ks),'_v', num2str(v),'_dtest', num2str(dtest),'_error.mat'];
 % fvar_name = ['../../Ian/Results/nPart', inter,'_dt',num2str(dt),'_tf',...
 %      num2str(tf),'_Ks', num2str(Ks),'_v', num2str(v),'_dtest', num2str(dtest),'_error.mat'];
+fvar_name = ['../../Ian/Results/nPart', num2str(nPart),'_dt',num2str(dt),'_tf',...
+   num2str(tf),'_Ks', inter,'_v', num2str(v),'_dtest', num2str(dtest),'_error.mat'];
 % fvar_name = ['../../Ian/Results/nPart', num2str(nPart),'_dt',num2str(dt),'_tf',...
-%    num2str(tf),'_Ks', inter,'_v', num2str(v),'_dtest', num2str(dtest),'_error.mat'];
+%      num2str(tf),'_Ks', num2str(Ks),'_v', inter,'_dtest', num2str(dtest),'_error.mat'];
 save(fvar_name, 'results')

@@ -140,13 +140,14 @@ plot(test,-z_, 'DisplayName','Analytical Solution')
 plot(CpresentNorm,-z_, 'DisplayName','Lagrangian Model')
 legend('Location','best')
 ylim([-L 0])
-% xlim([0.7 1.3])
+xlim([0 5])
 grid on
 inv = z(end:-1:1);
 yticks(-inv)
 xlabel("Normed concentration (mps.m⁻³)")
 ylabel("Depth (m)")
-% title("Reflective boundary conditions")
+ttl = join(["Ks = ", num2str(Ks), "m².s⁻¹"]);
+title(ttl)
 
 % ax2 = subplot(1,2,2);
 % plot(ax2, K(1:end-1), -z, 'DisplayName',['Ks = ', num2str(Ks)])
