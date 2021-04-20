@@ -61,8 +61,8 @@ InitialisationVitesseTransport
 rop=1010.5;
 S=rop./row;     D_=((g*(abs(S-1))/nuw^2).^(1/3))*D;
 Ws=eval(['Vitesse' cell2mat(Nom(indNom)) '(D,S,D_);']);
-%u=Ws; u(rop<row)=-Ws(rop<row);
-u = -ones(size(Ws))*v;
+Ws = ones(size(Ws))*v;
+u=Ws; u(rop<row)=-Ws(rop<row);
 
 % Analytical solution at equilibrium
 %Ccalc = C_analytical(Ws, Ks,x_, C);
@@ -104,8 +104,8 @@ end
 
 
 Ccalc = C_analytical(v, Ks, z_, sum(C*dz), L);
-error = totalError(C,Ccalc) ;
-disp(['Error analytical // model : ', num2str( error*100), '%'])
+error = MSE(C,Ccalc) ;
+disp(['Error analytical // model : ', num2str( error), ''])
 
 end
 
