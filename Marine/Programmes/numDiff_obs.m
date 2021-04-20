@@ -1,4 +1,4 @@
-function [results] = numDiff_obs(VarObs, Ks, Ws, N_test)
+function [results] = numDiff_obs(VarObs, Ks, N_test)
 %NUMDIFF_OBS Plots the error for different number of meshes
 %
 % VarObs is a string that can take 2 values : 'Ks' or 'Ws' corresponding to
@@ -6,7 +6,7 @@ function [results] = numDiff_obs(VarObs, Ks, Ws, N_test)
 %
 % Ks value(s) of diffusive turbidity (m².s⁻¹)
 %
-% Ws value(s) of spedd (m.s⁻¹)
+% Ws value(s) of speed (m.s⁻¹)
 %
 % N_test values taken for the number of meshes
 %
@@ -19,12 +19,13 @@ function [results] = numDiff_obs(VarObs, Ks, Ws, N_test)
 % N_test = linspace(10,510,11);
 if strcmp(VarObs, 'Ks')
     Ks_test = Ks;
-elseif strcmp(VarObs, 'Ws')
-    Ws_test = Ws;
+% elseif strcmp(VarObs, 'Ws')
+%     Ws_test = Ws;
 else
     disp('Invalid argument VarObs')
 end
-path = ['../../Ian/Results/'];
+path = '../../Ian/Results/';
+Ws = 0;
 %v_test = [1e-4 1e-3 1e-2 1e-1];
 %v_test = linspace(1e-2, 1e-1, 4);
 %v = 1e-3;
@@ -46,14 +47,14 @@ if strcmp(VarObs, 'Ks')
         iN = 0;
         for N = N_test
             iN = iN+1;
-            erroriN = Transport_Eulerian(N, Ks, Ws);
+            erroriN = Transport_Eulerian(N, Ks);
             N_error(iN,1) = N;
             N_error(iN,2) = erroriN;
         end
 
         Emin = min(N_error(:,2)); % minimal error
-        imin = find(N_error(:,2) == Emin); % index of the Emin
-        Nmin = N_error(imin); % N with minimal error
+        %imin = find(N_error(:,2) == Emin); % index of the Emin
+        Nmin = N_error(N_error(:,2) == Emin); % N with minimal error
         results(iKs,:) = {Ks, Nmin, Emin, N_error}; % store results
 
         Ks_Nmin(iKs,1) = Ks;
@@ -65,7 +66,7 @@ if strcmp(VarObs, 'Ks')
         fError = figure(1); clf;
         semilogy(N_error(:,1),N_error(:,2))
         xlabel('N');
-        ylabel('Error (mps.m⁻³)');
+        ylabel('Mean Square Error');
         ttl = ['Ks = ' num2str(Ks) 'm².s⁻¹ ; Ws = ' num2str(Ws) 'm.s⁻¹'];
         title(ttl)
         
@@ -73,47 +74,48 @@ if strcmp(VarObs, 'Ks')
             num2str(min(N_test)),'-',num2str(length(N_test)),'-',...
             num2str(max(N_test))];
         exportgraphics(fError,[path, 'ErrorKs_', fname,'.eps'],'ContentType','vector');
+        savefig(fError,[path, 'ErrorKs_', fname,'.fig']);
     end
 
     
-elseif strcmp(VarObs, 'Ws')
-    Ws_Nmin = zeros(length(Ws_test),2);
-    iWs = 0;
-    for Ws = Ws_test
-        iWs = iWs+1;
-
-        N_error = zeros(length(N_test),2);
-        iN = 0;
-        for N = N_test
-            iN = iN+1;
-            erroriN = Transport_Eulerian(N, Ks, Ws);
-            N_error(iN,1) = N;
-            N_error(iN,2) = erroriN;
-        end
-
-        Emin = min(N_error(:,2)); % minimal error
-        imin = find(N_error(:,2) == Emin); % index of the Emin
-        Nmin = N_error(imin); % N with minimal error
-        results(iWs,:) = {Ws, Nmin, Emin, N_error}; % store results
-
-        Ws_Nmin(iWs,1) = Ws;
-        Ws_Nmin(iWs,2) = Nmin;
-
-        inter = [inter '-' num2str(Ws)];
-        
-        %% Plot error
-        fError = figure(1); clf;
-        semilogy(N_error(:,1),N_error(:,2))
-        xlabel('N');
-        ylabel('Error (mps.m⁻³)');
-        ttl = ['Ks = ' num2str(Ks) 'm².s⁻¹ ; Ws = ' num2str(Ws) 'm.s⁻¹'];
-        title(ttl)
-        
-        fname = ['Ks', num2str(Ks),'_Ws', num2str(Ws),'_N',...
-            num2str(min(N_test)),'-',num2str(length(N_test)),'-',...
-            num2str(max(N_test))];
-        exportgraphics(fError,[path,'ErrorWs_',fname,'.eps'],'ContentType','vector');
-    end    
+% elseif strcmp(VarObs, 'Ws')
+%     Ws_Nmin = zeros(length(Ws_test),2);
+%     iWs = 0;
+%     for Ws = Ws_test
+%         iWs = iWs+1;
+% 
+%         N_error = zeros(length(N_test),2);
+%         iN = 0;
+%         for N = N_test
+%             iN = iN+1;
+%             erroriN = Transport_Eulerian(N, Ks, Ws);
+%             N_error(iN,1) = N;
+%             N_error(iN,2) = erroriN;
+%         end
+% 
+%         Emin = min(N_error(:,2)); % minimal error
+%         imin = find(N_error(:,2) == Emin); % index of the Emin
+%         Nmin = N_error(imin); % N with minimal error
+%         results(iWs,:) = {Ws, Nmin, Emin, N_error}; % store results
+% 
+%         Ws_Nmin(iWs,1) = Ws;
+%         Ws_Nmin(iWs,2) = Nmin;
+% 
+%         inter = [inter '-' num2str(Ws)];
+%         
+%         %% Plot error
+%         fError = figure(1); clf;
+%         semilogy(N_error(:,1),N_error(:,2))
+%         xlabel('N');
+%         ylabel('Error (mps.m⁻³)');
+%         ttl = ['Ks = ' num2str(Ks) 'm².s⁻¹ ; Ws = ' num2str(Ws) 'm.s⁻¹'];
+%         title(ttl)
+%         
+%         fname = ['Ks', num2str(Ks),'_Ws', num2str(Ws),'_N',...
+%             num2str(min(N_test)),'-',num2str(length(N_test)),'-',...
+%             num2str(max(N_test))];
+%         exportgraphics(fError,[path,'ErrorWs_',fname,'.eps'],'ContentType','vector');
+%     end    
 end
 
 %% Plot errors on the same fig
@@ -127,40 +129,45 @@ for j = 1:length(Ks_test)
 end
 legend('Location','best');
 xlabel('N');
-ylabel('Error (mps.m⁻³)');
+ylabel('Mean Square Error');
 hold off
 
 %% Plot min results
 fNmin = figure(2); clf;
 
 if strcmp(VarObs, 'Ks')
-    plot(Ks_Nmin(:,1), Ks_Nmin(:,2))
+    s = pcolor([results{:,1}], [0 max(Ks_Nmin(:,2))], [results{:,3};results{:,3}]);
+    s.FaceColor = 'interp';
+    hold on
+    plot(Ks_Nmin(:,1), Ks_Nmin(:,2), 'm')
     xlabel('Ks (m².s⁻¹)');
     ylabel('N_m_i_n');
-        
-elseif strcmp(VarObs, 'Ws')
-    plot(Ws_Nmin(:,1), Ws_Nmin(:,2))
-    xlabel('Ws (m.s⁻¹)');
-    ylabel('N_m_i_n');
+    hold off
+% elseif strcmp(VarObs, 'Ws')
+%     plot(Ws_Nmin(:,1), Ws_Nmin(:,2))
+%     xlabel('Ws (m.s⁻¹)');
+%     ylabel('N_m_i_n');
 end
 
 
 %% Save results
 
 if strcmp(VarObs, 'Ks')
+    
     files = ['Ks', num2str(min(Ks_test)),'-',...
         num2str(length(Ks_test)),'-', num2str(max(Ks_test)),'_Ws',...
         num2str(Ws),'_N',num2str(min(N_test)),'-',num2str(length(N_test)),...
         '-', num2str(max(N_test))];
         
-elseif strcmp(VarObs, 'Ws')
-    files = ['Ws', inter,'_Ks', num2str(Ks),'_N',...
-    num2str(min(N_test)),'-',num2str(length(N_test)),'-', num2str(max(N_test))];
+% elseif strcmp(VarObs, 'Ws')
+%     files = ['Ws', inter,'_Ks', num2str(Ks),'_N',...
+%     num2str(min(N_test)),'-',num2str(length(N_test)),'-', num2str(max(N_test))];
 end
 
-save([files,'.mat'], 'results', [VarObs '_Nmin'])
+save([path,files,'.mat'], 'results', [VarObs '_Nmin'])
 
 %% Save plot
-exportgraphics(fError2,[path, 'Error2_', files, '.eps'],'ContentType','vector');
+exportgraphics(fError2,[path, 'ErrorUnit_', files, '.eps'],'ContentType','vector');
+savefig(fError2,[path, 'ErrorUnit_', files, '.fig']);
 exportgraphics(fNmin,[path, 'Nmin_', files, '.eps'],'ContentType','vector');
 

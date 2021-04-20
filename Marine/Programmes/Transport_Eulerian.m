@@ -1,4 +1,4 @@
-function [error] = Transport_Eulerian(N, Ks, v)
+function [error] = Transport_Eulerian(N, Ks)
 %UNTITLED3 Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -49,7 +49,6 @@ C=max(0*C,C);
     
 %% 1) calculer le profil de concentration associé à Ws
 Concentration(1,:)=C;
-row = 1000;
 
 % Determiner rho eau
 DensiteFevrierRhoma
@@ -61,7 +60,8 @@ InitialisationVitesseTransport
 rop=1010.5;
 S=rop./row;     D_=((g*(abs(S-1))/nuw^2).^(1/3))*D;
 Ws=eval(['Vitesse' cell2mat(Nom(indNom)) '(D,S,D_);']);
-% Ws = ones(size(Ws))*v;
+%Ws = ones(size(Ws))*mean(Ws);
+Ws = ones(size(Ws))*mean(Ws);
 u=Ws; u(rop<row)=-Ws(rop<row);
 
 % Analytical solution at equilibrium
