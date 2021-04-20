@@ -61,7 +61,7 @@ InitialisationVitesseTransport
 rop=1010.5;
 S=rop./row;     D_=((g*(abs(S-1))/nuw^2).^(1/3))*D;
 Ws=eval(['Vitesse' cell2mat(Nom(indNom)) '(D,S,D_);']);
-Ws = ones(size(Ws))*v;
+% Ws = ones(size(Ws))*v;
 u=Ws; u(rop<row)=-Ws(rop<row);
 
 % Analytical solution at equilibrium
