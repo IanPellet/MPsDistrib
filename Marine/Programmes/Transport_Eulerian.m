@@ -102,10 +102,10 @@ while OnContinue
    end
 end
 
-
-Ccalc = C_analytical(v, Ks, z_, sum(C*dz), L);
+Ccalc = C_analytical(mean(Ws), mean(Ks), z_, sum(C*dz), L);
 error = MSE(C,Ccalc) ;
-disp(['Error analytical // model : ', num2str( error), ''])
+disp(['MSE analytical // model : ', num2str( error ), ' MP.m^-3'])
+
 
 end
 
