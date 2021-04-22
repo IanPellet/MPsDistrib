@@ -1,4 +1,4 @@
-function [z_, CfinalNorm] = varMP_model(D, rhoP, nPart, dt, tf, dt_test, WindSpeed, month, path)
+function [z_, CfinalNorm] = varMP_model(D, rhoP, nPart, dt, tf, dt_test, WindSpeed, month, Lon0, Lat0, path)
 %VARMP_MODEL Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -6,6 +6,11 @@ fprintf(['\n\n\n--------------------- D = ' num2str(D)...
     ' -- rhoP = ' num2str(rhoP) ' ---------------------\n\n'])
 
 clear Concentration err
+
+ ModeleHydro='2012RHOMA_arome_003.nc';
+    SauvegardeModeleHydro=['DonneeBase' ModeleHydro(1:end-3)];
+    load(SauvegardeModeleHydro)
+
 %% Speed computation formulas
 Nom=[... 
     ;{'Nielsen'}...%Nielsen (1992)
@@ -15,7 +20,9 @@ Nom=[...
 indNom=3;
 
 %% Water column parameters
-L = 50;
+[I0,J0]=ReperePoint(Lon,Lat,Lon0,Lat0);
+L = H0(I0,J0);
+% L = 50;
 N=50;  dz= L/N;  z=0:dz:L; % z : boundaries of the meshes
 z_=(z(1:end-1)+z(2:end))/2; % middle of each mesh  
 

@@ -1,7 +1,11 @@
-path = '../../Ian/Results/varMP/';
+path = '../Results/varMP/';
+
+load('../Data/stationLonLat_CEREGE.mat','station')
 
 wind = 10; % km/h
 month = 02;
+lon0 = station(1,'Lon').Variables;
+lat0 = station(1,'Lat').Variables;
 
 D_test = [750 1250 1750 2250]*1e-6;
 % rhop_test = linspace(850,1300, 10);
@@ -18,7 +22,7 @@ i = 0;
 for D = D_test
     for rhop = rhop_test
         i = i+1;
-        [Zi, Ci] = varMP_model(D, rhop, nPart, dt, tf, dt_test, wind, month, path);
+        [Zi, Ci] = varMP_model(D, rhop, nPart, dt, tf, dt_test, wind, month, lon0, lat0, path);
         results(i,:) = {D, rhop, Zi, Ci}; % Store values
     end
 end
