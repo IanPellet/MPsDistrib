@@ -24,8 +24,8 @@ if strcmp(VarObs, 'Ks')
 else
     disp('Invalid argument VarObs')
 end
-path = '../../Ian/Results/';
-Ws = 0;
+%path = '../../Ian/Results/'; 
+path = './';
 %v_test = [1e-4 1e-3 1e-2 1e-1];
 %v_test = linspace(1e-2, 1e-1, 4);
 %v = 1e-3;
@@ -47,7 +47,7 @@ if strcmp(VarObs, 'Ks')
         iN = 0;
         for N = N_test
             iN = iN+1;
-            erroriN = Transport_Eulerian(N, Ks);
+            [erroriN, Ws] = Transport_Eulerian(N, Ks);
             N_error(iN,1) = N;
             N_error(iN,2) = erroriN;
         end
@@ -170,4 +170,5 @@ save([path,files,'.mat'], 'results', [VarObs '_Nmin'])
 exportgraphics(fError2,[path, 'ErrorUnit_', files, '.eps'],'ContentType','vector');
 savefig(fError2,[path, 'ErrorUnit_', files, '.fig']);
 exportgraphics(fNmin,[path, 'Nmin_', files, '.eps'],'ContentType','vector');
+savefig(fNmin,[path, 'Nmin_', files, '.fig']);
 

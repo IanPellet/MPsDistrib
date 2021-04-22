@@ -1,4 +1,4 @@
-function [error] = Transport_Eulerian(N, Ks)
+function [error, v] = Transport_Eulerian(N, Ks)
 %UNTITLED3 Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -106,6 +106,6 @@ Ccalc = C_analytical(mean(Ws), mean(Ks), z_, sum(C*dz), L);
 error = MSE(C,Ccalc) ;
 disp(['MSE analytical // model : ', num2str( error ), ' MP.m^-3'])
 
-
+v = mean(Ws);
 end
 
