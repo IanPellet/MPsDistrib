@@ -24,7 +24,7 @@ load(SauvegardeModeleHydro)
 %[I0,J0]=ReperePoint(Lon,Lat,Lon0,Lat0);
 
 tf= 100*86400; dtmax=0.01; 
-Tdes=60*60; dConcMax=5E-5; % Tdes : intervalle de temps entre les tests d'équilibre 
+Tdes=60*60; dConcMax=5E-8; % Tdes : intervalle de temps entre les tests d'équilibre 
 % dConcMax : seuil de delta de concentration à partir duquel on de considère à l'équilibre 
 dh=0.15; % profondeur sur laquelle le filet prélève
 
@@ -57,12 +57,12 @@ Nu = ones(size(z_))*Ks;
 
 InitialisationVitesseTransport
 
-rop=1010.5;
-S=rop./row;     D_=((g*(abs(S-1))/nuw^2).^(1/3))*D;
+rhop=1010.5;
+S=rhop./row;     D_=((g*(abs(S-1))/nuw^2).^(1/3))*D;
 Ws=eval(['Vitesse' cell2mat(Nom(indNom)) '(D,S,D_);']);
 %Ws = ones(size(Ws))*mean(Ws);
 Ws = ones(size(Ws))*mean(Ws);
-u=Ws; u(rop<row)=-Ws(rop<row);
+u=Ws; u(rhop<row)=-Ws(rhop<row);
 
 % Analytical solution at equilibrium
 %Ccalc = C_analytical(Ws, Ks,x_, C);
