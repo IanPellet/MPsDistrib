@@ -25,7 +25,7 @@ else
     disp('Invalid argument VarObs')
 end
 %path = '../../Ian/Results/'; 
-path = './';
+path = '../Results/Nmin_Ks/';
 Ws = 0;
 %v_test = [1e-4 1e-3 1e-2 1e-1];
 %v_test = linspace(1e-2, 1e-1, 4);
@@ -48,15 +48,13 @@ if strcmp(VarObs, 'Ks')
         iN = 0;
         for N = N_test
             iN = iN+1;
-            erroriN = Transport_Eulerian(N, Ks);
+            [erroriN, Ws] = Transport_Eulerian(N, Ks);
             N_error(iN,1) = N;
             N_error(iN,2) = erroriN;
         end
 
         Emin = min(N_error(:,2)); % minimal error
-        %imin = find(N_error(:,2) == Emin); % index of the Emin
         Nmin = N_error(N_error(:,2) == Emin); % N with minimal error
-        %results(iKs,:) = {Ks, Nmin, Emin, N_error}; % store results
         results.bilan(iKs,:) = {Ks, Nmin, Emin}; % store results
         results.Ks(iKs) = Ks; % store results
         results.N = N_error(:,1); % store results
@@ -78,18 +76,13 @@ if strcmp(VarObs, 'Ks')
         fname = ['Ks', num2str(Ks),'_Ws', num2str(Ws),'_N',...
             num2str(min(N_test)),'-',num2str(length(N_test)),'-',...
             num2str(max(N_test))];
-%         exportgraphics(fError,[path, 'ErrorKs_', fname,'.eps'],'ContentType','vector');
-%         savefig(fError,[path, 'ErrorKs_', fname,'.fig']);
+        exportgraphics(fError,[path, 'errorKs/ErrorKs_', fname,'.eps'],'ContentType','vector');
+        savefig(fError,[path, 'fig/ErrorKs_', fname,'.fig']);
     end   
 end
 
 %% Plot errors on the same fig
-% fError2 = figure(3); clf;
-% for j = 1:length(Ks_test)
-%     j_name (j)= ['Ks = ' num2str(Ks_test(j)) 'm².s⁻¹'];
-% end
-%     disp(j_name)
-%     semilogy(results.N,results.Error,'DisplayName',j_name)
+fError2 = figure(3); clf;
 semilogy(results.N,results.Error)
 hold on
 leg = {};
@@ -107,6 +100,8 @@ fNmin = figure(2); clf;
 
 if strcmp(VarObs, 'Ks')
     pcolor(results.Ks,results.N,results.Error');
+    c = colorbar;
+    c.Label.String = 'Mean Square Error';
     hold on
     plot(Ks_Nmin(:,1), Ks_Nmin(:,2), 'm')
     xlabel('Ks (m².s⁻¹)');
@@ -129,7 +124,7 @@ end
 save([path,files,'.mat'], 'results', [VarObs '_Nmin'])
 
 %% Save plot
-% exportgraphics(fError2,[path, 'ErrorUnit_', files, '.eps'],'ContentType','vector');
-% savefig(fError2,[path, 'ErrorUnit_', files, '.fig']);
-% exportgraphics(fNmin,[path, 'Nmin_', files, '.eps'],'ContentType','vector');
-
+exportgraphics(fError2,[path, 'ErrorUnit_', files, '.eps'],'ContentType','vector');
+savefig(fError2,[path, 'fig/ErrorUnit_', files, '.fig']);
+exportgraphics(fNmin,[path, 'Nmin_', files, '.eps'],'ContentType','vector');
+savefig(fNmin,[path, 'fig/Nmin_', files, '.fig']);
