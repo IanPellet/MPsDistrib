@@ -23,7 +23,7 @@ indNom=3;
 [I0,J0]=ReperePoint(Lon,Lat,Lon0,Lat0);
 L = H0(I0,J0);
 % L = 50;
-N=50;  dz= L/N;  z=0:dz:L; % z : boundaries of the meshes
+N = fix(L);  dz= L/N;  z=0:dz:L; % z : boundaries of the meshes
 z_=(z(1:end-1)+z(2:end))/2; % middle of each mesh  
 
 %% Speed initialisation
