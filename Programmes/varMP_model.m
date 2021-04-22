@@ -1,8 +1,10 @@
-function [z_, CfinalNorm] = varMP_model(D, rhoP, nPart, dt, tf, dt_test)
+function [z_, CfinalNorm] = varMP_model(D, rhoP, nPart, dt, tf, dt_test, WindSpeed, month)
 %VARMP_MODEL Summary of this function goes here
 %   Detailed explanation goes here
 
-global L
+fprintf(['\n\n\n--------------------- D = ' num2str(D)...
+    ' -- rhoP = ' num2str(rhoP) ' ---------------------\n\n'])
+
 clear Concentration err
 %% Speed computation formulas
 Nom=[... 
@@ -12,43 +14,34 @@ Nom=[...
    ];
 indNom=3;
 
-%% Load hydrodinamic model
-ModeleHydro='2012RHOMA_arome_003.nc';
-SauvegardeModeleHydro=['DonneeBase' ModeleHydro(1:end-3)];
-load(SauvegardeModeleHydro)
-
 %% Water column parameters
 L = 50;
 N=50;  dz= L/N;  z=0:dz:L; % z : boundaries of the meshes
-z_=(z(1:end-1)+z(2:end))/2; % middle of each mesh
-z0=L*Sigma;   
-
-%% Particules initialisation
-% D=350e-6; % Particle diametre
-% rop=1010.5; % Particle density
-
-z_part = linspace(0, L, nPart);
+z_=(z(1:end-1)+z(2:end))/2; % middle of each mesh  
 
 %% Speed initialisation
+[KZ_day,Row_day,z_day,z__day] = KsSalTemp(WindSpeed, month);
 
-DensiteFevrierRhoma 
-
-[K,dK] = wcp_interpolation(z0,KZ_Fev10,-z_); % Diffusivity
+[K,dK] = wcp_interpolation(z_day,KZ_day,-z_); % Diffusivity
 % K_val = Ks;
 % K = ones(size(z))*K_val;
 % dK = zeros(size(z));
 
-InitialisationVitesseTransport
-S=rhoP./row;
+g = 9.81 ; %m.s-1 (gravitational acceleration)
+nuw = 1.1*10^-6; %m2.s-1 (kinematic viscosity of sea water)
+rhow = interp1(-z__day,Row_day,z,'pchip'); % density of sea water 
+
+S=rhoP./rhow;
 D_=((g*(abs(S-1))/nuw^2).^(1/3))*D;
 Ws=eval(['Vitesse' cell2mat(Nom(indNom)) '(D,S,D_);']);
-u=Ws; u(rhoP<row)=-Ws(rhoP<row);
+u=Ws; u(rhoP<rhow)=-Ws(rhoP<rhow);
 
 %% Particules matrix definition
 % part = [z1 z2 ... zn ; 
 %         u1 u2 ... un ;
 %         K1 K2 ... Kn ;
 %        dK1 dK2...dK3]
+z_part = linspace(0, L, nPart);
 index = max(1, cast(z_part/dz, 'uint32'));
 u_part = u(index);
 K_part = K(index);
@@ -136,8 +129,8 @@ path = '../../Ian/Results/varMP/';
 prof_name = ['profile_D',num2str(D), '_rhop',num2str(rhoP),...
     '_nPart',num2str(nPart), '_dt', num2str(dt),...
     '_tf', num2str(tf), '_dtest', num2str(dt_test)];
-exportgraphics(prof,[path,prof_name,'.eps'],'ContentType','vector');
-savefig(prof,[path,'fig/',prof_name,'.fig']);
+% exportgraphics(prof,[path,prof_name,'.eps'],'ContentType','vector');
+% savefig(prof,[path,'fig/',prof_name,'.fig']);
 
 end
 

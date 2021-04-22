@@ -7,37 +7,36 @@ SauvegardeModeleHydro=['DonneeBase' ModeleHydro(1:end-3)];
 
 load(SauvegardeModeleHydro)
 load(FichDiffusion)
-TAU=sqrt(TauX.^2 + TauY.^2);
 
+TAU=sqrt(TauX.^2 + TauY.^2); % TAU = tension de surface liée au vent
 % plot(TAU)
-
-TAUJanFev=TAU(1:24*(31+29));
+TAUJanFev=TAU(1:24*(31+29)); % Extract data from jan and feb
 
 %%%Contampump 10.02.20 (10:22 a 11:54 Vent moyen=7.7 Force2)
-Vitesse10FevKH=7.7;
-Vitesse10FevMS=Vitesse10FevKH/3.6;
+Vitesse10FevKH=7.7; % Wind speed km/h
+Vitesse10FevMS=Vitesse10FevKH/3.6; % Wind speed m/s
 
-Cd10Fev=10^-3*(0.43+0.096*Vitesse10FevMS); %Geernaert
+Cd10Fev=10^-3*(0.43+0.096*Vitesse10FevMS); %Geernaert               %% ????
 
 TAU10Fev=1.292*Cd10Fev.*Vitesse10FevMS.*Vitesse10FevMS;
 
 % RHOMAJTAU10=find(TAU==TAU10Fev);
-JRhomaTAU10=find(abs(TAUJanFev-TAU10Fev) < 0.0001);
+JRhomaTAU10=find(abs(TAUJanFev-TAU10Fev) < 0.0001); % Find a day with similar wind in our data
 
 %%%Contampump 03.02.20 (10:30 a 11:11 Vent moyen=10.05 Force2)
-Vitesse03FevKH=10.05;
-Vitesse03FevMS=Vitesse03FevKH/3.6;
+Vitesse03FevKH=10.05; % Wind speed km/h
+Vitesse03FevMS=Vitesse03FevKH/3.6; % Wind speed m/s
 
-Cd03Fev=10^-3*(0.43+0.096*Vitesse03FevMS); %Geernaert
+Cd03Fev=10^-3*(0.43+0.096*Vitesse03FevMS); %Geernaert               %% ????
 
 TAU03Fev=1.292*Cd03Fev.*Vitesse03FevMS.*Vitesse03FevMS;
 
-JRhomaTAU03=find(abs(TAUJanFev-TAU03Fev) < 0.000005);
+JRhomaTAU03=find(abs(TAUJanFev-TAU03Fev) < 0.000005); % Find a day with similar wind in our data
 
 
 %%%--------------Donnees Temperature/Salinite Rhoma 10 Fevrier
 
-Lon0= 5.29;Lat0=43.24; %point Somlit
+Lon0= 5.29;Lat0=43.24; %point Somlit 
 Temps0=JRhomaTAU10/24; 
 % ncdisp('2012RHOMA_arome_003.nc')
 T0=datenum(str2num(datestr(Temps(1),'yyyy')),1,1)-1;
