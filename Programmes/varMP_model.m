@@ -1,4 +1,4 @@
-function [z_, CfinalNorm] = varMP_model(D, rhoP, nPart, dt, tf, dt_test, WindSpeed, month)
+function [z_, CfinalNorm] = varMP_model(D, rhoP, nPart, dt, tf, dt_test, WindSpeed, month, path)
 %VARMP_MODEL Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -109,8 +109,6 @@ end
 CfinalNorm = CpresentNorm;
 %% Plot end profile
 prof = figure(1);
-clf
-hold on
 plot(CfinalNorm,-z_, 'DisplayName',...
     join(['D = ',num2str(D*1e6),'µm ; rhop = ',num2str(rhoP),'kg.m⁻³']))
 legend('Location','best')
@@ -125,12 +123,13 @@ ttl = join(['D = ',num2str(D*1e6),'µm ; rhop = ',num2str(rhoP),'kg.m⁻³']);
 title(ttl)
 hold off
 
-path = '../../Ian/Results/varMP/';
+% path = '../../Ian/Results/varMP/';
 prof_name = ['profile_D',num2str(D), '_rhop',num2str(rhoP),...
     '_nPart',num2str(nPart), '_dt', num2str(dt),...
-    '_tf', num2str(tf), '_dtest', num2str(dt_test)];
-% exportgraphics(prof,[path,prof_name,'.eps'],'ContentType','vector');
-% savefig(prof,[path,'fig/',prof_name,'.fig']);
+    '_tf', num2str(tf), '_dtest', num2str(dt_test),'_wind', num2str(WindSpeed),...
+    '_month', num2str(month)];
+exportgraphics(prof,[path,prof_name,'.eps'],'ContentType','vector');
+savefig(prof,[path,'fig/',prof_name,'.fig']);
 
 end
 
