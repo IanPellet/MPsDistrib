@@ -1,6 +1,8 @@
-function [z_, CfinalNorm] = varMP_model(D, rhoP, nPart, dt, tf, dt_test, WindSpeed, month, Lon0, Lat0, path)
+function [z_, CfinalNorm] = varMP_model(D, rhoP, type, nPart, tf, dt_test, WindSpeed, month, Lon0, Lat0, path)
 %VARMP_MODEL Summary of this function goes here
 %   Detailed explanation goes here
+
+global g nuw rhow L
 
 fprintf(['\n\n\n--------------------- D = ' num2str(D)...
     ' -- rhoP = ' num2str(rhoP) ' ---------------------\n\n'])
@@ -13,16 +15,20 @@ clear Concentration err
 
 %% Speed computation formulas
 Nom=[... 
+    ;{'Khatmullina'}...%Khatmullina (2016)
+    ;{'Ahrens'}...%Ahrens (2000)
     ;{'Nielsen'}...%Nielsen (1992)
     ;{'Soulsby'}...%Soulsby (1997)
-    ;{'Ahrens'}...%Ahrens (2000)
    ];
-indNom=3;
+indNom = type+1;
+if type ~= 1
+    disp("WARNING : Speed formula not implemented for this type of particle !");
+end
 
 %% Water column parameters
 [I0,J0]=ReperePoint(Lon,Lat,Lon0,Lat0);
-L = H0(I0,J0);
-% L = 50;
+% L = H0(I0,J0);
+L = 50;
 N = fix(L);  dz= L/N;  z=0:dz:L; % z : boundaries of the meshes
 z_=(z(1:end-1)+z(2:end))/2; % middle of each mesh  
 
@@ -43,20 +49,26 @@ D_=((g*(abs(S-1))/nuw^2).^(1/3))*D;
 Ws=eval(['Vitesse' cell2mat(Nom(indNom)) '(D,S,D_);']);
 u=Ws; u(rhoP<rhow)=-Ws(rhoP<rhow);
 
+%% Time step init
+dt = 10;
+ddK = diff(dK)/dz;
+dt = min(dt, abs(min(1./ddK)/10)); % condition dt<<min(1/ddK) 
+dt = min(dt, dz/max(abs(u))); % condition dt < dz/max|u|
+
 %% Particules matrix definition
 % part = [z1 z2 ... zn ; 
 %         u1 u2 ... un ;
 %         K1 K2 ... Kn ;
 %        dK1 dK2...dK3]
 z_part = linspace(0, L, nPart);
-index = max(1, cast(z_part/dz, 'uint32'));
+index = max(1, fix(z_part/dz));
 u_part = u(index);
 K_part = K(index);
 dK_part = dK(index);
 part = [z_part ; u_part ; K_part ; dK_part];
 
 
-%% Plot initial conditions
+%% Initial conditions
 h_init = histogram(part(1,:), "BinEdges", z, 'Visible', 'off').Values;
 CiNorm = h_init/dz*N/nPart;
 
