@@ -16,7 +16,7 @@ size_test = [1250 1750]*1e-6; % particles size tested (m)
 % rhop_test = linspace(850,1300, 10);
 rhop_test = [1010.5]; % particles density (kg.m⁻³)
 type_dict = containers.Map({'fibre','fragment','film','mousse'},0:3); % possible types
-type_name = 'fragment'; % choose a type
+type_name = 'fibre'; % choose a type
 type = type_dict(type_name); % corresponding int
 
 nPart = 50e3; % number of particles

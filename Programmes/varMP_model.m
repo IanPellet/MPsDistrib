@@ -21,7 +21,7 @@ Nom=[...
     ;{'Soulsby'}...%Soulsby (1997)
    ];
 indNom = type+1;
-if type ~= 1
+if type > 1
     disp("WARNING : Speed formula not implemented for this type of particle !");
 end
 
@@ -44,9 +44,11 @@ g = 9.81 ; %m.s-1 (gravitational acceleration)
 nuw = 1.1*10^-6; %m2.s-1 (kinematic viscosity of sea water)
 rhow = interp1(-z__day,Row_day,z,'pchip'); % density of sea water 
 
+g_red = g.*(rhoP-rhow)./rhow;
 S=rhoP./rhow;
 D_=((g*(abs(S-1))/nuw^2).^(1/3))*D;
-Ws=eval(['Vitesse' cell2mat(Nom(indNom)) '(D,S,D_);']);
+l = 0.5e-3;
+Ws=eval(['Vitesse' cell2mat(Nom(indNom)) '(D,S,D_,l,g_red);']);
 u=Ws; u(rhoP<rhow)=-Ws(rhoP<rhow);
 
 %% Time step init

@@ -1,4 +1,4 @@
-function [ w ] = VitesseAhrens( d, S, D_)
+function [ w ] = VitesseAhrens( d, S, ~, ~,~)
 %UNTITLED2 Summary of this function goes here
 %   Detailed explanation goes here
 
