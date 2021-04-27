@@ -1,20 +1,23 @@
-function [TimeSimu,PartPos,z,z_,K] = RunSimu(Npart,H,N,tf,dt_test)
+function [TimeSimu,PartPos,z,z_,K] = RunSimu(eq,Npart,H,N,tf,dt_test)
 %%RUNSIMU Run simulation of the Lagrandian diffusivity model
 
-if nargin < 5
+if nargin < 6
     dt_test = 60*60*2; % test time interval (s)
 end
-if nargin < 4 
+if nargin < 5 
     tf = 1e5; % simulation time (s)
 end
-if nargin < 3
+if nargin < 4
     N = 500;
 end
-if nargin < 2
+if nargin < 3
     H = 50;
 end
-if nargin == 0
+if nargin < 2
     Npart = 5000;
+end
+if nargin < 1
+    eq = 'eq3_NaiveRandomWalk';
 end
 
 %% Water column
@@ -63,7 +66,9 @@ while OnContinue
     % Particules update
     zi = Part(1,:);
     Kzi = Part(2,:);
-    newz = eq3_NaiveRandomWalk(zi,Kzi,dt);
+    dKzi = Part(3,:);
+%     newz = eq3_NaiveRandomWalk(zi,Kzi,dKzi,K,dt,dz);
+    newz = eval([eq '(zi,Kzi,dKzi,K,dt,dz)']);
     Part(1,:) = newz;
     % Boundary conditions
     Part(1,newz < 0) = -newz(newz < 0);

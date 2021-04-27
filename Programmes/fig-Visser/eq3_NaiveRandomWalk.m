@@ -1,4 +1,4 @@
-function [znew] = eq3_NaiveRandomWalk(zi,Kzi,dt)
+function [znew] = eq3_NaiveRandomWalk(zi,Kzi,~,~,dt,~)
 %EQ3_NAIVERANDOMWALK Diffusivity model
 %   
 

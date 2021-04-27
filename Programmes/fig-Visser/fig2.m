@@ -6,7 +6,7 @@ N = 50;
 tf = 1e5;
 dt_test = 60*60;
 
-[TimeSimu,PartPos,z,z_,K] = RunSimu(Npart,H,N,tf,dt_test);
+[TimeSimu,PartPos,z,z_,K] = RunSimu('eq3_NaiveRandomWalk',Npart,H,N,tf,dt_test);
 
 density = zeros(length(z_),length(TimeSimu));
 for t = 1:length(TimeSimu)
