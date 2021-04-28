@@ -1,4 +1,4 @@
-function [TimeSimu,PartPos,z,z_,K] = RunSimu(eq,Npart,H,N,tf,dt_test)
+function [TimeSimu,PartPos,z,z_,K,dK] = RunSimu(eq,Npart,H,N,tf,dt_test)
 %%RUNSIMU Run simulation of the Lagrandian diffusivity model
 
 if nargin < 6
@@ -17,7 +17,7 @@ if nargin < 2
     Npart = 5000;
 end
 if nargin < 1
-    eq = 'eq3_NaiveRandomWalk';
+    eq = 'eq6_CorrectedRandomWalk';
 end
 
 %% Water column
@@ -25,8 +25,8 @@ dz= H/N;  z=0:dz:H; % z : boundaries of the meshes
 z_=(z(1:end-1)+z(2:end))/2; % middle of each mesh
 
 [K, dK] = Diffusivity(z,z_,dz);
-% K = 0.5./z_;
-% dK = ones(size(K))*0.5/dz;
+% K = (-z_.^2 + H*z_ + 1)/10000;
+% dK = (-2*z_ +H)/10000;
 
 %% Particles
 z_part = linspace(0, H, Npart);
@@ -73,6 +73,8 @@ while OnContinue
     % Boundary conditions
     Part(1,newz < 0) = -newz(newz < 0);
     Part(1,newz > H) = H - newz(newz > H) + H;
+%     Part(1,newz < 0) = 0;
+%     Part(1,newz > H) = H;
     
     Part = UpdatePart(Part,K,dK,dz);
     
