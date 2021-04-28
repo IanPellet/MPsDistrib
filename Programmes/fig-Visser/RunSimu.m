@@ -67,14 +67,11 @@ while OnContinue
     zi = Part(1,:);
     Kzi = Part(2,:);
     dKzi = Part(3,:);
-%     newz = eq3_NaiveRandomWalk(zi,Kzi,dKzi,K,dt,dz);
     newz = eval([eq '(zi,Kzi,dKzi,K,dt,dz)']);
     Part(1,:) = newz;
     % Boundary conditions
     Part(1,newz < 0) = -newz(newz < 0);
     Part(1,newz > H) = H - newz(newz > H) + H;
-%     Part(1,newz < 0) = 0;
-%     Part(1,newz > H) = H;
     
     Part = UpdatePart(Part,K,dK,dz);
     

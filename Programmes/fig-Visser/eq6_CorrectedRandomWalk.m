@@ -1,7 +1,6 @@
-function [znew] = eq6_CorrectedRandomWalk(zi,Kzi,dKzi,K,dt,dz)
+function [znew] = eq6_CorrectedRandomWalk(zi,Kzi,dKzi,~,dt,~)
 %EQ6_CORRECTEDRANDOMWALK Diffusivity model
 %   
-
     pd = makedist('Uniform', 'lower', -1, 'upper', 1);
     r = 1/3;
     R = random(pd,size(zi));
@@ -10,6 +9,5 @@ function [znew] = eq6_CorrectedRandomWalk(zi,Kzi,dKzi,K,dt,dz)
 %     KziOffset = K(index);
 %     znew = zi + dKzi*dt + R.*sqrt(2/r*KziOffset*dt);
     znew = zi + dKzi*dt + R.*sqrt(2/r*Kzi*dt);
-    
 end
 
