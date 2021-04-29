@@ -10,7 +10,7 @@ Lon0= 5.29;Lat0=43.24; %point Somlit
 H = H0(I0,J0); % depth
 % H = 55;
 N = fix(H);
-Npart = N*100;
+Npart = N*1e2;
 tf = 1e5;
 dt_test = 60*60;
 eq = 'eq6_CorrectedRandomWalk';
