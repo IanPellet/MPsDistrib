@@ -5,9 +5,11 @@ global L
 %disp(u)
 %disp(Nu)
 %disp(x)
-
-d = 1;
-pd = makedist('Normal', 'mu', 0, 'sigma', d);
+% 
+pd = makedist('Uniform', 'lower', -1, 'upper', 1);
+d = 1/3;
+% pd = makedist('Normal', 'mu', 0, 'sigma', 1);
+% d = 1;
 R = random(pd,size(x));
 new_x = x + dt*u + dKz*dt + R.*(2/d*Kz*dt).^(1/2);
 

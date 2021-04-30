@@ -1,4 +1,4 @@
-function [z_, CfinalNorm] = varMP_model(D, rhoP, type, nPart, tf, dt_test, WindSpeed, month, Lon0, Lat0, path)
+function [z_, CfinalNorm, PartPos] = varMP_model(D, rhoP, type, nPart, tf, dt_test, WindSpeed, month, Lon0, Lat0, path)
 %VARMP_MODEL Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -27,8 +27,9 @@ end
 
 %% Water column parameters
 [I0,J0]=ReperePoint(Lon,Lat,Lon0,Lat0);
-% L = H0(I0,J0);
-L = 50;
+L = H0(I0,J0);
+disp(L);
+% L = 50;
 N = fix(L);  dz= L/N;  z=0:dz:L; % z : boundaries of the meshes
 z_=(z(1:end-1)+z(2:end))/2; % middle of each mesh  
 
@@ -128,29 +129,32 @@ while OnContinue
     end
 end
 CfinalNorm = CpresentNorm;
-%% Plot end profile
-prof = figure(1);
-plot(CfinalNorm,-z_, 'DisplayName',...
-    join(['D = ',num2str(D*1e6),'µm ; rhop = ',num2str(rhoP),'kg.m⁻³']))
-legend('Location','best')
-ylim([-L 0])
-xlim([0 10])
-grid on
-inv = z(end:-1:1);
-yticks(-inv)
-xlabel("Normed concentration (mps.m⁻³)")
-ylabel("Depth (m)")
-ttl = join(['D = ',num2str(D*1e6),'µm ; rhop = ',num2str(rhoP),'kg.m⁻³']);
-title(ttl)
-hold off
 
-% path = '../../Ian/Results/varMP/';
-prof_name = ['profile_D',num2str(D), '_rhop',num2str(rhoP),...
-    '_nPart',num2str(nPart), '_dt', num2str(dt),...
-    '_tf', num2str(tf), '_dtest', num2str(dt_test),'_wind', num2str(WindSpeed),...
-    '_month', num2str(month)];
-exportgraphics(prof,[path,prof_name,'.eps'],'ContentType','vector');
-savefig(prof,[path,'fig/',prof_name,'.fig']);
+PartPos = part(1,:);
+
+%% Plot end profile
+% prof = figure(1);
+% plot(CfinalNorm,-z_, 'DisplayName',...
+%     join(['D = ',num2str(D*1e6),'µm ; rhop = ',num2str(rhoP),'kg.m⁻³']))
+% legend('Location','best')
+% ylim([-L 0])
+% % xlim([0 10])
+% grid on
+% inv = z(end:-1:1);
+% yticks(-inv)
+% xlabel("Normed concentration (mps.m⁻³)")
+% ylabel("Depth (m)")
+% ttl = join(['D = ',num2str(D*1e6),'µm ; rhop = ',num2str(rhoP),'kg.m⁻³']);
+% title(ttl)
+% hold off
+% 
+% % path = '../../Ian/Results/varMP/';
+% prof_name = ['profile_D',num2str(D), '_rhop',num2str(rhoP),...
+%     '_nPart',num2str(nPart), '_dt', num2str(dt),...
+%     '_tf', num2str(tf), '_dtest', num2str(dt_test),'_wind', num2str(WindSpeed),...
+%     '_month', num2str(month)];
+% exportgraphics(prof,[path,prof_name,'.eps'],'ContentType','vector');
+% savefig(prof,[path,'fig/',prof_name,'.fig']);
 
 end
 
