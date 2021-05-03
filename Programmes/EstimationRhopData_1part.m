@@ -42,7 +42,7 @@ end
 Ztest_ = DepthSample + dh/2;
 
 SizePart = 750*1e-6; % particles size tested (m)
-RhoP_test = 850:1var    0:950; % plage de densite a tester (kg.m⁻³)
+RhoP_test = 850:10:950; % plage de densite a tester (kg.m⁻³)
 
 type_dict = containers.Map({'fibre','fragment','film','mousse'},0:3); % possible types
 type_name = 'fibre'; % choose a type
@@ -75,15 +75,17 @@ for RhoP = RhoP_test
         end
     end
     ConcentrationModel = NpartModel/dh * (nPart/L) ; % on ramène le modèle à 1
-    alpho = mean(ConcentrationSample(ConcentrationModel>0)./ConcentrationModel(ConcentrationModel>0));
-%     alpho = ConcentrationSample/ConcentrationModel;
+%     alpho = mean(ConcentrationSample(ConcentrationModel>0)./ConcentrationModel(ConcentrationModel>0));
+%     alpha = ConcentrationSample\ConcentrationModel;
+    alpha = ConcentrationModel\ConcentrationSample;
     
-    Erreur = abs(ConcentrationModel.*alpho - ConcentrationSample)./ConcentrationSample;
+    
+    Erreur = abs(ConcentrationModel.*alpha - ConcentrationSample)./ConcentrationSample;
     meanErreur = mean(Erreur);
     
     Resultats(iRes).RhoP = RhoP;
     Resultats(iRes).ConcentrationModel = ConcentrationModel;
-    Resultats(iRes).Alpha = alpho;
+    Resultats(iRes).Alpha = alpha;
     Resultats(iRes).Erreur = Erreur;
     Resultats(iRes).MeanErreur = meanErreur;
 end
