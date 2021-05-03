@@ -20,23 +20,27 @@ Nom=[...
     ;{'Nielsen'}...%Nielsen (1992)
     ;{'Soulsby'}...%Soulsby (1997)
    ];
-indNom = type+1;
-if type > 1
-    disp("WARNING : Speed formula not implemented for this type of particle !");
-end
+indNom = 2;
+% indNom = type+1;
+% if type > 1
+%     disp("WARNING : Speed formula not implemented for this type of particle !");
+% end
 
 %% Water column parameters
-[I0,J0]=ReperePoint(Lon,Lat,Lon0,Lat0);
-L = H0(I0,J0);
-disp(L);
-% L = 50;
+% [I0,J0]=ReperePoint(Lon,Lat,Lon0,Lat0);
+% L = H0(I0,J0);
+% disp(L);
+L = 55;
 N = fix(L);  dz= L/N;  z=0:dz:L; % z : boundaries of the meshes
 z_=(z(1:end-1)+z(2:end))/2; % middle of each mesh  
 
 %% Speed initialisation
 [KZ_day,Row_day,z_day,z__day] = KsSalTemp(WindSpeed, month);
 
-[K,dK] = wcp_interpolation(z_day,KZ_day,-z_); % Diffusivity
+addpath('./fig-Visser/');
+% [K,dK] = wcp_interpolation(z_day,KZ_day,-z_); % Diffusivity
+[K,dK] = Diffusivity(z,z_,dz,0.5,0.01,KZ_day,z_day);
+
 % K_val = Ks;
 % K = ones(size(z))*K_val;
 % dK = zeros(size(z));
@@ -45,7 +49,7 @@ g = 9.81 ; %m.s-1 (gravitational acceleration)
 nuw = 1.1*10^-6; %m2.s-1 (kinematic viscosity of sea water)
 rhow = interp1(-z__day,Row_day,z,'pchip'); % density of sea water 
 
-g_red = g.*(rhoP-rhow)./rhow;
+g_red = g.*abs(rhoP-rhow)./rhow;
 S=rhoP./rhow;
 D_=((g*(abs(S-1))/nuw^2).^(1/3))*D;
 l = 0.5e-3;
@@ -117,7 +121,7 @@ while OnContinue
                 
         dC = max(abs(CpresentNorm - CpastNorm)/dt);
         
-        if (t>=tf || dC/sum(CpresentNorm)*100 <= 0.005)
+        if (t>=tf || dC/sum(CpresentNorm)*100 <= 0.0005)
            OnContinue = false;
         end
         
@@ -133,7 +137,7 @@ CfinalNorm = CpresentNorm;
 PartPos = part(1,:);
 
 %% Plot end profile
-% prof = figure(1);
+% figure(1)
 % plot(CfinalNorm,-z_, 'DisplayName',...
 %     join(['D = ',num2str(D*1e6),'µm ; rhop = ',num2str(rhoP),'kg.m⁻³']))
 % legend('Location','best')
@@ -148,6 +152,12 @@ PartPos = part(1,:);
 % title(ttl)
 % hold off
 % 
+% figure(2)
+% plot(dK,-z_)
+% 
+% figure(3)
+% plot(K,-z_)
+
 % % path = '../../Ian/Results/varMP/';
 % prof_name = ['profile_D',num2str(D), '_rhop',num2str(rhoP),...
 %     '_nPart',num2str(nPart), '_dt', num2str(dt),...

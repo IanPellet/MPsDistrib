@@ -15,15 +15,16 @@ SauvegardeModeleHydro=['DonneeBase' ModeleHydro(1:end-3)];
 load(SauvegardeModeleHydro)
 
 
-[I0,J0]=ReperePoint(Lon,Lat,Lon0,Lat0);
-L = H0(I0,J0);
+% [I0,J0]=ReperePoint(Lon,Lat,Lon0,Lat0);
+% L = H0(I0,J0);
+L = 55;
 
-DepthSample = [0 5 15 25 35 55]; % depth of samples (m)
-ConcentrationSample = [0.99117913922709/0.75 ,1.16012084592145,... % le manta à 0m ne récupère que 75% des particules
-    0.937931034482759,0.567505720823799,1.3265306122449,1.18213058419244]; % mps.m⁻³
-FilteredVolume = [88.78314375,331,435,437,392,291]; % m³
-% Number of particles at each depth
-NpartSample = ConcentrationSample .* FilteredVolume; 
+[ConcentrationSample, DepthSample] = getDataConcentration;
+% DepthSample = [0 5 15 25 35 55]; % depth of samples (m)
+% ConcentrationSample = [0.99117913922709/0.75 ,1.16012084592145,... % le manta à 0m ne récupère que 75% des particules
+%     0.937931034482759,0.567505720823799,1.3265306122449,1.18213058419244]; % mps.m⁻³
+% FilteredVolume = [88.78314375,331,435,437,392,291]; % m³
+
 
 dh = 0.15; % Net oppening (m)
 
@@ -40,8 +41,8 @@ end
 
 Ztest_ = DepthSample + dh/2;
 
-SizePart = 1250*1e-6; % particles size tested (m)
-RhoP_test = 1009.9:.1:1010.1; % plage de densite a tester (kg.m⁻³)
+SizePart = 750*1e-6; % particles size tested (m)
+RhoP_test = 850:1var    0:950; % plage de densite a tester (kg.m⁻³)
 
 type_dict = containers.Map({'fibre','fragment','film','mousse'},0:3); % possible types
 type_name = 'fibre'; % choose a type
@@ -65,7 +66,7 @@ for RhoP = RhoP_test
     % 2) calculer l'erreur avec les mesures :
     % =======================================
     hcalc = histogram(PartPos, "BinEdges",  boundTest, 'Visible', 'off').Values;
-    NpartModel = zeros(size(NpartSample));
+    NpartModel = zeros(size(ConcentrationSample));
     j = 0;
     for i = 1:length(hcalc)
         if mod(i,2) ~= 0
@@ -73,10 +74,11 @@ for RhoP = RhoP_test
             NpartModel(j) = hcalc(i);
         end
     end
-    ConcentrationModel = NpartModel/dh * (Npart/L) ; % on ramène le modèle à 1
-    alpho = ConcentrationSample/ConcentrationModel;
+    ConcentrationModel = NpartModel/dh * (nPart/L) ; % on ramène le modèle à 1
+    alpho = mean(ConcentrationSample(ConcentrationModel>0)./ConcentrationModel(ConcentrationModel>0));
+%     alpho = ConcentrationSample/ConcentrationModel;
     
-    Erreur = abs(ConcentrationModel*alpho - ConcentrationSample)./ConcentrationSample;
+    Erreur = abs(ConcentrationModel.*alpho - ConcentrationSample)./ConcentrationSample;
     meanErreur = mean(Erreur);
     
     Resultats(iRes).RhoP = RhoP;
@@ -86,5 +88,26 @@ for RhoP = RhoP_test
     Resultats(iRes).MeanErreur = meanErreur;
 end
 
-plot([Resultats.RhoP],[Resultats.Alpha])
-plot(ConcentrationSample,-Ztest_,'pm',Resultats(2).ConcentrationModel*Resultats(2).Alpha,-Ztest_,'b', 'MarkerSize', 10)
+% figure(1)
+% plot([Resultats.RhoP],[Resultats.Alpha])
+figure(1), clf,
+plot(ConcentrationSample,-Ztest_,'pm','MarkerSize', 10, 'DisplayName', 'Sampled Data');
+xlim([0 max(ConcentrationSample)])
+ylim([-L 0])
+xlabel('Concentration (mps.m⁻¹)')
+ylabel('Depth (m)')
+hold on
+for res = Resultats
+    plot(res.ConcentrationModel*res.Alpha,-Ztest_,'DisplayName', ['RhoP = ' num2str(res.RhoP)])
+end
+legend('Location', 'southeast')
+hold off
+
+figure(2)
+hold on
+plotErr = zeros(size([Resultats.RhoP]));
+for i = 1:length(Resultats)
+    plotErr(i) = mean(Resultats(i).Erreur);
+end
+plot([Resultats.RhoP], plotErr)
+hold off
