@@ -35,29 +35,36 @@ Lat0 = iStation(:,'Lat').Variables;
 % load(SauvegardeModeleHydro)
 % [I0,J0]=ReperePoint(Lon,Lat,Lon0,Lat0);
 % L = H0(I0,J0);
-L = 58;
+L = 56;
 
-[ConcentrationSample, DepthSample] = getDataNpart(type_name, SizePart, true);
+% [ConcentrationSample, DepthSample] = getDataNpart(type_name, SizePart, true);
+CMes=[0.62 0.34 0.06 0.02 0];
+ZMes=[1 10 15 40 L];
+ConcentrationSample = CMes;
+DepthSample = ZMes;
 
 dh = 0.15; % Net oppening (m)
 
 % Boundaries in between which modeled part number have to be tested
-% boundTest = zeros(1,length(DepthSample)*2);
-% for i = 1:length(boundTest)
-%     temp_depth = DepthSample(fix((i+1)/2));
-%     if i>1 && boundTest(i-1) == temp_depth
-%         boundTest(i) = temp_depth+dh;
-%     else
-%         boundTest(i) = temp_depth;
-%     end
-% end
-boundTest = 0:dh:L;
+boundTest = zeros(1,length(DepthSample)*2);
+for i = 1:length(boundTest)
+    temp_depth = DepthSample(fix((i+1)/2));
+    if i>1 && boundTest(i-1) == temp_depth
+        boundTest(i) = temp_depth+dh;
+    else
+        boundTest(i) = temp_depth;
+    end
+end
+% boundTest = 0:dh:L;
 
 
 Ztest_ = DepthSample + dh/2;
-zplot = boundTest(1:end-1)+dh/2;
+N = L*2;
+dz= L/N;
+z = 0:dz:L;
+zplot = z(1:end-1)+dh/2;
 
-nPart = 50e3; % number of particles
+nPart = 5e3; % number of particles
 
 tf = 1e5; % simulation time (s)
 dt_test = 60*60; % test time interval (s)
@@ -76,7 +83,7 @@ end
 iRes = 0;
 for RhoP = RhoP_test
     iRes = iRes+1;
-    [~, ~, PartPos] = varMP_model(modSize, RhoP, TypePart, nPart, tf, dt_test, wind, month, Lon0, Lat0, path);
+    [~, ~, PartPos] = varMP_model(modSize, RhoP, TypePart, nPart, tf, dt_test, wind, month, Lon0, Lat0,L, path);
     
     figure(2)
     hist = histogram(PartPos,'Visible', 'off').Values;
@@ -85,21 +92,21 @@ for RhoP = RhoP_test
     % 2) calculer l'erreur avec les mesures :
     % =======================================
     hcalc = histogram(PartPos, "BinEdges",  boundTest, 'Visible', 'off').Values;
-    NpartModel = hcalc(fix(DepthSample./dh+1));
-%     NpartModel = zeros(size(ConcentrationSample));
-%     j = 0;
-%     for i = 1:length(hcalc)
-%         if mod(i,2) ~= 0
-%             j = j+1;
-%             NpartModel(j) = hcalc(i);
-%         end
-%     end
-    conc = hcalc/dh * (nPart/L) ;
+%     NpartModel = hcalc(fix(DepthSample./dh));
+    NpartModel = zeros(size(ConcentrationSample));
+    j = 0;
+    for i = 1:length(hcalc)
+        if mod(i,2) ~= 0
+            j = j+1;
+            NpartModel(j) = hcalc(i);
+        end
+    end
+    conc = histogram(PartPos, "BinEdges",z,'Visible', 'off').Values/dh * (nPart/L) ;
     
     ConcentrationModel = NpartModel'/dh * (nPart/L) ; % on ramène le modèle à 1
 %     alpho = mean(ConcentrationSample(ConcentrationModel>0)./ConcentrationModel(ConcentrationModel>0));
 %     alpha = ConcentrationSample\ConcentrationModel;
-    alpha = ConcentrationModel\ConcentrationSample;
+    alpha = ConcentrationModel\ConcentrationSample';
     
     
     Erreur = abs(ConcentrationModel.*alpha - ConcentrationSample)./ConcentrationSample;

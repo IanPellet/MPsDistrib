@@ -1,4 +1,4 @@
-function [z_, CfinalNorm, PartPos] = varMP_model(D, rhoP, type, nPart, tf, dt_test, WindSpeed, month, Lon0, Lat0, path)
+function [z_, CfinalNorm, PartPos] = varMP_model(D, rhoP, type, nPart, tf, dt_test, WindSpeed, month, Lon0, Lat0, L, path)
 %VARMP_MODEL Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -30,7 +30,7 @@ indNom = 2;
 % [I0,J0]=ReperePoint(Lon,Lat,Lon0,Lat0);
 % L = H0(I0,J0);
 % disp(L);
-L = 55;
+% L = 56;
 N = fix(L);  dz= L/N;  z=0:dz:L; % z : boundaries of the meshes
 z_=(z(1:end-1)+z(2:end))/2; % middle of each mesh  
 
