@@ -4,8 +4,8 @@ function [z_, CfinalNorm, PartPos] = varMP_model(D, rhoP, type, nPart, tf, dt_te
 
 global g nuw rhow L
 
-fprintf(['\n\n\n--------------------- D = ' num2str(D)...
-    ' -- rhoP = ' num2str(rhoP) ' ---------------------\n\n'])
+fprintf(['\n\n\n--------------------- D = ' num2str(D*1e6) 'µm'...
+    ' -- rhoP = ' num2str(rhoP) 'kg.m⁻³ -- Type = ' num2str(type) ' ---------------------\n\n'])
 
 clear Concentration err
 
