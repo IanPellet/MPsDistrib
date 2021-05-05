@@ -2,7 +2,7 @@ function [z_, CfinalNorm, PartPos] = varMP_model(D, rhoP, type, nPart, tf, dt_te
 %VARMP_MODEL Summary of this function goes here
 %   Detailed explanation goes here
 
-global g nuw rhow L
+global g nuw rhow 
 
 fprintf(['\n\n\n--------------------- D = ' num2str(D*1e6) 'µm'...
     ' -- rhoP = ' num2str(rhoP) 'kg.m⁻³ -- Type = ' num2str(type) ' ---------------------\n\n'])
@@ -35,7 +35,12 @@ N = fix(L);  dz= L/N;  z=0:dz:L; % z : boundaries of the meshes
 z_=(z(1:end-1)+z(2:end))/2; % middle of each mesh  
 
 %% Speed initialisation
-[KZ_day,Row_day,z_day,z__day] = KsSalTemp(WindSpeed, month);
+% [KZ_day,Row_day,z_day,z__day] = KsSalTemp(WindSpeed, month);
+DensiteFevrierRhoma
+KZ_day = KZ_Fev10;
+Row_day = Row_Fev10;
+z_day = z_Fev10;
+z__day = z__Fev10;
 
 addpath('./fig-Visser/');
 % [K,dK] = wcp_interpolation(z_day,KZ_day,-z_); % Diffusivity
