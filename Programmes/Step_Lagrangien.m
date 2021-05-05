@@ -1,7 +1,6 @@
-function [new_x] = Step_Lagrangien(x, u, Kz, dKz, dt)
+function [new_x] = Step_Lagrangien(x, u, Kz, dKz, dt, L)
 %STEP_LAGRANGIEN One step foward in time for the Lagrangian transport model
 %   The new value of x after dt is computed and returned by this function.
-global L
 %disp(u)
 %disp(Nu)
 %disp(x)

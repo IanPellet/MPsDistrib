@@ -105,7 +105,7 @@ while OnContinue
     t=t+dt;
     
     % Particules update
-    part(1,:) = Step_Lagrangien(part(1,:), part(2,:), part(3,:), part(4,:), dt);
+    part(1,:) = Step_Lagrangien(part(1,:), part(2,:), part(3,:), part(4,:), dt, L);
     index = max(1, cast(part(1,:)/dz, 'uint32'));
     part(2,:) = u(index);
     part(3,:) = K(index);
