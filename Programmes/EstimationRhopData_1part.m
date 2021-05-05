@@ -1,4 +1,4 @@
-function [Resultats,ConcentrationSample,Ztest_,zplot] = EstimationRhopData_1part(SizePart, type_name, RhoP_test)
+function [Resultats,ConcentrationSample,Ztest_,z_] = EstimationRhopData_1part(SizePart, type_name, RhoP_test, saveFig)
 
 %% Set Parameters
 
@@ -11,6 +11,7 @@ if nargin == 0
     SizePart = false; % particles size tested (m)
     type_name = false;
     RhoP_test = 800:100:1000; % plage de densite a tester (kg.m⁻³)
+    saveFig = false;
 end
 
 if type_name
@@ -35,13 +36,18 @@ Lat0 = iStation(:,'Lat').Variables;
 % load(SauvegardeModeleHydro)
 % [I0,J0]=ReperePoint(Lon,Lat,Lon0,Lat0);
 % L = H0(I0,J0);
-L = 56;
+L = 55;
+N = L;
+dz= L/N;
+z = 0:dz:L;
+z_ = z(1:end-1)+dz/2;
+
 
 % [ConcentrationSample, DepthSample] = getDataNpart(type_name, SizePart, true);
 CMes=[0.62 0.34 0.06 0.02 0];
 ZMes=[1 10 15 40 L];
-ConcentrationSample = CMes';
-DepthSample = ZMes';
+ConcentrationSample = interp1(ZMes,CMes,z_,'pchip')';
+DepthSample = z_';
 
 dh = 0.15; % Net oppening (m)
 
@@ -66,10 +72,6 @@ end, clear i,
 
 % Ztest_ = DepthSample + dh/2;
 Ztest_ = DepthSample - dh/2;
-N = L;
-dz= L/N;
-z = 0:dz:L;
-zplot = z(1:end-1)+dz/2;
 
 nPart = 50e3; % number of particles
 
@@ -79,7 +81,7 @@ dt_test = 60*60; % test time interval (s)
 clear Resultats
 
 Resultats(1:length(RhoP_test)) = struct('RhoP', 0, 'ConcentrationModel', zeros(size(ConcentrationSample)),...
-    'Alpha', 0, 'Erreur', zeros(size(ConcentrationSample)), 'MeanErreur', 0);
+    'Alpha', 0, 'Erreur', zeros(size(ConcentrationSample)), 'rmseErreur', 0);
 if SizePart
     modSize = SizePart;
 else
@@ -117,65 +119,91 @@ for RhoP = RhoP_test
     
     
     Erreur = abs(ConcentrationModel.*alpha - ConcentrationSample);
-    meanErreur = mean(Erreur,'omitnan');
+%     rmseErreur = mean(Erreur,'omitnan');
+    rmseErreur = sqrt(mean(Erreur.^2,'omitnan'));
     
     Resultats(iRes).RhoP = RhoP;
     Resultats(iRes).ConcentrationModel = ConcentrationModel;
     Resultats(iRes).Alpha = alpha;
     Resultats(iRes).Erreur = Erreur;
-    Resultats(iRes).MeanErreur = meanErreur;
+    Resultats(iRes).rmseErreur = rmseErreur;
     Resultats(iRes).conc = conc;
 end
 
 % typeSTR = {'fibre','fragment','film','mousse'}; % List of existing type
-if type_name
-    dispType = type_name;
-else
-    dispType = 'all';
-end
+% if type_name
+%     dispType = type_name;
+% else
+%     dispType = 'all';
+% end
 ttl = ['Particle size : ' num2str(modSize*1e6) 'µm'];
 
-figure(1), clf,
-plot(ConcentrationSample,-Ztest_,'pm','MarkerSize', 10, 'DisplayName', 'Sampled Data');
-% xlim([0 max(ConcentrationSample)])
+f1 = figure(1); clf,
+plot(ConcentrationSample,-Ztest_,'--', 'DisplayName', 'Data interpolation');
 ylim([-L+0.75 0])
 xlabel('Concentration (mps.m⁻¹)')
 ylabel('Depth (m)')
 hold on
+plot(CMes,-ZMes,'pm','MarkerSize', 10, 'DisplayName', 'Sampled Data');
 for res = Resultats
-    plot(res.conc*res.Alpha,-zplot,'DisplayName', ['RhoP = ' num2str(res.RhoP)])
+    plot(res.conc*res.Alpha,-z_,'DisplayName', ['RhoP = ' num2str(res.RhoP) 'kg.m⁻³'])
 %     plot(res.ConcentrationModel*res.Alpha, -Ztest_,'*','DisplayName', ['RhoP = ' num2str(res.RhoP)])
 end
 legend('Location', 'southeast')
 title(ttl)
 hold off
 
-figure(2), clf,
+f2 = figure(2); clf,
 hold on
 plotErr = zeros(size([Resultats]));
 for i = 1:length(Resultats)
-    plotErr(i) = Resultats(i).MeanErreur;
+    plotErr(i) = Resultats(i).rmseErreur;
 end
 plot([Resultats.RhoP], plotErr)
 xlabel('Rho_p (kg.m⁻³)');
-ylabel('Error (mps.m⁻³)');
+ylabel('RMSE (mps.m⁻³)');
 title(ttl)
 hold off
 
-minI = [Resultats.MeanErreur] == min([Resultats.MeanErreur]);
+minI = [Resultats.rmseErreur] == min([Resultats.rmseErreur]);
 minRho = Resultats(minI).RhoP;
 
 
-figure(3), clf,
-plot(ConcentrationSample,-Ztest_,'pm','MarkerSize', 10, 'DisplayName', 'Sampled Data');
+f3 = figure(3); clf,
+plot(ConcentrationSample,-Ztest_,'--', 'DisplayName', 'Data interpolation');
 % xlim([0 max(ConcentrationSample)])
 ylim([-L+0.75 0])
 xlabel('Concentration (mps.m⁻¹)')
 ylabel('Depth (m)')
 hold on 
-plot(Resultats(minI).conc*Resultats(minI).Alpha,-zplot,'DisplayName', ['RhoP = ' num2str(Resultats(minI).RhoP)])
+plot(CMes,-ZMes,'pm','MarkerSize', 10, 'DisplayName', 'Sampled Data');
+plot(Resultats(minI).conc*Resultats(minI).Alpha,-z_,'DisplayName', ['RhoP = ' num2str(Resultats(minI).RhoP) 'kg.m⁻³'])
 legend('Location', 'southeast')
 title([ttl ' -- Rho_p = ' num2str(minRho) 'kg.m⁻³'])
 hold off
+
+if saveFig
+    if length(RhoP_test) == 1
+        rhoInter = num2str(RhoP_test);
+    else
+        rhoInter = [num2str(min(RhoP_test)) '-' num2str(RhoP_test(2)-RhoP_test(1)) '-' num2str(max(RhoP_test))];
+    end
+    
+    fileName = ['size' num2str(modSize*1e6) '_rho' rhoInter 'part_10fev'];
+    
+    F = [f1, f2, f3];
+    xPart = '1part_';
+    N = {'profils_', 'error_', 'min_'};
+    for i=1:length(F)
+        f = F(i);
+        n = N{i};
+        NamePNG = [path 'png/' xPart n fileName '.png'];
+        NameEPS = [path 'eps/' xPart n fileName '.eps'];
+        NameFIG = [path 'fig/' xPart n fileName '.fig'];
+        exportgraphics(f,NamePNG);
+        exportgraphics(f,NameEPS,'ContentType','vector');
+        savefig(f,NameFIG);
+    end, clear i,
+end
 
 end
