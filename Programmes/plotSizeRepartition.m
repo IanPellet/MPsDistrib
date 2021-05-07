@@ -1,4 +1,4 @@
-function [resE] = plotLagrEul_varSize(D_test, RhoP, N)
+function [resE] = plotSizeRepartition(D_test, RhoP, N)
 %%PLOTLAGREUL_VARSIZE Plot size histogram in each mesh
 % D_test : array of particles sizes (m)
 % RhoP : density of particles
