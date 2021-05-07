@@ -6,7 +6,7 @@
 %     C_
 %     Z_
 %     dh
-global dt dx
+global dt dz
 
 Nom=[... 
     ;{'Nielsen'}...%Nielsen (1992)
@@ -29,15 +29,10 @@ Tdes=60*60; dConcMax=5E-5; % Tdes : intervalle de temps entre les tests d'équil
 % dConcMax : seuil de delta de concentration à partir duquel on de considère à l'équilibre 
 dh=0.15; % profondeur sur laquelle le filet prélève
 
-% Eulerien vs Lagrangien
-tf= 100*86400; % maximum simulation time
-dt_max=0.01; % maximun time interval
-dt_test = 60*30; % time interval between equilirium tests
-
 clear Concentration err
 %L=H0(I0,J0);   %m
 L = 50; % Profondeur (arbitraire)
-N=2000;  dx= L/N;  z=0:dx:L; % x : boundaries of the meshes
+N=200;  dz= L/N;  z=0:dz:L; % x : boundaries of the meshes
 z_=(z(1:end-1)+z(2:end))/2; % milieu de chaque maille
 Xmin=0;Xmax=L;Cmin=-1;Cmax=2;
         %z0=H0(I0,J0)*Sigma;
@@ -46,12 +41,14 @@ Xmin=0;Xmax=L;Cmin=-1;Cmax=2;
         z0_=L*(Sigma(1:end-1)+Sigma(2:end))/2;    
 
 % conditions initiales 
-CMes=[0.62 0.34 0.06 0.02 0]; % concentrations mesurées
-ZMes=[1 10 15 40 L]; % profondeur de chaque mesure
-C = interp1(ZMes,CMes,z(1:end-1)+dx/2,'pchip'); % interpolation sur x
-C=max(0*C,C); C_init = C;
+% CMes=[0.62 0.34 0.06 0.02 0]; % concentrations mesurées
+% ZMes=[1 10 15 40 L]; % profondeur de chaque mesure
+% C = interp1(ZMes,CMes,z(1:end-1)+dz/2,'pchip'); % interpolation sur x
+% C=max(0*C,C); C_init = C;
+C = ones(size(z(1:end-1)+dz/2));
+C_init = C;
 
-figure(1),clf,plot(C,-z_,'r',CMes,-ZMes,'og'),xlabel('Concentration (kg.m^-^3)'), ylabel('Depth (m)')
+% figure(1),clf,plot(C,-z_,'r',CMes,-ZMes,'og'),xlabel('Concentration (kg.m^-^3)'), ylabel('Depth (m)')
 
 
     
@@ -61,9 +58,7 @@ row = 1000;
 
 % Determiner rho eau
 DensiteFevrierRhoma
-%Nu=interp1(z0,KZ_Fev10,-x_,'pchip');
-Ks = 0.01;
-Nu = ones(1,2000)*Ks;
+Nu=interp1(z0,KZ_Fev10,-z_,'pchip');
 
 figure(4),
     subplot(1,2,1), plot(row,-z)
@@ -81,11 +76,11 @@ u=Ws; u(rop<row)=-Ws(rop<row);
 
 u0_=max(u);Nu0_=max(Nu);
 if u0_~=0 & Nu0_~=0; 
-   dt=min(dx/abs(u0_)*0.5,dx*dx/(2*Nu0_)*0.5); 
+   dt=min(dz/abs(u0_)*0.5,dz*dz/(2*Nu0_)*0.5); 
 elseif u0_==0 & Nu0_~=0; 
-   dt=dx*dx/(2*Nu0_)*0.5;
+   dt=dz*dz/(2*Nu0_)*0.5;
 elseif u0_~=0 & Nu0_==0; 
-   dt=min(dx/abs(u0_)*0.5,dx*dx/(2*Nu0_)*0.5); 
+   dt=min(dz/abs(u0_)*0.5,dz*dz/(2*Nu0_)*0.5); 
 else, 
    dt=dtmax;
 end
@@ -106,18 +101,19 @@ while OnContinue
        end
        disp([' Temps : ' num2str(t/3600/24) 'j -' ...
              ' Numero de sauvegarde : ' num2str(index)  ...
-             ' - Concentration Totale : ' num2str(sum(C*dx)) ...
+             ' - Concentration Totale : ' num2str(sum(C*dz)) ...
              ' - Ecart : ' num2str(Ecart(index,:))])
              %' - Vitesse : ' num2str(u)])
        TempsConc(index)=t;
 
-       figure(2)
-       AffichageConcentration
+%        figure(2)
+%        AffichageConcentration
 
-       pause(0.01)
+%        pause(0.01)
    end
 end
 
-Ccalc = C_analytical(mean(Ws), mean(Ks), z_, sum(C_init*dx), L);
-disp(['MSE analytical // model : ', num2str( MSE(C,Ccalc) ), ' MP.m^-3'])
-plot(Ccalc, -z_, 'g')
+% Ccalc = C_analytical(mean(Ws), mean(Ks), z_, sum(C_init*dz), L);
+% disp(['MSE analytical // model : ', num2str( MSE(C,Ccalc) ), ' MP.m^-3'])
+% figure(3),clf,
+% plot(Ccalc, -z_, 'g')

@@ -1,4 +1,4 @@
-function [z_, CfinalNorm, PartPos] = varMP_model(D, rhoP, type, nPart, tf, dt_test, WindSpeed, month, Lon0, Lat0, L, path)
+function [z_, CfinalNorm, PartPos] = varMP_model(D, rhoP, type, nPart, tf, dt_test, WindSpeed, month, Lon0, Lat0, L, N, path)
 %VARMP_MODEL Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -31,7 +31,8 @@ indNom = 2;
 % L = H0(I0,J0);
 % disp(L);
 % L = 56;
-N = fix(L);  dz= L/N;  z=0:dz:L; % z : boundaries of the meshes
+% N = fix(L);  
+dz= L/N;  z=0:dz:L; % z : boundaries of the meshes
 z_=(z(1:end-1)+z(2:end))/2; % middle of each mesh  
 
 %% Speed initialisation
@@ -44,7 +45,7 @@ z__day = z__Fev10;
 
 addpath('./fig-Visser/');
 % [K,dK] = wcp_interpolation(z_day,KZ_day,-z_); % Diffusivity
-[K,dK] = Diffusivity(z,z_,dz,0.5,0.01,KZ_day,z_day);
+[K,dK] = Diffusivity(z,z_,dz,0.8,0,KZ_day,z_day);
 
 % K_val = Ks;
 % K = ones(size(z))*K_val;
@@ -156,7 +157,7 @@ PartPos = part(1,:);
 % ttl = join(['D = ',num2str(D*1e6),'µm ; rhop = ',num2str(rhoP),'kg.m⁻³']);
 % title(ttl)
 % hold off
-% 
+
 % figure(2)
 % plot(dK,-z_)
 % 

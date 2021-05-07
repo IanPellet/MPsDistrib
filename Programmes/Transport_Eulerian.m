@@ -1,11 +1,11 @@
-function [error, v] = Transport_Eulerian(N, Ks)
+function [C, z_] = Transport_Eulerian(D, rhop,N)
 %UNTITLED3 Summary of this function goes here
 %   Detailed explanation goes here
 
 global dt dz
 global nuw g row 
 
-fprintf(['\n\n--------------------- Ks = ' num2str(Ks) ' -- N = ' num2str(N) ' ---------------------\n'])
+fprintf(['\n\n--------------------- D = ' num2str(D) ' -- rhop = ' num2str(rhop) ' ---------------------\n'])
 
 Nom=[... 
     ;{'Nielsen'}...%Nielsen (1992)
@@ -14,7 +14,7 @@ Nom=[...
    ];
 
 % Initilisation :
-D=350e-6; %m : Diametre
+% D=350e-6; %m : Diametre
 Lon0= 5.29;Lat0=43.24; %point Somlit
 ModeleHydro='2012RHOMA_arome_003.nc';
 indNom=3;
@@ -24,13 +24,14 @@ load(SauvegardeModeleHydro)
 %[I0,J0]=ReperePoint(Lon,Lat,Lon0,Lat0);
 
 tf= 100*86400; dtmax=0.01; 
-Tdes=60*60; dConcMax=5E-8; % Tdes : intervalle de temps entre les tests d'équilibre 
+Tdes=60*60; dConcMax=5E-6; % Tdes : intervalle de temps entre les tests d'équilibre 
 % dConcMax : seuil de delta de concentration à partir duquel on de considère à l'équilibre 
 dh=0.15; % profondeur sur laquelle le filet prélève
 
 clear Concentration err
 %L=H0(I0,J0);   %m
 L = 50; % Profondeur 
+% N = 500;
 dz= L/N;  z=0:dz:L; % x : boundaries of the meshes
 z_=(z(1:end-1)+z(2:end))/2; % milieu de chaque maille
 Xmin=0;Xmax=L;Cmin=-1;Cmax=2;
@@ -52,12 +53,12 @@ Concentration(1,:)=C;
 
 % Determiner rho eau
 DensiteFevrierRhoma
-%Nu=interp1(z0,KZ_Fev10,-x_,'pchip');
-Nu = ones(size(z_))*Ks;
+Nu=interp1(z0,KZ_Fev10,-z_,'pchip');
+% Nu = ones(size(z_))*Ks;
 
 InitialisationVitesseTransport
 
-rhop=1010.5;
+% rhop=1010.5;
 S=rhop./row;     D_=((g*(abs(S-1))/nuw^2).^(1/3))*D;
 Ws=eval(['Vitesse' cell2mat(Nom(indNom)) '(D,S,D_);']);
 %Ws = ones(size(Ws))*mean(Ws);
@@ -102,10 +103,10 @@ while OnContinue
    end
 end
 
-Ccalc = C_analytical(mean(Ws), mean(Ks), z_, sum(C*dz), L);
-error = MSE(C,Ccalc) ;
-disp(['MSE analytical // model : ', num2str( error ), ' MP.m^-3'])
+% Ccalc = C_analytical(mean(Ws), mean(Ks), z_, sum(C*dz), L);
+% error = MSE(C,Ccalc) ;
+% disp(['MSE analytical // model : ', num2str( error ), ' MP.m^-3'])
 
-v = mean(Ws);
+% v = mean(Ws);
 end
 
