@@ -1,4 +1,4 @@
-function [Resultats,ConcentrationSample,Ztest_,z_] = EstimationRhopData_2part_Eul(SizePart, type_name, RhoP_test,saveFig)
+function [Resultats,ConcentrationSample,Ztest_,z_] = EstimationRhopData_2part_Eul(SizePart, type_name, RhoP_test,saveFig, sub1, sub2)
 
 %% Set Parameters
 
@@ -47,6 +47,7 @@ CMes=[0.27 0.08 0.09 0.1 0.2];
 ZMes=[0 25 35 45 50]+dh;
 ConcentrationSample = interp1(ZMes,CMes,z_,'pchip')';
 DepthSample = z_';
+day = '3fev';
 
 
 
@@ -76,7 +77,7 @@ clear Resultats
 CRho = zeros(length(RhoP_test),N+1);
 for i = 1:length(RhoP_test)
     rho=RhoP_test(i);
-    [C, z_] = Transport_Eulerian(modSize, rho,N);
+    [C, z_] = Transport_Eulerian(modSize, rho, N, day);
     CRho(i,:) = [rho C];
 end, clear i,
 
@@ -110,18 +111,26 @@ for i=1:length(Resultats)
 end, clear i,
 
 ErrorPlotRes = zeros(length(RhoP_test));
-for i=1:length(RhoP_test)
-    for j=1:length(RhoP_test)
-        r1 = RhoP_test(i);
-        r2 = RhoP_test(j);
-        
-        iCond = find(([Resultats.Rho1] == r1 & [Resultats.Rho2] == r2) |...
-            ([Resultats.Rho1] == r2 & [Resultats.Rho2] == r1),1);
-        
-        ErrorPlotRes(i,j) = Resultats(iCond).rmseErreur;
-    end, clear j,
+for i=1:length(Resultats)
+    a = RhoP_test == Resultats(i).Rho1;
+    b = RhoP_test == Resultats(i).Rho2;
+    ErrorPlotRes(a,b) = Resultats(i).rmseErreur;
 end, clear i,
-              
+
+ErrorPlotRes = ErrorPlotRes + ErrorPlotRes' - eye(size(ErrorPlotRes)).*ErrorPlotRes;
+
+% for i=1:length(RhoP_test)
+%     for j=1:length(RhoP_test)
+%         r1 = RhoP_test(i);
+%         r2 = RhoP_test(j);
+%         
+%         iCond = find(([Resultats.Rho1] == r1 & [Resultats.Rho2] == r2) |...
+%             ([Resultats.Rho1] == r2 & [Resultats.Rho2] == r1),1);
+%         
+%         ErrorPlotRes(i,j) = Resultats(iCond).rmseErreur;
+%     end, clear j,
+% end, clear i,
+%               
 
 %% Display results
 % if type_name
@@ -146,8 +155,16 @@ legend('Location', 'best')
 title(ttl)
 hold off
 
+if nargin < 6
+    ErrorPlotResBis = ErrorPlotRes;
+else
+    ErrorPlotResBis = NaN(length(RhoP_test));
+    ErrorPlotResBis(1:(length(sub1)-1),(end-length(sub2)+1):end) = ErrorPlotRes(1:(length(sub1)-1),(end-length(sub2)+1):end);
+    ErrorPlotResBis((end-length(sub2)+1):end,1:(length(sub1)-1)) = ErrorPlotRes((end-length(sub2)+1):end,1:(length(sub1)-1));
+end
+
 f2 = figure(2); clf,
-pcolor(RhoP_test,RhoP_test,ErrorPlotRes);
+pcolor(RhoP_test,RhoP_test,ErrorPlotResBis);
 c = colorbar;
 c.Label.String = 'RMSE (mps.m⁻³)';
 xlabel('Rho_1 (kg.m⁻³)');
@@ -184,11 +201,11 @@ if saveFig
         rhoInter = [num2str(min(RhoP_test)) '-' num2str(RhoP_test(2)-RhoP_test(1)) '-' num2str(max(RhoP_test))];
     end
     
-    fileName = ['size' num2str(modSize*1e6) '_rho' rhoInter 'part_marine'];
+    fileName = ['size' num2str(modSize*1e6) '_rho' rhoInter 'part_EulMarine'];
     
-    F = [f1, f2, f3];
+    F = [f2, f3];
     xPart = '2part_';
-    N = {'profils_', 'error_', 'min_'};
+    N = {'error_', 'min_'};
     for i=1:length(F)
         f = F(i);
         n = N{i};

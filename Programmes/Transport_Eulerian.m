@@ -1,4 +1,4 @@
-function [C, z_] = Transport_Eulerian(D, rhoP, N, WindSpeed, month)
+function [C, z_] = Transport_Eulerian(D, rhoP, N, day)
 %UNTITLED3 Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -17,7 +17,7 @@ Nom=[...
 % D=350e-6; %m : Diametre
 Lon0= 5.29;Lat0=43.24; %point Somlit
 ModeleHydro='2012RHOMA_arome_003.nc';
-indNom=3;Tr
+indNom=3;
 
 SauvegardeModeleHydro=['DonneeBase' ModeleHydro(1:end-3)];
 load(SauvegardeModeleHydro)
@@ -52,14 +52,25 @@ C=max(0*C,C);
 Concentration(1,:)=C;
 
 % Determiner rho eau
+DensiteFevrierRhoma
 if nargin < 4
-    DensiteFevrierRhoma
     KZ_day = KZ_Fev10;
     Row_day = Row_Fev10;
     z_day = z_Fev10;
     z__day = z__Fev10;
+elseif  strcmp(day, '10fev')
+    KZ_day = KZ_Fev10;
+    Row_day = Row_Fev10;
+    z_day = z_Fev10;
+    z__day = z__Fev10;
+elseif  strcmp(day, '3fev')
+    KZ_day = KZ_Fev03;
+    Row_day = Row_Fev03;
+    z_day = z0;
+    z__day = z0_;
 else
-    [KZ_day,Row_day,z_day,z__day] = KsSalTemp(WindSpeed, month);
+    error('Day argument not recognised');
+    %     [KZ_day,Row_day,z_day,z__day] = KsSalTemp(WindSpeed, month);
 end
 
 Nu=interp1(z_day,KZ_day,-z_,'pchip');
