@@ -1,11 +1,11 @@
-function [C, z_] = Transport_Eulerian(D, rhop,N)
+function [C, z_] = Transport_Eulerian(D, rhoP, N, WindSpeed, month)
 %UNTITLED3 Summary of this function goes here
 %   Detailed explanation goes here
 
 global dt dz
-global nuw g row 
+global nuw g
 
-fprintf(['\n\n--------------------- D = ' num2str(D) ' -- rhop = ' num2str(rhop) ' ---------------------\n'])
+fprintf(['\n\n--------------------- D = ' num2str(D) ' -- rhop = ' num2str(rhoP) ' ---------------------\n'])
 
 Nom=[... 
     ;{'Nielsen'}...%Nielsen (1992)
@@ -17,7 +17,7 @@ Nom=[...
 % D=350e-6; %m : Diametre
 Lon0= 5.29;Lat0=43.24; %point Somlit
 ModeleHydro='2012RHOMA_arome_003.nc';
-indNom=3;
+indNom=3;Tr
 
 SauvegardeModeleHydro=['DonneeBase' ModeleHydro(1:end-3)];
 load(SauvegardeModeleHydro)
@@ -52,18 +52,28 @@ C=max(0*C,C);
 Concentration(1,:)=C;
 
 % Determiner rho eau
-DensiteFevrierRhoma
-Nu=interp1(z0,KZ_Fev10,-z_,'pchip');
-% Nu = ones(size(z_))*Ks;
+if nargin < 4
+    DensiteFevrierRhoma
+    KZ_day = KZ_Fev10;
+    Row_day = Row_Fev10;
+    z_day = z_Fev10;
+    z__day = z__Fev10;
+else
+    [KZ_day,Row_day,z_day,z__day] = KsSalTemp(WindSpeed, month);
+end
 
-InitialisationVitesseTransport
+Nu=interp1(z_day,KZ_day,-z_,'pchip');
 
-% rhop=1010.5;
-S=rhop./row;     D_=((g*(abs(S-1))/nuw^2).^(1/3))*D;
-Ws=eval(['Vitesse' cell2mat(Nom(indNom)) '(D,S,D_);']);
-%Ws = ones(size(Ws))*mean(Ws);
-Ws = ones(size(Ws))*mean(Ws);
-u=Ws; u(rhop<row)=-Ws(rhop<row);
+g = 9.81 ; %m.s-1 (gravitational acceleration)
+nuw = 1.1*10^-6; %m2.s-1 (kinematic viscosity of sea water)
+rhow = interp1(-z__day,Row_day,z,'pchip'); % density of sea water 
+
+g_red = g.*abs(rhoP-rhow)./rhow;
+S=rhoP./rhow;
+D_=((g*(abs(S-1))/nuw^2).^(1/3))*D;
+l = 0.5e-3;
+Ws=eval(['Vitesse' cell2mat(Nom(indNom)) '(D,S,D_,l,g_red);']);
+u=Ws; u(rhoP<rhow)=-Ws(rhoP<rhow);
 
 % Analytical solution at equilibrium
 %Ccalc = C_analytical(Ws, Ks,x_, C);
@@ -82,7 +92,7 @@ end
 t=0; OnContinue=true;
 while OnContinue
    t=t+dt;
-   C = StepTransport (u,Nu,C,'UpWind'); 
+   C = StepTransport(u,Nu,C,'UpWind'); 
    
 
    if (mod(t,Tdes)<=dt/2 | Tdes-mod(t,Tdes)<=dt/2 )
