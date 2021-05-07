@@ -1,10 +1,11 @@
-function [Keep] = KeepSizeType_threshold(DataFile, SamplingDate, threshold)
+function [Keep] = KeepSizeType_threshold(DataFile, SamplingDate, threshold, sumOn)
 %% Find size and type of particles above a number of particle defined by threshold 
 
 if nargin == 0
     DataFile = '../Data/data_mps.txt'; % File containing data
     SamplingDate = datetime('3/18/2021'); % Date of the data of interest
     threshold = 10; % Minimal number of particles
+    sumOn = NaN;
 end
 
 dataTable = load_MPs_data(DataFile); % load data file
@@ -46,9 +47,22 @@ ylabel('Number of particles')
 legend('Location', 'best')
 hold off
 
-% Find the row and column indexes of data above the threshold
-[row,col] = find(NumbPart >= threshold);
-Keep = struct('Type', typeSTR(row), 'Size', num2cell(sizeSamples(col))');
+if sumOn == 'type'
+    NumbPart = sum(NumbPart,2);
+    row = find(NumbPart >= threshold);
+    Keep = struct('Type', {typeSTR(row)}, 'Size', sizeSamples*1e-6);
+elseif sumOn == 'size'
+    NumbPart = sum(NumbPart,1);
+    col = find(NumbPart >= threshold);
+    Keep = struct('Size', num2cell(sizeSamples(col)*1e-6)','Type', []);
+    for i=1:length(Keep)
+        Keep(i).Type = typeSTR(typeSamples+1);
+    end, clear i,
+else
+    % Find the row and column indexes of data above the threshold
+    [row,col] = find(NumbPart >= threshold);
+    Keep = struct('Type', typeSTR(row), 'Size', num2cell(sizeSamples(col)*1e-6)');
+end
 
 clear conditionDate DataFile dataMultinet dataTable depthSamples filteredDataTable SamplingDate sizeSamples typeSamples typeSTR threshold row col keep
 end
