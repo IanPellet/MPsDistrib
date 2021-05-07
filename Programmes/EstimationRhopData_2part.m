@@ -4,7 +4,7 @@ function [Resultats,ConcentrationSample,Ztest_,z_] = EstimationRhopData_2part(Si
 
 path = '../Results/EstimRho/';
 
-wind = 1; % km/h
+wind = 50; % km/h
 month = 03; 
 
 if nargin == 0
@@ -42,9 +42,12 @@ dz= L/N;
 z = 0:dz:L;
 z_ = z(1:end-1)+dz/2;
 dh = 0.15; % Net oppening (m)
-% [ConcentrationSample, DepthSample] = getDataNpart(type_name, SizePart, true);
-CMes=[0.27 0.08 0.09 0.1 0.2];
-ZMes=[0 25 35 45 50]+dh;
+[CMes, ZMes] = getDataNpart(type_name, SizePart, true);
+CMes = CMes(1:end-1);
+ZMes = ZMes(1:end-1);
+
+% CMes=[0.27 0.08 0.09 0.1 0.2];
+% ZMes=[0 25 35 45 50]+dh;
 ConcentrationSample = interp1(ZMes,CMes,z_,'pchip')';
 DepthSample = z_';
 
@@ -91,7 +94,7 @@ clear Resultats
 pPosRho = zeros(length(RhoP_test),nPart/2+1);
 for i = 1:length(RhoP_test)
     rho=RhoP_test(i);
-    [~, ~, pPos] = varMP_model(modSize, rho, TypePart, nPart/2, tf, dt_test, wind, month, Lon0, Lat0, L, path);
+    [~, ~, pPos] = varMP_model(modSize, rho, TypePart, nPart/2, tf, dt_test, wind, month, Lon0, Lat0, L, N, path);
     pPosRho(i,:) = [rho pPos];
 end, clear i,
 
@@ -181,19 +184,19 @@ end, clear i,
 % ttl = ['Particle size : ' num2str(modSize*1e6) 'µm -- Particle type : ' dispType];
 ttl = ['Particle size : ' num2str(modSize*1e6) 'µm'];
 
-% f1 = figure(1); clf,
-% plot(ConcentrationSample,-Ztest_,'--', 'DisplayName', 'Data interpolation');
-% ylim([-L+0.75 0])
-% xlabel('Concentration (mps.m⁻¹)')
-% ylabel('Depth (m)')
-% hold on
-% plot(CMes,-ZMes,'pm','MarkerSize', 10, 'DisplayName', 'Sampled Data');
-% for res = Resultats
-%     plot(res.conc*res.Alpha,-z_,'DisplayName', ['Rho1 = ' num2str(res.Rho1) ', Rho2 = ' num2str(res.Rho2) 'kg.m⁻³'])
-% end
-% legend('Location', 'southeast')
-% title(ttl)
-% hold off
+f1 = figure(1); clf,
+plot(ConcentrationSample,-Ztest_,'--', 'DisplayName', 'Data interpolation');
+ylim([-L+0.75 0])
+xlabel('Concentration (mps.m⁻¹)')
+ylabel('Depth (m)')
+hold on
+plot(CMes,-ZMes,'pm','MarkerSize', 10, 'DisplayName', 'Sampled Data');
+for res = Resultats
+    plot(res.conc*res.Alpha,-z_,'DisplayName', ['Rho1 = ' num2str(res.Rho1) ', Rho2 = ' num2str(res.Rho2) 'kg.m⁻³'])
+end
+legend('Location', 'southeast')
+title(ttl)
+hold off
 
 f2 = figure(2); clf,
 pcolor(RhoP_test,RhoP_test,ErrorPlotRes);
@@ -233,7 +236,7 @@ if saveFig
         rhoInter = [num2str(min(RhoP_test)) '-' num2str(RhoP_test(2)-RhoP_test(1)) '-' num2str(max(RhoP_test))];
     end
     
-    fileName = ['size' num2str(modSize*1e6) '_rho' rhoInter 'part_10fev'];
+    fileName = ['size' num2str(modSize*1e6) '_rho' rhoInter 'part_anaelle'];
     
     F = [f1, f2, f3];
     xPart = '2part_';

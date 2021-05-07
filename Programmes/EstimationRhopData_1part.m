@@ -92,7 +92,7 @@ end
 iRes = 0;
 for RhoP = RhoP_test
     iRes = iRes+1;
-    [~, ~, PartPos] = varMP_model(modSize, RhoP, TypePart, nPart, tf, dt_test, wind, month, Lon0, Lat0,L, path);
+    [~, ~, PartPos] = varMP_model(modSize, RhoP, TypePart, nPart, tf, dt_test, wind, month, Lon0, Lat0,L, N, path);
 %     
 %     figure(2)
 %     hist = histogram(PartPos,'Visible', 'off').Values;
