@@ -1,4 +1,4 @@
-function [Resultats,ConcentrationSample,Ztest_,z_] = EstimationRhopData_2part(SizePart, type_name, RhoP_test,saveFig)
+function [Resultats,ConcentrationSample,Ztest_,z_] = EstimationRhopData_2part_Lagr(SizePart, type_name, RhoP_test,saveFig)
 
 %% Set Parameters
 
@@ -6,6 +6,7 @@ path = '../Results/EstimRho/';
 
 wind = 50; % km/h
 month = 03; 
+
 
 if nargin == 0
     SizePart = false; % particles size tested (m)
@@ -36,20 +37,21 @@ Lat0 = iStation(:,'Lat').Variables;
 % load(SauvegardeModeleHydro)
 % [I0,J0]=ReperePoint(Lon,Lat,Lon0,Lat0);
 % L = H0(I0,J0);
-L = 55;
+L = 50;
 N = L;
 dz= L/N;
 z = 0:dz:L;
 z_ = z(1:end-1)+dz/2;
 dh = 0.15; % Net oppening (m)
-[CMes, ZMes] = getDataNpart(type_name, SizePart, true);
-CMes = CMes(1:end-1);
-ZMes = ZMes(1:end-1);
+% [CMes, ZMes] = getDataNpart(type_name, SizePart, true);
+% CMes = CMes(1:end-1);
+% ZMes = ZMes(1:end-1);
 
-% CMes=[0.27 0.08 0.09 0.1 0.2];
-% ZMes=[0 25 35 45 50]+dh;
+CMes=[0.27 0.08 0.09 0.1 0.2];
+ZMes=[0 25 35 45 50]+dh;
 ConcentrationSample = interp1(ZMes,CMes,z_,'pchip')';
 DepthSample = z_';
+day = '3fev';
 
 
 
@@ -94,7 +96,7 @@ clear Resultats
 pPosRho = zeros(length(RhoP_test),nPart/2+1);
 for i = 1:length(RhoP_test)
     rho=RhoP_test(i);
-    [~, ~, pPos] = varMP_model(modSize, rho, TypePart, nPart/2, tf, dt_test, wind, month, Lon0, Lat0, L, N, path);
+    [~, ~, pPos] = varMP_model(modSize, rho, TypePart, nPart/2, tf, dt_test, wind, month, Lon0, Lat0, L, N, day);
     pPosRho(i,:) = [rho pPos];
 end, clear i,
 

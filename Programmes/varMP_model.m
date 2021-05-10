@@ -1,4 +1,4 @@
-function [z_, CfinalNorm, PartPos] = varMP_model(D, rhoP, type, nPart, tf, dt_test, WindSpeed, month, Lon0, Lat0, L, N, path)
+function [z_, CfinalNorm, PartPos] = varMP_model(D, rhoP, type, nPart, tf, dt_test, WindSpeed, month, Lon0, Lat0, L, N, day)
 %VARMP_MODEL Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -37,19 +37,32 @@ z_=(z(1:end-1)+z(2:end))/2; % middle of each mesh
 
 %% Speed initialisation
 % [KZ_day,Row_day,z_day,z__day] = KsSalTemp(WindSpeed, month);
+
 DensiteFevrierRhoma
-KZ_day = KZ_Fev10;
-Row_day = Row_Fev10;
-z_day = z_Fev10;
-z__day = z__Fev10;
+if nargin < 4
+    KZ_day = KZ_Fev10;
+    Row_day = Row_Fev10;
+    z_day = z_Fev10;
+    z__day = z__Fev10;
+elseif  strcmp(day, '10fev')
+    KZ_day = KZ_Fev10;
+    Row_day = Row_Fev10;
+    z_day = z_Fev10;
+    z__day = z__Fev10;
+elseif  strcmp(day, '3fev')
+    KZ_day = KZ_Fev03;
+    Row_day = Row_Fev03;
+    z_day = z0;
+    z__day = z0_;
+else
+    error('Day argument not recognised');
+    %     [KZ_day,Row_day,z_day,z__day] = KsSalTemp(WindSpeed, month);
+end
 
 addpath('./fig-Visser/');
 % [K,dK] = wcp_interpolation(z_day,KZ_day,-z_); % Diffusivity
 [K,dK] = Diffusivity(z,z_,dz,0.8,0,KZ_day,z_day);
 
-% K_val = Ks;
-% K = ones(size(z))*K_val;
-% dK = zeros(size(z));
 
 g = 9.81 ; %m.s-1 (gravitational acceleration)
 nuw = 1.1*10^-6; %m2.s-1 (kinematic viscosity of sea water)
