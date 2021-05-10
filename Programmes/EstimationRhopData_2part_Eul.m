@@ -32,7 +32,7 @@ Lat0 = iStation(:,'Lat').Variables;
 
 %% Data loading
 
-L = 50;
+L = 51;
 N = 500;
 dz= L/N;
 z = 0:dz:L;

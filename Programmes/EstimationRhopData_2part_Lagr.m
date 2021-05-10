@@ -37,7 +37,7 @@ Lat0 = iStation(:,'Lat').Variables;
 % load(SauvegardeModeleHydro)
 % [I0,J0]=ReperePoint(Lon,Lat,Lon0,Lat0);
 % L = H0(I0,J0);
-L = 50;
+L = 51;
 N = L;
 dz= L/N;
 z = 0:dz:L;
@@ -103,105 +103,128 @@ end, clear i,
 Resultats(1:length(RhoP_test)) = struct('Rho1', 0, 'Rho2', 0, 'PartPos',...
     [] ,'ConcentrationModel', zeros(size(ConcentrationSample)),...
     'Alpha', 0, 'Erreur', zeros(size(ConcentrationSample)), 'rmseErreur', 0);
+% 
+% combRho = nchoosek(RhoP_test,2);
 
-combRho = nchoosek(RhoP_test,2);
+
+
+%% Model output treatment
+combRho = [nchoosek(RhoP_test,2);[RhoP_test' RhoP_test']];
 
 for iRes=1:size(combRho,1)
+    
     Rho1 = combRho(iRes,1);
-    Rho2 = combRho(iRes,2);
-    
-%     [~, ~, PartPos1] = varMP_model(modSize, Rho1, TypePart, nPart, tf, dt_test, wind, month, Lon0, Lat0, path);
-%     [~, ~, PartPos2] = varMP_model(modSize, Rho2, TypePart, nPart, tf, dt_test, wind, month, Lon0, Lat0, path);
-    
+    Rho2 = combRho(iRes,2);    
     Resultats(iRes).Rho1 = Rho1;
     Resultats(iRes).Rho2 = Rho2;
     Resultats(iRes).PartPos = [pPosRho(pPosRho(:,1)==Rho1,2:end) pPosRho(pPosRho(:,1)==Rho2,2:end)];
-end, clear iRes,
-
-ErrorPlotRes = zeros(length(RhoP_test));
-for i=1:length(RhoP_test)
-    for j=1:length(RhoP_test)
-        r1 = RhoP_test(i);
-        r2 = RhoP_test(j);
-        partpos = [pPosRho(pPosRho(:,1)==r1,2:end) pPosRho(pPosRho(:,1)==r2,2:end)];
-        
-        hTest = histogram(partpos, "BinEdges",  boundTest, 'Visible', 'off').Values;
-        NpartModel = zeros(size(ConcentrationSample));
-        k = 0;
-        for in = 1:length(hTest)
-            if mod(in,2)
-                k = k+1;
-                NpartModel(k) = hTest(in);
-            end
-        end, clear k in,
-
-        Cmod = NpartModel/dh * (nPart/L) ; % on ramène le modèle à 1
-        alpha = Cmod\ConcentrationSample;
-
-        erreur = abs(Cmod.*alpha - ConcentrationSample);
-        rmse = sqrt(mean(erreur.^2,'omitnan'));
-        
-        ErrorPlotRes(i,j) = rmse;
-    end, clear j,
-end, clear i,
-        
-
-%% Model output treatment
-for i=1:length(Resultats)
-    hTest = histogram(Resultats(i).PartPos, "BinEdges",  boundTest, 'Visible', 'off').Values;
-    NpartModel = zeros(size(ConcentrationSample));
-    j = 0;
-    for in = 1:length(hTest)
-        if mod(in,2)
-            j = j+1;
-            NpartModel(j) = hTest(in);
-        end
-    end
-    conc = histogram(Resultats(i).PartPos, "BinEdges",z,'Visible', 'off').Values/dz * (nPart/L) ;
     
-    ConcentrationModel = NpartModel/dh * (nPart/L) ; % on ramène le modèle à 1
+    % Compute concentrations   
+    ConcentrationModel = histogram(Resultats(iRes).PartPos, "BinEdges",z,'Visible', 'off').Values'/dz;
+    % Find best proportionnality coef between model output and data
+%     Cmod = ConcentrationModel;
+%     Cmod(Cmod == 0) = 1e-100;
     alpha = ConcentrationModel\ConcentrationSample;
-    
-    
+    % Compute error
     Erreur = abs(ConcentrationModel.*alpha - ConcentrationSample);
-%     rmseErreur = mean(Erreur,'omitnan');
     rmseErreur = sqrt(mean(Erreur.^2,'omitnan'));
     
-    Resultats(i).ConcentrationModel = ConcentrationModel;
-    Resultats(i).Alpha = alpha;
-    Resultats(i).Erreur = Erreur;
-    Resultats(i).rmseErreur = rmseErreur;
-    Resultats(i).conc = conc;
+    % Fill resultates
+    Resultats(iRes).ConcentrationModel = ConcentrationModel;
+    Resultats(iRes).Alpha = alpha;
+    Resultats(iRes).Erreur = Erreur;
+    Resultats(iRes).rmseErreur = rmseErreur;
+    
+end, clear iRes,
+
+%% Create error matrix to plot results
+
+ErrorPlotRes = zeros(length(RhoP_test));
+for i=1:length(Resultats)
+    a = RhoP_test == Resultats(i).Rho1;
+    b = RhoP_test == Resultats(i).Rho2;
+    ErrorPlotRes(a,b) = Resultats(i).rmseErreur;
 end, clear i,
+
+ErrorPlotResBis = ErrorPlotRes + ErrorPlotRes' - eye(size(ErrorPlotRes)).*ErrorPlotRes;
+
+% ErrorPlotRes = zeros(length(RhoP_test));
+% for i=1:length(RhoP_test)
+%     for j=1:length(RhoP_test)
+%         r1 = RhoP_test(i);
+%         r2 = RhoP_test(j);
+%         partpos = [pPosRho(pPosRho(:,1)==r1,2:end) pPosRho(pPosRho(:,1)==r2,2:end)];
+%         
+%         hTest = histogram(partpos, "BinEdges",  boundTest, 'Visible', 'off').Values;
+%         NpartModel = zeros(size(ConcentrationSample));
+%         k = 0;
+%         for in = 1:length(hTest)
+%             if mod(in,2)
+%                 k = k+1;
+%                 NpartModel(k) = hTest(in);
+%             end
+%         end, clear k in,
+% 
+%         Cmod = NpartModel/dh * (nPart/L) ; % on ramène le modèle à 1
+%         alpha = Cmod\ConcentrationSample;
+% 
+%         erreur = abs(Cmod.*alpha - ConcentrationSample);
+%         rmse = sqrt(mean(erreur.^2,'omitnan'));
+%         
+%         ErrorPlotRes(i,j) = rmse;
+%     end, clear j,
+% end, clear i,
+%         
+% 
+% for i=1:length(Resultats)
+%     hTest = histogram(Resultats(i).PartPos, "BinEdges",  boundTest, 'Visible', 'off').Values;
+%     NpartModel = zeros(size(ConcentrationSample));
+%     j = 0;
+%     for in = 1:length(hTest)
+%         if mod(in,2)
+%             j = j+1;
+%             NpartModel(j) = hTest(in);
+%         end
+%     end
+%     conc = histogram(Resultats(i).PartPos, "BinEdges",z,'Visible', 'off').Values/dz * (nPart/L) ;
+%     
+%     ConcentrationModel = NpartModel/dh * (nPart/L) ; % on ramène le modèle à 1
+%     alpha = ConcentrationModel\ConcentrationSample;
+%     
+%     
+%     Erreur = abs(ConcentrationModel.*alpha - ConcentrationSample);
+% %     rmseErreur = mean(Erreur,'omitnan');
+%     rmseErreur = sqrt(mean(Erreur.^2,'omitnan'));
+%     
+%     Resultats(i).ConcentrationModel = ConcentrationModel;
+%     Resultats(i).Alpha = alpha;
+%     Resultats(i).Erreur = Erreur;
+%     Resultats(i).rmseErreur = rmseErreur;
+%     Resultats(i).conc = ConcentrationModel;
+% end, clear i,
 
 
         
 
 %% Display results
-% if type_name
-%     dispType = type_name;
-% else
-%     dispType = 'all';
-% end
-% ttl = ['Particle size : ' num2str(modSize*1e6) 'µm -- Particle type : ' dispType];
 ttl = ['Particle size : ' num2str(modSize*1e6) 'µm'];
 
-f1 = figure(1); clf,
-plot(ConcentrationSample,-Ztest_,'--', 'DisplayName', 'Data interpolation');
-ylim([-L+0.75 0])
-xlabel('Concentration (mps.m⁻¹)')
-ylabel('Depth (m)')
-hold on
-plot(CMes,-ZMes,'pm','MarkerSize', 10, 'DisplayName', 'Sampled Data');
-for res = Resultats
-    plot(res.conc*res.Alpha,-z_,'DisplayName', ['Rho1 = ' num2str(res.Rho1) ', Rho2 = ' num2str(res.Rho2) 'kg.m⁻³'])
-end
-legend('Location', 'southeast')
-title(ttl)
-hold off
+% f1 = figure(1); clf,
+% plot(ConcentrationSample,-Ztest_,'--', 'DisplayName', 'Data interpolation');
+% ylim([-L+0.75 0])
+% xlabel('Concentration (mps.m⁻¹)')
+% ylabel('Depth (m)')
+% hold on
+% plot(CMes,-ZMes,'pm','MarkerSize', 10, 'DisplayName', 'Sampled Data');
+% for res = Resultats
+%     plot(res.ConcentrationModel*res.Alpha,-z_,'DisplayName', ['Rho1 = ' num2str(res.Rho1) ', Rho2 = ' num2str(res.Rho2) 'kg.m⁻³'])
+% end
+% legend('Location', 'southeast')
+% title(ttl)
+% hold off
 
 f2 = figure(2); clf,
-pcolor(RhoP_test,RhoP_test,ErrorPlotRes);
+pcolor(RhoP_test,RhoP_test,ErrorPlotResBis);
 c = colorbar;
 c.Label.String = 'RMSE (mps.m⁻³)';
 xlabel('Rho_1 (kg.m⁻³)');
@@ -226,7 +249,7 @@ xlabel('Concentration (mps.m⁻¹)')
 ylabel('Depth (m)')
 hold on 
 plot(CMes,-ZMes,'pm','MarkerSize', 10, 'DisplayName', 'Sampled Data');
-plot(Resultats(minI).conc*Resultats(minI).Alpha,-z_,'DisplayName', ['Rho1 = ' num2str(minRho1) ', Rho2 = ' num2str(minRho2) 'kg.m⁻³'])
+plot(Resultats(minI).ConcentrationModel*Resultats(minI).Alpha,-z_,'DisplayName', ['Rho1 = ' num2str(minRho1) ', Rho2 = ' num2str(minRho2) 'kg.m⁻³'])
 legend('Location', 'southeast')
 title([ttl ' -- Rho1 = ' num2str(minRho1) ', Rho2 = ' num2str(minRho2) 'kg.m⁻³'])
 hold off
@@ -238,11 +261,11 @@ if saveFig
         rhoInter = [num2str(min(RhoP_test)) '-' num2str(RhoP_test(2)-RhoP_test(1)) '-' num2str(max(RhoP_test))];
     end
     
-    fileName = ['size' num2str(modSize*1e6) '_rho' rhoInter 'part_anaelle'];
+    fileName = ['size' num2str(modSize*1e6) '_rho' rhoInter '_MarineLagr'];
     
-    F = [f1, f2, f3];
+    F = [f2, f3];
     xPart = '2part_';
-    N = {'profils_', 'error_', 'min_'};
+    N = {'error_', 'min_'};
     for i=1:length(F)
         f = F(i);
         n = N{i};
