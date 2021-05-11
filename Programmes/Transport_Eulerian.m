@@ -1,4 +1,4 @@
-function [C, z_] = Transport_Eulerian(D, rhoP, N, day)
+function [C, z_, z] = Transport_Eulerian(D, rhoP, N, L, day)
 %UNTITLED3 Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -30,7 +30,7 @@ dh=0.15; % profondeur sur laquelle le filet prélève
 
 clear Concentration err
 %L=H0(I0,J0);   %m
-L = 50; % Profondeur 
+% L = 50; % Profondeur 
 % N = 500;
 dz= L/N;  z=0:dz:L; % x : boundaries of the meshes
 z_=(z(1:end-1)+z(2:end))/2; % milieu de chaque maille

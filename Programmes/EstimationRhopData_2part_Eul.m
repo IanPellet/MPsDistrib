@@ -77,7 +77,7 @@ clear Resultats
 CRho = zeros(length(RhoP_test),N+1);
 for i = 1:length(RhoP_test)
     rho=RhoP_test(i);
-    [C, z_] = Transport_Eulerian(modSize, rho, N, day);
+    [C, z_] = Transport_Eulerian(modSize, rho, N, L, day);
     CRho(i,:) = [rho C];
 end, clear i,
 
