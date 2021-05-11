@@ -4,54 +4,52 @@ function [Resultats,ConcentrationSample,Ztest_,z_] = EstimationRhopData_1part_Eu
 % SizePart : (double) size of the modeled particles (m)
 % RhoP_tes : (double array) modeled particle densities tested (kg.m⁻³)
 % saveFig : (boolean) if true figures will be saved to '../Results/EstimRho/'
-
+% 
+% 
 
 %% Set Parameters
 path = '../Results/EstimRho/'; % saved figures directory
 
 % Wind parameters
-wind = 50; % km/h
-month = 03; 
 day = '10fev';
 
 
 %% Data loading
-L = 55;
-N = L;
+L = 51;
+N = 100;
 dz= L/N;
-z = 0:dz:L;
+z = (0:dz:L)';
 z_ = z(1:end-1)+dz/2;
 
 % SamplingDate = datetime('3/18/2021');
 % DataFile = '../Data/data_mps.txt';
 % [ConcentrationSample, DepthSample] = getDataNpart(false, SizePart, true, DataFile, SamplingDate);
 CMes=[0.62 0.34 0.06 0.02 0];
-ZMes=[1 10 15 40 L];
-ConcentrationSample = interp1(ZMes,CMes,z_,'pchip')';
-DepthSample = z_';
+ZMes=[1 10 15 40 50];
+% ConcentrationSample = interp1(ZMes,CMes,z_,'pchip')';
+% DepthSample = z_';
+ConcentrationSample = CMes';
+DepthSample = ZMes';
+DataInterp = interp1(ZMes,CMes,z_,'pchip')';
+
 
 dh = 0.71; % Net oppening (m)
 
 % Boundaries in between which modeled part number have to be tested
-boundTest = zeros(1,length(DepthSample)*2);
-% for i = 1:length(boundTest)
-%     temp_depth = DepthSample(fix((i+1)/2));
-%     if i>1 && boundTest(i-1) == temp_depth
-%         boundTest(i) = temp_depth+dh;
-%     else
-%         boundTest(i) = temp_depth;
-%     end
-% end
-% boundTest = 0:dh:L;
+boundTest = zeros(length(DepthSample)*2,1);
+ibound = zeros(size(boundTest));
+
 for i = 1:length(boundTest)
     if mod(i,2)
-        boundTest(i) = DepthSample(fix((i+1)/2))-dh;
-    else
         boundTest(i) = DepthSample(fix((i+1)/2));
+    else
+        boundTest(i) = DepthSample(fix((i+1)/2))+dh;
     end
+    ibound(i) = min(length(z_),max(1,fix(boundTest(i)/dz)+1));
 end, clear i,
 
-Ztest_ = DepthSample - dh/2;
+
+Ztest_ = DepthSample + dh/2;
 
 clear Resultats
 
@@ -66,9 +64,14 @@ end
 
 for iRes = 1:length(RhoP_test)
     RhoP = RhoP_test(iRes);    
-    [conc, z_] = Transport_Eulerian(modSize, RhoP, N, day);
+    [conc, z_] = Transport_Eulerian(modSize, RhoP, N, L, day);
     
-    ConcentrationModel = conc';
+    ConcentrationModel = zeros(size(ConcentrationSample));
+    j = 0;
+    for ic = 1:2:length(ibound)
+        j = j+1;
+        ConcentrationModel(j) = mean(conc(ibound(ic):ibound(ic+1)));
+    end, clear ic j,
 
     alpha = ConcentrationModel\ConcentrationSample;
     
@@ -81,14 +84,17 @@ for iRes = 1:length(RhoP_test)
     Resultats(iRes).Alpha = alpha;
     Resultats(iRes).Erreur = Erreur;
     Resultats(iRes).rmseErreur = rmseErreur;
-    Resultats(iRes).conc = conc;
+    Resultats(iRes).conc = conc';
 end, clear iRes,
 
 
 ttl = ['Particle size : ' num2str(modSize*1e6) 'µm'];
+minI = [Resultats.rmseErreur] == min([Resultats.rmseErreur]);
+minRho = Resultats(minI).RhoP;
 
 f1 = figure(1); clf,
-plot(ConcentrationSample,-Ztest_,'--', 'DisplayName', 'Data interpolation');
+plot(DataInterp,-z_,'--', 'DisplayName', 'Data interpolation');
+xlim([0 max(Resultats(minI).conc*Resultats(minI).Alpha)])
 ylim([-L+0.75 0])
 xlabel('Concentration (mps.m⁻¹)')
 ylabel('Depth (m)')
@@ -114,18 +120,14 @@ ylabel('RMSE (mps.m⁻³)');
 title(ttl)
 hold off
 
-minI = [Resultats.rmseErreur] == min([Resultats.rmseErreur]);
-minRho = Resultats(minI).RhoP;
-
-
 f3 = figure(3); clf,
-plot(ConcentrationSample,-Ztest_,'--', 'DisplayName', 'Data interpolation');
-% xlim([0 max(ConcentrationSample)])
+plot(DataInterp,-z_,'--', 'DisplayName', 'Data interpolation');
+xlim([0 max(Resultats(minI).conc*Resultats(minI).Alpha)])
 ylim([-L+0.75 0])
 xlabel('Concentration (mps.m⁻¹)')
 ylabel('Depth (m)')
 hold on 
-plot(CMes,-ZMes,'pm','MarkerSize', 10, 'DisplayName', 'Sampled Data');
+plot(CMes,-Ztest_,'pm','MarkerSize', 10, 'DisplayName', 'Sampled Data');
 plot(Resultats(minI).conc*Resultats(minI).Alpha,-z_,'DisplayName', ['RhoP = ' num2str(Resultats(minI).RhoP) 'kg.m⁻³'])
 legend('Location', 'southeast')
 title([ttl ' -- Rho_p = ' num2str(minRho) 'kg.m⁻³'])
