@@ -1,4 +1,4 @@
-function [Resultats,ConcentrationSample,Ztest_,z_] = EstimationRhopData_1part(SizePart, type_name, RhoP_test, saveFig)
+function [Resultats,ConcentrationSample,Ztest_,z_] = EstimationRhopData_1part_Lagr(SizePart, type_name, RhoP_test, saveFig)
 
 %% Set Parameters
 
