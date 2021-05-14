@@ -153,63 +153,6 @@ for i=1:length(Resultats)
 end, clear i,
 
 ErrorPlotResBis = ErrorPlotRes + ErrorPlotRes' - eye(size(ErrorPlotRes)).*ErrorPlotRes;
-
-% ErrorPlotRes = zeros(length(RhoP_test));
-% for i=1:length(RhoP_test)
-%     for j=1:length(RhoP_test)
-%         r1 = RhoP_test(i);
-%         r2 = RhoP_test(j);
-%         partpos = [pPosRho(pPosRho(:,1)==r1,2:end) pPosRho(pPosRho(:,1)==r2,2:end)];
-%         
-%         hTest = histogram(partpos, "BinEdges",  boundTest, 'Visible', 'off').Values;
-%         NpartModel = zeros(size(ConcentrationSample));
-%         k = 0;
-%         for in = 1:length(hTest)
-%             if mod(in,2)
-%                 k = k+1;
-%                 NpartModel(k) = hTest(in);
-%             end
-%         end, clear k in,
-% 
-%         Cmod = NpartModel/dh * (nPart/L) ; % on ramène le modèle à 1
-%         alpha = Cmod\ConcentrationSample;
-% 
-%         erreur = abs(Cmod.*alpha - ConcentrationSample);
-%         rmse = sqrt(mean(erreur.^2,'omitnan'));
-%         
-%         ErrorPlotRes(i,j) = rmse;
-%     end, clear j,
-% end, clear i,
-%         
-% 
-% for i=1:length(Resultats)
-%     hTest = histogram(Resultats(i).PartPos, "BinEdges",  boundTest, 'Visible', 'off').Values;
-%     NpartModel = zeros(size(ConcentrationSample));
-%     j = 0;
-%     for in = 1:length(hTest)
-%         if mod(in,2)
-%             j = j+1;
-%             NpartModel(j) = hTest(in);
-%         end
-%     end
-%     conc = histogram(Resultats(i).PartPos, "BinEdges",z,'Visible', 'off').Values/dz * (nPart/L) ;
-%     
-%     ConcentrationModel = NpartModel/dh * (nPart/L) ; % on ramène le modèle à 1
-%     alpha = ConcentrationModel\ConcentrationSample;
-%     
-%     
-%     Erreur = abs(ConcentrationModel.*alpha - ConcentrationSample);
-% %     rmseErreur = mean(Erreur,'omitnan');
-%     rmseErreur = sqrt(mean(Erreur.^2,'omitnan'));
-%     
-%     Resultats(i).ConcentrationModel = ConcentrationModel;
-%     Resultats(i).Alpha = alpha;
-%     Resultats(i).Erreur = Erreur;
-%     Resultats(i).rmseErreur = rmseErreur;
-%     Resultats(i).conc = ConcentrationModel;
-% end, clear i,
-
-
         
 
 %% Display results

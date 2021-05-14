@@ -23,16 +23,19 @@ z_ = z(1:end-1)+dz/2; % center of the meshes
 day = '10fev'; % day corresponding to diffusive turbulence data
 
 %% Data
+
+dh = 0.71; % Net oppening (m)
+
 % SamplingDate = datetime('3/18/2021');
 % DataFile = '../Data/data_mps.txt';
 % [ConcentrationSample, DepthSample] = getDataNpart(false, SizePart, true, DataFile, SamplingDate);
 CMes=[0.62 0.34 0.06 0.02 0]; % Concentration
-ZMes=[1 10 15 40 50]; % Depth of the samples
+ZMes=[1 10 15 40 50]+dh/2; % Depth of the samples
 ConcentrationSample = CMes';
 DepthSample = ZMes';
 DataInterp = interp1(ZMes,CMes,z_,'pchip')'; % Interpolated data
 
-dh = 0.71; % Net oppening (m)
+
 
 %% Find corresponding depths to get from the model
 boundTest = zeros(length(DepthSample)*2,1); % Boundaries in between which modeled part number have to be tested
@@ -40,14 +43,14 @@ ibound = zeros(size(boundTest)); % index boundaries of meshes to avg
 
 for i = 1:length(boundTest)
     if mod(i,2)
-        boundTest(i) = DepthSample(fix((i+1)/2));
+        boundTest(i) = DepthSample(fix((i+1)/2))-dh/2;
     else
-        boundTest(i) = DepthSample(fix((i+1)/2))+dh;
+        boundTest(i) = DepthSample(fix((i+1)/2))+dh/2;
     end
     ibound(i) = min(length(z_),max(1,fix(boundTest(i)/dz)+1));
 end, clear i,
 
-Ztest_ = DepthSample + dh/2; 
+Ztest_ = ZMes; 
 
 %% Simulations
 clear Resultats
