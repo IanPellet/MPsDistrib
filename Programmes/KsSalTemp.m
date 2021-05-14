@@ -1,18 +1,27 @@
-function [KZ_day,Row_day,z_day,z__day] = KsSalTemp(WindSpeed_kmh, month)
+%function [KZ_day,Row_day,z_day,z__day] = KsSalTemp(WindSpeed_kmh, month)
 %KSSALTEMP Summary of this function goes here
 % Find the day in the 2012RHOMA_arome database with the closest wind
-% situation to return the values of turbidity, salinity, temperature and
+% situation to return the values of diffusivity, salinity, temperature and
 % water density that day.
-%   WindSpeed_kmh Wind Speed in km/h
+%   WindSpeed_kmh : Wind Speed in km/h
+
+station = "RN2";
+stationFile = '../Data/stationIJ_CEREGE.mat';
+load(stationFile,'stationIJ');
+I0 = stationIJ{stationIJ{:,'station'} == station,'I0'};
+J0 = stationIJ{stationIJ{:,'station'} == station,'J0'};
+
+month = 3;
+WindSpeed_kmh = 50;
 
 ModeleHydro='2012RHOMA_arome_003.nc';
 SauvegardeModeleHydro=['DonneeBase' ModeleHydro(1:end-3)];
-load(SauvegardeModeleHydro)
+load(SauvegardeModeleHydro, 'TauX', 'TauY', 'Temps')
 % Loaded variables :  Adv - C - C_ - Diff - H0 - ii - Lat - Lon - Nu -
 % Sigma - TauX - TauY - Temps 
 
 FichDiffusion='/media/ian/Elements/Ian_Plastique/Data/Diffusion';
-load(FichDiffusion)
+load(FichDiffusion, 'KZ0', 'Salinite0', 'Temperature0', 'z0', 'z0_')
 % Loaded variables :  KZ0 - Row0 - Salinite0 - Temperature0 - z0 - z0_
 
 mDays = [31 29 31 30 31 30 31 31 30 31 30 31]; % Days in each month
@@ -29,11 +38,11 @@ TAU_period = TAU(dStart:dStop); % Extract data from dStart to dStop
 %%%Contampump 10.02.20 (10:22 a 11:54 Vent moyen=7.7 Force2)
 WindSpeed_ms = WindSpeed_kmh/3.6; % Wind speed m/s
 
-Cd10Fev=10^-3*(0.43+0.096*WindSpeed_ms); %Geernaert               %% ????
+Cd_day=10^-3*(0.43+0.096*WindSpeed_ms); %Geernaert               %% ????
 
-TAU10Fev=1.292*Cd10Fev.*WindSpeed_ms.*WindSpeed_ms;
+TAU_day=1.292*Cd_day.*WindSpeed_ms.*WindSpeed_ms;
 
-JRhomaTAU =find(abs(TAU_period-TAU10Fev) < 0.0001); % Find a day with similar wind in our data
+JRhomaTAU =find(abs(TAU_period-TAU_day) < 0.0001); % Find a day with similar wind in our data
 
 % If several days are found, we take the one closer to the middle of the
 % month
@@ -49,7 +58,7 @@ end
 Temps0=JRhomaTAU/24; 
 T0=datenum(str2num(datestr(Temps(1),'yyyy')),1,1)-1;
 
-[tt,iT0]=min(abs(Temps-T0-Temps0));
+[~,iT0]=min(abs(Temps-T0-Temps0));
 
 
 KZ_day = KZ0(iT0,:);
@@ -63,5 +72,5 @@ Row_day = CalculDensite(Temp_day,Sal_day); %source: edu.obs-mip.fr
 
 
 
-end
+%end
 
