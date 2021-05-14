@@ -22,6 +22,12 @@ else
     TypePart = false;
 end
 
+
+nPart = 10e3; % number of particles
+
+tf = 1e5; % simulation time (s)
+dt_test = 60*60; % test time interval (s)
+
 load('../Data/stationLonLat_CEREGE.mat','station') % load position data of stations
 staName = 'RN2'; % chosen station
 iStation = station(all(station(:,'Station').Variables'==staName')',:); % corresponding row of the table station
@@ -37,50 +43,26 @@ Lat0 = iStation(:,'Lat').Variables;
 % load(SauvegardeModeleHydro)
 % [I0,J0]=ReperePoint(Lon,Lat,Lon0,Lat0);
 % L = H0(I0,J0);
-L = 51;
+L = 55;
 N = L;
 dz= L/N;
-z = 0:dz:L;
-z_ = z(1:end-1)+dz/2;
-dh = 0.15; % Net oppening (m)
-% [CMes, ZMes] = getDataNpart(type_name, SizePart, true);
-% CMes = CMes(1:end-1);
-% ZMes = ZMes(1:end-1);
+z = (0:dz:L)'; % meshes boundaries
+z_ = z(1:end-1)+dz/2; % center of the meshes
 
-CMes=[0.27 0.08 0.09 0.1 0.2];
-ZMes=[0 25 35 45 50]+dh;
-ConcentrationSample = interp1(ZMes,CMes,z_,'pchip')';
-DepthSample = z_';
-day = '3fev';
+day = '3fev'; % day corresponding to diffusive turbulence data
 
+%% Data
 
+% SamplingDate = datetime('3/18/2021');
+% DataFile = '../Data/data_mps.txt';
+% [ConcentrationSample, DepthSample] = getDataNpart(false, SizePart, true, DataFile, SamplingDate);
+CMes=[0.27 0.08 0.09 0.1 0.2]; % Concentration
+ZMes=[0 25 35 45 50]; % Depth of the samples
+ConcentrationSample = CMes(1:end)';
+DepthSample = ZMes(1:end)';
+DataInterp = interp1(ZMes,CMes,z_,'pchip')'; % Interpolated data
 
-% Boundaries in between which modeled part number have to be tested
-boundTest = zeros(1,length(DepthSample)*2);
-% for i = 1:length(boundTest)
-%     temp_depth = DepthSample(fix((i+1)/2));
-%     if i>1 && boundTest(i-1) == temp_depth
-%         boundTest(i) = temp_depth+dh;
-%     else
-%         boundTest(i) = temp_depth;
-%     end
-% end
-% boundTest = 0:dh:L;
-for i = 1:length(boundTest)
-    if mod(i,2)
-        boundTest(i) = DepthSample(fix((i+1)/2))-dh;
-    else
-        boundTest(i) = DepthSample(fix((i+1)/2));
-    end
-end, clear i,
-
-% Ztest_ = DepthSample + dh/2;
-Ztest_ = DepthSample - dh/2;
-
-nPart = 50e3; % number of particles
-
-tf = 1e5; % simulation time (s)
-dt_test = 60*60; % test time interval (s)
+dh = 0.71; % Net oppening (m)
 
 
 if SizePart
@@ -90,7 +72,22 @@ else
 end
 
 
-%% Run model
+%% Find corresponding depths to get from the model
+boundTest = zeros(length(DepthSample)*2,1); % Boundaries in between which modeled part number have to be tested
+% ibound = zeros(size(boundTest)); % index boundaries of meshes to avg
+
+for i = 1:length(boundTest)
+    if mod(i,2)
+        boundTest(i) = DepthSample(fix((i+1)/2));
+    else
+        boundTest(i) = DepthSample(fix((i+1)/2))+dh;
+    end
+%     ibound(i) = min(length(z_),max(1,fix(boundTest(i)/dz)+1));
+end, clear i,
+
+Ztest_ = DepthSample + dh/2; 
+
+%% Simulations
 clear Resultats
 
 pPosRho = zeros(length(RhoP_test),nPart/2+1);
@@ -103,9 +100,6 @@ end, clear i,
 Resultats(1:length(RhoP_test)) = struct('Rho1', 0, 'Rho2', 0, 'PartPos',...
     [] ,'ConcentrationModel', zeros(size(ConcentrationSample)),...
     'Alpha', 0, 'Erreur', zeros(size(ConcentrationSample)), 'rmseErreur', 0);
-% 
-% combRho = nchoosek(RhoP_test,2);
-
 
 
 %% Model output treatment
@@ -120,11 +114,23 @@ for iRes=1:size(combRho,1)
     Resultats(iRes).PartPos = [pPosRho(pPosRho(:,1)==Rho1,2:end) pPosRho(pPosRho(:,1)==Rho2,2:end)];
     
     % Compute concentrations   
-    ConcentrationModel = histogram(Resultats(iRes).PartPos, "BinEdges",z,'Visible', 'off').Values'/dz;
+    hTest = histogram(Resultats(iRes).PartPos, "BinEdges", boundTest,'Visible', 'off').Values';
+    NpartModel = zeros(size(ConcentrationSample));
+    j = 0;
+    for i = 1:length(hTest)
+        if mod(i,2)
+            j = j+1;
+            NpartModel(j) = hTest(i);
+        end
+    end
+    ConcentrationModel = NpartModel/dh;
+    conc = histogram(Resultats(iRes).PartPos, "BinEdges",z,'Visible', 'off').Values/dz * (nPart/L) ;
+    
     % Find best proportionnality coef between model output and data
 %     Cmod = ConcentrationModel;
 %     Cmod(Cmod == 0) = 1e-100;
-    alpha = ConcentrationModel\ConcentrationSample;
+%     alpha = ConcentrationModel\ConcentrationSample;
+    alpha = conc'\DataInterp';
     % Compute error
     Erreur = abs(ConcentrationModel.*alpha - ConcentrationSample);
     rmseErreur = sqrt(mean(Erreur.^2,'omitnan'));
@@ -134,7 +140,7 @@ for iRes=1:size(combRho,1)
     Resultats(iRes).Alpha = alpha;
     Resultats(iRes).Erreur = Erreur;
     Resultats(iRes).rmseErreur = rmseErreur;
-    
+    Resultats(iRes).conc = conc;
 end, clear iRes,
 
 %% Create error matrix to plot results
@@ -209,20 +215,21 @@ ErrorPlotResBis = ErrorPlotRes + ErrorPlotRes' - eye(size(ErrorPlotRes)).*ErrorP
 %% Display results
 ttl = ['Particle size : ' num2str(modSize*1e6) 'µm'];
 
-% f1 = figure(1); clf,
-% plot(ConcentrationSample,-Ztest_,'--', 'DisplayName', 'Data interpolation');
-% ylim([-L+0.75 0])
-% xlabel('Concentration (mps.m⁻¹)')
-% ylabel('Depth (m)')
-% hold on
-% plot(CMes,-ZMes,'pm','MarkerSize', 10, 'DisplayName', 'Sampled Data');
-% for res = Resultats
-%     plot(res.ConcentrationModel*res.Alpha,-z_,'DisplayName', ['Rho1 = ' num2str(res.Rho1) ', Rho2 = ' num2str(res.Rho2) 'kg.m⁻³'])
-% end
-% legend('Location', 'southeast')
-% title(ttl)
-% hold off
+f1 = figure(1); clf,
+plot(DataInterp,-z_,'--', 'DisplayName', 'Data interpolation');
+ylim([-L+0.75 0])
+xlabel('Concentration (mps.m⁻¹)')
+ylabel('Depth (m)')
+hold on
+plot(CMes,-ZMes,'pm','MarkerSize', 10, 'DisplayName', 'Sampled Data');
+for res = Resultats
+    plot(res.conc*res.Alpha,-z_,'DisplayName', ['Rho1 = ' num2str(res.Rho1) ', Rho2 = ' num2str(res.Rho2) 'kg.m⁻³'])
+end
+legend('Location', 'southeast')
+title(ttl)
+hold off
 
+% figure 2 : plot error with respect to rhoP
 f2 = figure(2); clf,
 pcolor(RhoP_test,RhoP_test,ErrorPlotResBis);
 c = colorbar;
@@ -231,25 +238,24 @@ xlabel('Rho_1 (kg.m⁻³)');
 ylabel('Rho_2 (kg.m⁻³)');
 xticks(RhoP_test);
 yticks(RhoP_test);
-
-
 title(ttl)
 
 
-minI = [Resultats.rmseErreur] == min([Resultats.rmseErreur]);
+minI = find([Resultats.rmseErreur] == min([Resultats.rmseErreur]),1);
+
 minRho1 = Resultats(minI).Rho1;
 minRho2 = Resultats(minI).Rho2;
 
-
+% figure 3 : plot best rhoP profile
 f3 = figure(3); clf,
-plot(ConcentrationSample,-Ztest_,'--', 'DisplayName', 'Data interpolation');
+plot(DataInterp,-z_,'--', 'DisplayName', 'Data interpolation');
 % xlim([0 max(ConcentrationSample)])
 ylim([-L+0.75 0])
 xlabel('Concentration (mps.m⁻¹)')
 ylabel('Depth (m)')
 hold on 
 plot(CMes,-ZMes,'pm','MarkerSize', 10, 'DisplayName', 'Sampled Data');
-plot(Resultats(minI).ConcentrationModel*Resultats(minI).Alpha,-z_,'DisplayName', ['Rho1 = ' num2str(minRho1) ', Rho2 = ' num2str(minRho2) 'kg.m⁻³'])
+plot(Resultats(minI).conc*Resultats(minI).Alpha,-z_,'DisplayName', ['Rho1 = ' num2str(minRho1) ', Rho2 = ' num2str(minRho2) 'kg.m⁻³'])
 legend('Location', 'southeast')
 title([ttl ' -- Rho1 = ' num2str(minRho1) ', Rho2 = ' num2str(minRho2) 'kg.m⁻³'])
 hold off
