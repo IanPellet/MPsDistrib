@@ -1,29 +1,51 @@
-clear
+function [fileName] = recupDataNcdf(station)
+%RECUPDATANCDF Saves data at station's point 
+% Saves salinity, temperature, diffusivity, depth, data points levels
+% at the data point corresponding to the station and the time array t.
+%
+% station : (string) station's name
+%
+% Data saved as '../Data/waterCol_station.mat'
 
-station = "RN2";
-date = datetime('18/03/2012','InputFormat', 'dd/MM/yyyy');
-monthStart = date - calmonths(1);
-monthEnd = date + calmonths(1);
-origin = datetime(1900,1,1,0,0,0);
-tStart = monthStart - origin;
-tEnd = monthEnd - origin;
+start % add necessary paths 
 
+% Load file with indexes corresponding to each stations
 stationFile = '../Data/stationIJ_CEREGE.mat';
 load(stationFile,'stationIJ');
+% Get the indexes of the right station
 I0 = stationIJ{stationIJ{:,'station'} == station,'I0'};
 J0 = stationIJ{stationIJ{:,'station'} == station,'J0'};
 
+% Load netCDF data files
 ncSal = netcdf('../../rhoma2012/SAL.nc');
 ncTemp = netcdf('../../rhoma2012/TEMP.nc');
 ncKz = netcdf('../../rhoma2012/KZ.nc');
 
-Sal = ncSal{'SAL'};
-Temp = ncTemp{'TEMP'};
-Kz = ncKz{'KZ'};
+% Get the full data arrays pointers
+fullSal = ncSal{'SAL'};
+fullTemp = ncTemp{'TEMP'};
+fullKz = ncKz{'KZ'};
+
+% Get the data at the station's point
+Sal = fullSal(:,:,I0,J0);
+Temp = fullTemp(:,:,I0,J0);
+Kz = fullKz(:,:,I0,J0);
+% Get time array
 t = seconds(ncKz{'time'}(:,:));
 
-itStart = find(abs(t-tStart) == min(abs(t-tStart)));
-itEnd = find(abs(t-tEnd) == min(abs(t-tStart)));
+H0 = ncKz{'H0'}(I0,J0); % bathymetry relative to the mean level
+eta = ncKz{'XE'}(:,I0,J0); % sea surface height
+sigma_w = ncKz{'level_w'}(:,:); % sigma level at the interface
 
+% Compute depth of data points
+z0 = zeros(length(t), length(sigma_w));
+for i=1:length(t)
+    z0(i,:) = eta(i) + sigma_w*(H0+eta(i));
+end
 
-Kz_month = Kz(itStart:itEnd,:,I0,J0);
+% Save data to file
+fileName = join(['../Data/waterCol_' station ".mat"],"");
+save(fileName, 'Sal', 'Temp', 'Kz', 't', 'H0', 'z0');
+
+disp(join(['Saved to' fileName]))
+end
