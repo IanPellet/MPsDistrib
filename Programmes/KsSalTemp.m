@@ -9,7 +9,7 @@ function [KZ_day,Row_day,z_day,z__day] = KsSalTemp(WindSpeed_kmh, date)
 % clear
 % date = datetime('18/03/2012','InputFormat', 'dd/MM/yyyy');
 % WindSpeed_kmh = 50;
-
+date = datetime(2012,month(date),day(date));
 monthStart = date - calmonths(1);
 monthEnd = date + calmonths(1);
 origin = datetime(0,1,1,0,0,0);
