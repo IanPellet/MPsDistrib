@@ -7,6 +7,8 @@ global g nuw rhow
 fprintf(['\n\n\n--------------------- D = ' num2str(D*1e6) 'µm'...
     ' -- rhoP = ' num2str(rhoP) 'kg.m⁻³ -- Type = ' num2str(type) ' ---------------------\n\n'])
 
+rng('shuffle'); % seed init based on clock
+
 clear Concentration err
 
  ModeleHydro='2012RHOMA_arome_003.nc';
