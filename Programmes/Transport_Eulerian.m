@@ -1,4 +1,4 @@
-function [C, z_, z] = Transport_Eulerian(D, rhoP, N, L, day)
+function [C, z_, z] = Transport_Eulerian(D, rhoP, N, L, day, windSpeed, date)
 %UNTITLED3 Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -68,9 +68,10 @@ elseif  strcmp(day, '3fev')
     Row_day = Row_Fev03;
     z_day = z0;
     z__day = z0_;
+elseif windSpeed 
+    [KZ_day,Row_day,z_day,z__day] = KsSalTemp(windSpeed, date);
 else
-    error('Day argument not recognised');
-    %     [KZ_day,Row_day,z_day,z__day] = KsSalTemp(WindSpeed, month);
+    error('Please pass day or windSpeed and date as argument');
 end
 
 Nu=interp1(z_day,KZ_day,-z_,'pchip');

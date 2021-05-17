@@ -1,40 +1,66 @@
-function [Resultats,ConcentrationSample,Ztest_,z_] = Estimation1Rhop_Eul(SizePart, RhoP_test, saveFig, N)
-%%ESTIMATIONRHOPDATA_1PART_EUL Finds the modeled particle density closest
+function [Resultats,ConcentrationSample,Ztest_,z_] = Estimation1Rhop_Eul(SizePart, RhoP_test, saveFig, N, windSpeed)
+%%ESTIMATION1RHOP_EUL Finds the modeled particle density closest
 %%to data
 % SizePart : (double) size of the modeled particles (m)
 % RhoP_tes : (double array) modeled particle densities tested (kg.m⁻³)
 % saveFig : (boolean) if true figures will be saved to '../Results/EstimRho/'
 % N : (int) default = 500, number of meshes. High : +precise -fast / Low : -precise +fast
+% windSpeed : (double) wind speed (km.h⁻¹)
 % 
-% example : EstimationRhopData_1part_Eul(400e-6, 900:1100, true, 200)
+% example : Estimation1Rhop_Eul(400e-6, 900:1100, true, 600)
 
 %% Set Parameters
 path = '../Results/EstimRho/'; % saved figures directory
 
+% Multinet sample characteristics 
+Station = 'RN2';
+Date = datetime('3/18/2021');
+
 %% Water column parameters
-L = 51; % depth (m)
+% Find depth at station RN2
+ModeleHydro='2012RHOMA_arome_003.nc';
+SauvegardeModeleHydro=['DonneeBase' ModeleHydro(1:end-3)];
+% Load file with indexes corresponding to each stations
+stationFile = '../Data/stationIJ_CEREGE.mat';
+load(stationFile,'stationIJ');
+% Get the indexes of the right station
+I0 = stationIJ{stationIJ{:,'station'} == Station,'I0'};
+J0 = stationIJ{stationIJ{:,'station'} == Station,'J0'};
+% Get depth at RN2
+load(SauvegardeModeleHydro, 'H0')
+L = H0(I0,J0);
+
 if nargin < 4
     N = 500; % number of meshes. High : +precise -fast / Low : -precise +fast
 end
+
 dz= L/N; % size of meshes
 z = (0:dz:L)'; % meshes boundaries
 z_ = z(1:end-1)+dz/2; % center of the meshes
 
-day = '10fev'; % day corresponding to diffusive turbulence data
+% day = '10fev'; % day corresponding to diffusive turbulence data
+day = false;
 
 %% Data
 
 dh = 0.71; % Net oppening (m)
 
-% SamplingDate = datetime('3/18/2021');
-% DataFile = '../Data/data_mps.txt';
-% [ConcentrationSample, DepthSample] = getDataNpart(false, SizePart, true, DataFile, SamplingDate);
-CMes=[0.62 0.34 0.06 0.02 0]; % Concentration
-ZMes=[1 10 15 40 50]+dh/2; % Depth of the samples
-ConcentrationSample = CMes';
-DepthSample = ZMes';
-DataInterp = interp1(ZMes,CMes,z_,'pchip')'; % Interpolated data
+% Concentration at each depth and filtered volume
+ConcVolFile = '../Data/ConcVol_MP.txt';
+ConcVolTable = load_ConcVol_data(ConcVolFile);
 
+% Multinet condition
+concCond = strcmp(ConcVolTable{:,'station'},Station) & ConcVolTable{:,'date'} == Date;
+
+% Concentration data
+CMes = ConcVolTable{concCond,'C'};
+ZMes = ConcVolTable{concCond,'depth'}+dh/2;
+
+% CMes=[0.62 0.34 0.06 0.02 0]'; % Concentration
+% ZMes=[1 10 15 40 50]'+dh/2; % Depth of the samples
+ConcentrationSample = CMes;
+DepthSample = ZMes;
+DataInterp = interp1(ZMes,CMes,z_,'pchip')'; % Interpolated data
 
 
 %% Find corresponding depths to get from the model
@@ -68,7 +94,7 @@ end
 for iRes = 1:length(RhoP_test)
     RhoP = RhoP_test(iRes);    
     
-    [conc, z_] = Transport_Eulerian(modSize, RhoP, N, L, day);
+    [conc, z_] = Transport_Eulerian(modSize, RhoP, N, L, day, windSpeed, Date);
     
     % find the modeled concentration at depth corresponding with sample
     ConcentrationModel = zeros(size(ConcentrationSample));
@@ -81,6 +107,7 @@ for iRes = 1:length(RhoP_test)
     % Compute the proportionnality coefficient minimizing the square error
     % between model and data
     alpha = ConcentrationModel\ConcentrationSample;
+%     alpha = conc'\DataInterp';
     
     % Compute the root mean square error between model and data
     Erreur = abs(ConcentrationModel.*alpha - ConcentrationSample);
@@ -105,8 +132,8 @@ ttl = ['Particle size : ' num2str(modSize*1e6) 'µm']; % Figures titles
 % figure 1 : plot all simulation results
 f1 = figure(1); clf,
 plot(DataInterp,-z_,'--', 'DisplayName', 'Data interpolation');
-xlim([0 max(Resultats(minI).conc*Resultats(minI).Alpha)])
-ylim([-L+0.75 0])
+xlim([0 3])
+ylim([-L 0])
 xlabel('Concentration (mps.m⁻¹)')
 ylabel('Depth (m)')
 hold on
@@ -114,7 +141,7 @@ plot(CMes,-ZMes,'pm','MarkerSize', 10, 'DisplayName', 'Sampled Data');
 for res = Resultats
     plot(res.conc*res.Alpha,-z_,'DisplayName', ['RhoP = ' num2str(res.RhoP) 'kg.m⁻³'])
 end
-legend('Location', 'southeast')
+legend('Location', 'best')
 title(ttl)
 hold off
 
@@ -134,14 +161,14 @@ hold off
 % figure 3 : plot best rhoP profile
 f3 = figure(3); clf,
 plot(DataInterp,-z_,'--', 'DisplayName', 'Data interpolation');
-xlim([0 max(Resultats(minI).conc*Resultats(minI).Alpha)])
-ylim([-L+0.75 0])
+xlim([0 3])
+ylim([-L 0])
 xlabel('Concentration (mps.m⁻¹)')
 ylabel('Depth (m)')
 hold on 
 plot(CMes,-Ztest_,'pm','MarkerSize', 10, 'DisplayName', 'Sampled Data');
 plot(Resultats(minI).conc*Resultats(minI).Alpha,-z_,'DisplayName', ['RhoP = ' num2str(Resultats(minI).RhoP) 'kg.m⁻³'])
-legend('Location', 'southeast')
+legend('Location', 'best')
 title([ttl ' -- Rho_p = ' num2str(minRho) 'kg.m⁻³'])
 hold off
 
@@ -153,7 +180,7 @@ if saveFig
         rhoInter = [num2str(min(RhoP_test)) '-' num2str(RhoP_test(2)-RhoP_test(1)) '-' num2str(max(RhoP_test))];
     end
     
-    fileName = ['size' num2str(modSize*1e6) '_rho' rhoInter 'part_10fev'];
+    fileName = ['size' num2str(modSize*1e6) '_rho' rhoInter '_dataCEREGE'];
     
     F = [f1, f2, f3];
     xPart = '1part_';

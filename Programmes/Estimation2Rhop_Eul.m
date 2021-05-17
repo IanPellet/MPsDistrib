@@ -1,34 +1,50 @@
-function [Resultats,ConcentrationSample,Ztest_,z_] = EstimationRhopData_2part_Eul(SizePart, type_name, RhoP_test, saveFig, N, sub1, sub2)
+function [Resultats,minI,ConcentrationSample,Ztest_,z_] = Estimation2Rhop_Eul(SizePart, RhoP_test, saveFig, N, windSpeed)
+%%ESTIMATION2RHOP_EUL Finds the modeled particle density closest
+%%to data with two different densities
+% SizePart : (double) size of the modeled particles (m)
+% RhoP_tes : (double array) modeled particle densities tested (kg.m⁻³)
+% saveFig : (boolean) if true figures will be saved to '../Results/EstimRho/'
+% N : (int) default = 500, number of meshes. High : +precise -fast / Low : -precise +fast
+% windSpeed : (double) wind speed (km.h⁻¹)
+% 
+% example : EstimationRhopData_2part_Eul(400e-6, 900:1100, true, 600)
 
 if nargin == 0
     SizePart = false; % particles size tested (m)
-    type_name = false;
     RhoP_test = 800:100:1000; % plage de densite a tester (kg.m⁻³)
     saveFig = false;
-    N = 200;
-end
-
-if type_name
-    type_dict = containers.Map({'fibre','fragment','film','mousse'},0:3); % possible types
-    TypePart = type_dict(type_name); % corresponding int
-else
-    TypePart = false;
+    N = 500;
+    windSpeed = 50;
 end
 
 %% Set Parameters
 path = '../Results/EstimRho/'; % saved figures directory
 
+% Multinet sample characteristics 
+Station = 'RN2';
+Date = datetime('3/18/2021');
+
+
 %% Water column parameters
-L = 51; % depth (m)
-if nargin < 5
+ModeleHydro='2012RHOMA_arome_003.nc';
+SauvegardeModeleHydro=['DonneeBase' ModeleHydro(1:end-3)];
+% Load file with indexes corresponding to each stations
+stationFile = '../Data/stationIJ_CEREGE.mat';
+load(stationFile,'stationIJ');
+% Get the indexes of the right station
+I0 = stationIJ{stationIJ{:,'station'} == Station,'I0'};
+J0 = stationIJ{stationIJ{:,'station'} == Station,'J0'};
+load(SauvegardeModeleHydro, 'H0')
+L = H0(I0,J0); 
+if nargin < 4
     N = 200; % number of meshes. High : +precise -fast / Low : -precise +fast
 end
 dz= L/N; % size of meshes
 z = (0:dz:L)'; % meshes boundaries
 z_ = z(1:end-1)+dz/2; % center of the meshes
 
-day = '3fev'; % day corresponding to diffusive turbulence data
-
+% day = '3fev'; % day corresponding to diffusive turbulence data
+day = false;
 
 load('../Data/stationLonLat_CEREGE.mat','station') % load position data of stations
 staName = 'RN2'; % chosen station
@@ -38,20 +54,38 @@ Lon0 = iStation(:,'Lon').Variables;
 Lat0 = iStation(:,'Lat').Variables;
 
 
+% %% Data
+% 
+% dh = 0.71; % Net oppening (m)
+% 
+% % SamplingDate = datetime('3/18/2021');
+% % DataFile = '../Data/data_mps.txt';
+% % [ConcentrationSample, DepthSample] = getDataNpart(false, SizePart, true, DataFile, SamplingDate);
+% CMes=[0.27 0.08 0.09 0.1 0.2]; % Concentration
+% ZMes=[0 25 35 45 50]+dh/2; % Depth of the samples
+% ConcentrationSample = CMes(1:end)';
+% DepthSample = ZMes(1:end)';
+% DataInterp = interp1(ZMes,CMes,z_,'pchip')'; % Interpolated data
+
 %% Data
 
 dh = 0.71; % Net oppening (m)
 
-% SamplingDate = datetime('3/18/2021');
-% DataFile = '../Data/data_mps.txt';
-% [ConcentrationSample, DepthSample] = getDataNpart(false, SizePart, true, DataFile, SamplingDate);
-CMes=[0.27 0.08 0.09 0.1 0.2]; % Concentration
-ZMes=[0 25 35 45 50]+dh/2; % Depth of the samples
-ConcentrationSample = CMes(1:end)';
-DepthSample = ZMes(1:end)';
+% Concentration at each depth and filtered volume
+ConcVolFile = '../Data/ConcVol_MP.txt';
+ConcVolTable = load_ConcVol_data(ConcVolFile);
+
+% Multinet condition
+concCond = strcmp(ConcVolTable{:,'station'},Station) & ConcVolTable{:,'date'} == Date;
+
+% Concentration data
+CMes = ConcVolTable{concCond,'C'};
+ZMes = ConcVolTable{concCond,'depth'}+dh/2;
+
+
+ConcentrationSample = CMes(1:end);
+DepthSample = ZMes(1:end);
 DataInterp = interp1(ZMes,CMes,z_,'pchip')'; % Interpolated data
-
-
 
 
 %% Find corresponding depths to get from the model
@@ -84,7 +118,7 @@ CRho = zeros(length(RhoP_test),length(ConcentrationSample)+1);
 concRho = zeros(length(RhoP_test),N+1);
 for i = 1:length(RhoP_test)
     rho=RhoP_test(i);
-    [conc, z_] = Transport_Eulerian(modSize, rho, N, L, day);
+    [conc, z_] = Transport_Eulerian(modSize, rho, N, L, day, windSpeed, Date);
     
       % find the modeled concentration at depth corresponding with sample
     CModel = zeros(size(ConcentrationSample));
@@ -138,14 +172,14 @@ end, clear i,
 
 ErrorPlotRes = ErrorPlotRes + ErrorPlotRes' - eye(size(ErrorPlotRes)).*ErrorPlotRes;
 
-
-if nargin < 6
-    ErrorPlotResBis = ErrorPlotRes;
-else
-    ErrorPlotResBis = NaN(length(RhoP_test));
-    ErrorPlotResBis(1:(length(sub1)-1),(end-length(sub2)+1):end) = ErrorPlotRes(1:(length(sub1)-1),(end-length(sub2)+1):end);
-    ErrorPlotResBis((end-length(sub2)+1):end,1:(length(sub1)-1)) = ErrorPlotRes((end-length(sub2)+1):end,1:(length(sub1)-1));
-end
+ErrorPlotResBis = ErrorPlotRes;
+% if nargin < 6
+%     ErrorPlotResBis = ErrorPlotRes;
+% else
+%     ErrorPlotResBis = NaN(length(RhoP_test));
+%     ErrorPlotResBis(1:(length(sub1)-1),(end-length(sub2)+1):end) = ErrorPlotRes(1:(length(sub1)-1),(end-length(sub2)+1):end);
+%     ErrorPlotResBis((end-length(sub2)+1):end,1:(length(sub1)-1)) = ErrorPlotRes((end-length(sub2)+1):end,1:(length(sub1)-1));
+% end
 
 
 minI = [Resultats.rmseErreur] == min([Resultats.rmseErreur]);
@@ -158,8 +192,8 @@ ttl = ['Particle size : ' num2str(modSize*1e6) 'µm'];
 
 % f1 = figure(1); clf,
 % plot(DataInterp,-z_,'--', 'DisplayName', 'Data interpolation');
-% xlim([0 0.5])
-% ylim([-L+0.75 0])
+% xlim([0 4])
+% ylim([-L 0])
 % xlabel('Concentration (mps.m⁻¹)')
 % ylabel('Depth (m)')
 % hold on
@@ -187,8 +221,8 @@ title(ttl)
 % figure 3 : plot best rhoP profile
 f3 = figure(3); clf,
 plot(DataInterp,-z_,'--', 'DisplayName', 'Data interpolation');
-xlim([0 0.5])
-ylim([-L+0.75 0])
+xlim([0 7])
+ylim([-L 0])
 xlabel('Concentration (mps.m⁻¹)')
 ylabel('Depth (m)')
 hold on 
@@ -207,7 +241,7 @@ if saveFig
         rhoInter = [num2str(min(RhoP_test)) '-' num2str(RhoP_test(2)-RhoP_test(1)) '-' num2str(max(RhoP_test))];
     end
     
-    fileName = ['size' num2str(modSize*1e6) '_rho' rhoInter '_eul'];
+    fileName = ['size' num2str(modSize*1e6) '_rho' rhoInter '_dataCEREGE'];
     
     F = [f2, f3];
     xPart = '2part_';
