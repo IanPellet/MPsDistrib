@@ -21,7 +21,7 @@ else
     TypePart = false;
 end
 
-nPart = 50e3; % number of particles
+nPart = 10e3; % number of particles
 
 tf = 1e5; % simulation time (s)
 dt_test = 60*60; % test time interval (s)
@@ -85,7 +85,7 @@ else
     modSize = 350e-6;
 end
 
-NsecTest = 60*60;
+NsecTest = 60*30;
 % launch simulation for each rhop
 for iRes = 1:length(RhoP_test)
     RhoP = RhoP_test(iRes);    
@@ -94,11 +94,9 @@ for iRes = 1:length(RhoP_test)
     hConc = NaN(size(ppHist,1),length(z_));
     for hStep = 1:size(ppHist,1)
         pp = ppHist(hStep,:);
-        if ~isnan(sum(pp))
-            histi = histogram(pp, "BinEdges", z, 'Visible', 'off').Values;
-            hConc(hStep,:) = histi/dz*L/nPart;
-        end
-    end, clear hStep,
+        [histi,~] =  groupcounts(pp',z,'IncludeEmptyGroups',true);
+        hConc(hStep,:) = histi/dz*L/nPart;
+    end, clear hStep pp histi,
 
     conc = mean(hConc, 'omitnan');
     stdConc = std(hConc, 'omitnan');
@@ -111,28 +109,10 @@ for iRes = 1:length(RhoP_test)
     end, clear ic j,
     
     
-%     % 2) calculer l'erreur avec les mesures :
-%     % =======================================
-%     % find the modeled concentration at depth corresponding with sample
-%     hTest = histogram(PartPos, "BinEdges",  boundTest, 'Visible', 'off').Values;
-%     NpartModel = zeros(size(ConcentrationSample));
-%     j = 0;
-%     for i = 1:length(hTest)
-%         if mod(i,2)
-%             j = j+1;
-%             NpartModel(j) = hTest(i);
-%         end
-%     end
-% %     conc = histogram(PartPos, "BinEdges",z,'Visible', 'off').Values/dz / (nPart/L) ;
-%     
-%     ConcentrationModel = NpartModel/dh / (nPart/L) ; % on ramène le modèle à 1
-% %     alpho = mean(ConcentrationSample(ConcentrationModel>0)./ConcentrationModel(ConcentrationModel>0));
-% %     alpha = ConcentrationSample\ConcentrationModel;
     alpha = ConcentrationModel\ConcentrationSample;
     
     
     Erreur = abs(ConcentrationModel.*alpha - ConcentrationSample);
-%     rmseErreur = mean(Erreur,'omitnan');
     rmseErreur = sqrt(mean(Erreur.^2,'omitnan'));
     
     Resultats(iRes).RhoP = RhoP;
@@ -142,7 +122,7 @@ for iRes = 1:length(RhoP_test)
     Resultats(iRes).rmseErreur = rmseErreur;
     Resultats(iRes).conc = conc;
     Resultats(iRes).std = stdConc;
-end, clear iRes RhoP,
+end, clear iRes RhoP ppHist hConc conc stdConc ConcentrationModel alpha Erreur rmseErreur ,
 
 % Find rhop correponding to minimal error
 minI = [Resultats.rmseErreur] == min([Resultats.rmseErreur]); 
