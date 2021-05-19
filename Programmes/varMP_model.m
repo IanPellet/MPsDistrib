@@ -1,4 +1,4 @@
-function [z_, CfinalNorm, PartPos] = varMP_model(D, rhoP, type, nPart, tf, dt_test, WindSpeed, month, Lon0, Lat0, L, N, day)
+function [z_, CfinalNorm, PartPos, ppHistory] = varMP_model(D, rhoP, type, nPart, tf, dt_test, WindSpeed, month, Lon0, Lat0, L, N, day, saveNsec)
 %VARMP_MODEL Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -113,6 +113,12 @@ z_past = part(1,:);
 step = 1;
 ChNorm(step,:) = [CiNorm];
 
+if nargin > 13 && saveNsec ~= 0
+    saveNstep = fix(saveNsec/dt)+1;
+    ppHistory = NaN(saveNstep,nPart);
+    saveStep = 0;
+end
+
 t=0; OnContinue=true;
 T(step,1) = t;
 while OnContinue
@@ -126,6 +132,11 @@ while OnContinue
     part(2,:) = u(index);
     part(3,:) = K(index);
     part(4,:) = dK(index);
+    
+    if t >= tf-saveNsec
+        saveStep = saveStep+1;
+        ppHistory(saveStep,:) = part(1,:);
+    end
     
     if (mod(t,dt_test)<=dt/2 || dt_test-mod(t,dt_test)<=dt/2 ) 
     %if true

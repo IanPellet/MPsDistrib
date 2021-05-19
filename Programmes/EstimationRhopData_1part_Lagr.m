@@ -21,7 +21,7 @@ else
     TypePart = false;
 end
 
-nPart = 5e3; % number of particles
+nPart = 50e3; % number of particles
 
 tf = 1e5; % simulation time (s)
 dt_test = 60*60; % test time interval (s)
@@ -60,7 +60,7 @@ dh = 0.71; % Net oppening (m)
 
 %% Find corresponding depths to get from the model
 boundTest = zeros(length(DepthSample)*2,1); % Boundaries in between which modeled part number have to be tested
-% ibound = zeros(size(boundTest)); % index boundaries of meshes to avg
+ibound = zeros(size(boundTest)); % index boundaries of meshes to avg
 
 for i = 1:length(boundTest)
     if mod(i,2)
@@ -68,7 +68,7 @@ for i = 1:length(boundTest)
     else
         boundTest(i) = DepthSample(fix((i+1)/2))+dh;
     end
-%     ibound(i) = min(length(z_),max(1,fix(boundTest(i)/dz)+1));
+    ibound(i) = min(length(z_),max(1,fix(boundTest(i)/dz)+1));
 end, clear i,
 
 Ztest_ = DepthSample + dh/2; 
@@ -85,29 +85,49 @@ else
     modSize = 350e-6;
 end
 
+NsecTest = 60*60;
 % launch simulation for each rhop
 for iRes = 1:length(RhoP_test)
     RhoP = RhoP_test(iRes);    
-    [~, ~, PartPos] = varMP_model(modSize, RhoP, TypePart, nPart, tf, dt_test, wind, month, Lon0, Lat0,L, N, day);
+    [~, ~, ~, ppHist] = varMP_model(modSize, RhoP, TypePart, nPart, tf, dt_test, wind, month, Lon0, Lat0,L, N, day,NsecTest);
     
-    
-    % 2) calculer l'erreur avec les mesures :
-    % =======================================
-    % find the modeled concentration at depth corresponding with sample
-    hTest = histogram(PartPos, "BinEdges",  boundTest, 'Visible', 'off').Values;
-    NpartModel = zeros(size(ConcentrationSample));
-    j = 0;
-    for i = 1:length(hTest)
-        if mod(i,2)
-            j = j+1;
-            NpartModel(j) = hTest(i);
+    hConc = NaN(size(ppHist,1),length(z_));
+    for hStep = 1:size(ppHist,1)
+        pp = ppHist(hStep,:);
+        if ~isnan(sum(pp))
+            histi = histogram(pp, "BinEdges", z, 'Visible', 'off').Values;
+            hConc(hStep,:) = histi/dz*L/nPart;
         end
-    end
-    conc = histogram(PartPos, "BinEdges",z,'Visible', 'off').Values/dz * (nPart/L) ;
+    end, clear hStep,
+
+    conc = mean(hConc, 'omitnan');
+    stdConc = std(hConc, 'omitnan');
     
-    ConcentrationModel = NpartModel/dh * (nPart/L) ; % on ramène le modèle à 1
-%     alpho = mean(ConcentrationSample(ConcentrationModel>0)./ConcentrationModel(ConcentrationModel>0));
-%     alpha = ConcentrationSample\ConcentrationModel;
+    ConcentrationModel = zeros(size(ConcentrationSample));
+    j = 0;
+    for ic = 1:2:length(ibound)
+        j = j+1;
+        ConcentrationModel(j) = mean(conc(ibound(ic):ibound(ic+1)));
+    end, clear ic j,
+    
+    
+%     % 2) calculer l'erreur avec les mesures :
+%     % =======================================
+%     % find the modeled concentration at depth corresponding with sample
+%     hTest = histogram(PartPos, "BinEdges",  boundTest, 'Visible', 'off').Values;
+%     NpartModel = zeros(size(ConcentrationSample));
+%     j = 0;
+%     for i = 1:length(hTest)
+%         if mod(i,2)
+%             j = j+1;
+%             NpartModel(j) = hTest(i);
+%         end
+%     end
+% %     conc = histogram(PartPos, "BinEdges",z,'Visible', 'off').Values/dz / (nPart/L) ;
+%     
+%     ConcentrationModel = NpartModel/dh / (nPart/L) ; % on ramène le modèle à 1
+% %     alpho = mean(ConcentrationSample(ConcentrationModel>0)./ConcentrationModel(ConcentrationModel>0));
+% %     alpha = ConcentrationSample\ConcentrationModel;
     alpha = ConcentrationModel\ConcentrationSample;
     
     
@@ -121,6 +141,7 @@ for iRes = 1:length(RhoP_test)
     Resultats(iRes).Erreur = Erreur;
     Resultats(iRes).rmseErreur = rmseErreur;
     Resultats(iRes).conc = conc;
+    Resultats(iRes).std = stdConc;
 end, clear iRes RhoP,
 
 % Find rhop correponding to minimal error
@@ -142,9 +163,25 @@ plot(CMes,-ZMes,'pm','MarkerSize', 10, 'DisplayName', 'Sampled Data');
 for res = Resultats
     plot(res.conc*res.Alpha,-z_,'DisplayName', ['RhoP = ' num2str(res.RhoP) 'kg.m⁻³'])
 end
+plot((Resultats(minI).conc+2*Resultats(minI).std)*Resultats(minI).Alpha,-z_, '--','DisplayName', 'min+2std');
+plot((Resultats(minI).conc-2*Resultats(minI).std)*Resultats(minI).Alpha,-z_, '--','DisplayName', 'min-2std');
 legend('Location', 'southeast')
 title(ttl)
 hold off
+
+% f1 = figure(1); clf,
+% plot((Resultats(minI).conc+Resultats(minI).std)*Resultats(minI).Alpha,-z_, '--r',(Resultats(minI).conc-Resultats(minI).std)*Resultats(minI).Alpha,-z_, '--r');
+% xlim([0 max(Resultats(minI).conc*Resultats(minI).Alpha)])
+% ylim([-L+0.75 0])
+% xlabel('Concentration (mps.m⁻¹)')
+% ylabel('Depth (m)')
+% hold on
+% for res = Resultats
+%     plot(res.conc*res.Alpha,-z_,'DisplayName', ['RhoP = ' num2str(res.RhoP) 'kg.m⁻³'])
+% end
+% legend('Location', 'southeast')
+% title(ttl)
+% hold off
 
 % figure 2 : plot error with respect to rhoP
 f2 = figure(2); clf,
@@ -169,6 +206,8 @@ ylabel('Depth (m)')
 hold on 
 plot(CMes,-Ztest_,'pm','MarkerSize', 10, 'DisplayName', 'Sampled Data');
 plot(Resultats(minI).conc*Resultats(minI).Alpha,-z_,'DisplayName', ['RhoP = ' num2str(Resultats(minI).RhoP) 'kg.m⁻³'])
+plot((Resultats(minI).conc+2*Resultats(minI).std)*Resultats(minI).Alpha,-z_, '--','DisplayName', '+2std');
+plot((Resultats(minI).conc-2*Resultats(minI).std)*Resultats(minI).Alpha,-z_, '--','DisplayName', '-2std');
 legend('Location', 'southeast')
 title([ttl ' -- Rho_p = ' num2str(minRho) 'kg.m⁻³'])
 hold off
@@ -185,7 +224,7 @@ if saveFig
     
     F = [f1, f2, f3];
     xPart = '1part_';
-    N = {'profils_', 'error_', 'min_'};
+    N = {'profils_', 'error_', 'min_'};Dvar
     for i=1:length(F)
         f = F(i);
         n = N{i};
