@@ -77,7 +77,7 @@ Ztest_ = DepthSample + dh/2;
 clear Resultats
 % Initalisation of results data structure fields
 Resultats(1:length(RhoP_test)) = struct('RhoP', 0, 'ConcentrationModel', zeros(size(ConcentrationSample)),...
-    'Alpha', 0, 'Erreur', zeros(size(ConcentrationSample)), 'rmseErreur', 0);
+    'Alpha', 0, 'rmseErreur', 0);
 
 if SizePart
     modSize = SizePart;
@@ -90,16 +90,19 @@ NsecTest = 60*30;
 for iRes = 1:length(RhoP_test)
     RhoP = RhoP_test(iRes);    
     [~, ~, ~, ppHist] = varMP_model(modSize, RhoP, TypePart, nPart, tf, dt_test, wind, month, Lon0, Lat0,L, N, day,NsecTest);
-    
-    hConc = NaN(size(ppHist,1),length(z_));
-    for hStep = 1:size(ppHist,1)
-        pp = ppHist(hStep,:);
-        [histi,~] =  groupcounts(pp',z,'IncludeEmptyGroups',true);
-        hConc(hStep,:) = histi/dz*L/nPart;
-    end, clear hStep pp histi,
-
-    conc = mean(hConc, 'omitnan');
-    stdConc = std(hConc, 'omitnan');
+    nPP = size(ppHist,1);
+    pphist = reshape(ppHist, [numel(ppHist) 1]);
+%     hConc = NaN(size(ppHist,1),length(z_));
+%     for hStep = 1:size(ppHist,1)
+%         pp = ppHist(hStep,:);
+%         [histi,~] =  groupcounts(pp',z,'IncludeEmptyGroups',true);
+%         hConc(hStep,:) = histi/dz*L/nPart;
+%     end, clear hStep pp histi,
+    [histi,~] =  groupcounts(pphist,z,'IncludeEmptyGroups',true);
+    hConc = histi'/dz*L/nPart;
+    conc = hConc/nPP;
+%     conc = mean(hConc, 'omitnan');
+%     stdConc = std(hConc, 'omitnan');
     
     ConcentrationModel = zeros(size(ConcentrationSample));
     j = 0;
@@ -118,11 +121,11 @@ for iRes = 1:length(RhoP_test)
     Resultats(iRes).RhoP = RhoP;
     Resultats(iRes).ConcentrationModel = ConcentrationModel;
     Resultats(iRes).Alpha = alpha;
-    Resultats(iRes).Erreur = Erreur;
+%     Resultats(iRes).Erreur = Erreur;
     Resultats(iRes).rmseErreur = rmseErreur;
     Resultats(iRes).conc = conc;
-    Resultats(iRes).std = stdConc;
-end, clear iRes RhoP ppHist hConc conc stdConc ConcentrationModel alpha Erreur rmseErreur ,
+%     Resultats(iRes).std = stdConc;
+end, clear iRes RhoP ppHist hConc conc stdConc ConcentrationModel alpha Erreur rmseErreur nPP pphist,
 
 % Find rhop correponding to minimal error
 minI = [Resultats.rmseErreur] == min([Resultats.rmseErreur]); 
@@ -143,9 +146,9 @@ plot(CMes,-ZMes,'pm','MarkerSize', 10, 'DisplayName', 'Sampled Data');
 for res = Resultats
     plot(res.conc*res.Alpha,-z_,'DisplayName', ['RhoP = ' num2str(res.RhoP) 'kg.m⁻³'])
 end
-plot((Resultats(minI).conc+2*Resultats(minI).std)*Resultats(minI).Alpha,-z_, '--','DisplayName', 'min+2std');
-plot((Resultats(minI).conc-2*Resultats(minI).std)*Resultats(minI).Alpha,-z_, '--','DisplayName', 'min-2std');
-legend('Location', 'southeast')
+% plot((Resultats(minI).conc+2*Resultats(minI).std)*Resultats(minI).Alpha,-z_, '--','DisplayName', 'min+2std');
+% plot((Resultats(minI).conc-2*Resultats(minI).std)*Resultats(minI).Alpha,-z_, '--','DisplayName', 'min-2std');
+legend('Location', 'best')
 title(ttl)
 hold off
 
@@ -186,9 +189,9 @@ ylabel('Depth (m)')
 hold on 
 plot(CMes,-Ztest_,'pm','MarkerSize', 10, 'DisplayName', 'Sampled Data');
 plot(Resultats(minI).conc*Resultats(minI).Alpha,-z_,'DisplayName', ['RhoP = ' num2str(Resultats(minI).RhoP) 'kg.m⁻³'])
-plot((Resultats(minI).conc+2*Resultats(minI).std)*Resultats(minI).Alpha,-z_, '--','DisplayName', '+2std');
-plot((Resultats(minI).conc-2*Resultats(minI).std)*Resultats(minI).Alpha,-z_, '--','DisplayName', '-2std');
-legend('Location', 'southeast')
+% plot((Resultats(minI).conc+2*Resultats(minI).std)*Resultats(minI).Alpha,-z_, '--','DisplayName', '+2std');
+% plot((Resultats(minI).conc-2*Resultats(minI).std)*Resultats(minI).Alpha,-z_, '--','DisplayName', '-2std');
+legend('Location', 'best')
 title([ttl ' -- Rho_p = ' num2str(minRho) 'kg.m⁻³'])
 hold off
 

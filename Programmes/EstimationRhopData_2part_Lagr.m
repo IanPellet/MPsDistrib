@@ -103,16 +103,20 @@ for iRes=1:size(combRho,1)
     Resultats(iRes).Rho2 = Rho2;
     
     pphist = [ppRho([ppRho(:).rho] == Rho1).ppHist  ppRho([ppRho(:).rho] == Rho2).ppHist];
-
-    hConc = NaN(size(pphist,1),length(z_));
-    for hStep = 1:size(ppHist,1)
-        pp = pphist(hStep,:);
-        [histi,~] =  groupcounts(pp',z,'IncludeEmptyGroups',true);
-        hConc(hStep,:) = histi'/dz*L/nPart;
-    end, clear hStep pp histi,
-
-    conc = mean(hConc, 'omitnan');
-    stdConc = std(hConc, 'omitnan');
+    nPP = size(pphist,1);
+    pphist = reshape(pphist, [numel(pphist) 1]);
+%     hConc = NaN(size(pphist,1),length(z_));
+%     for hStep = 1:size(ppHist,1)
+%         pp = pphist(hStep,:);
+%         [histi,~] =  groupcounts(pp',z,'IncludeEmptyGroups',true);
+%         hConc(hStep,:) = histi'/dz*L/nPart;
+%     end, clear hStep pp histi,
+    
+    [histi,~] =  groupcounts(pphist,z,'IncludeEmptyGroups',true);
+    hConc = histi'/dz*L/nPart;
+    conc = hConc/nPP;
+%     conc = mean(hConc, 'omitnan');
+%     stdConc = std(hConc, 'omitnan');
 
     ConcentrationModel = zeros(size(ConcentrationSample));
     j = 0;
@@ -131,9 +135,9 @@ for iRes=1:size(combRho,1)
     Resultats(iRes).Alpha = alpha;
     Resultats(iRes).rmseErreur = rmseErreur;
     Resultats(iRes).conc = conc;
-    Resultats(iRes).std = stdConc;
+%     Resultats(iRes).std = stdConc;
 
-end, clear iRes pphist hConc hConc conc stdConc ConcentrationModel,
+end, clear iRes pphist hConc hConc conc stdConc ConcentrationModel nPP,
 
 %% Create error matrix to plot results
 
@@ -193,8 +197,8 @@ ylabel('Depth (m)')
 hold on 
 plot(CMes,-ZMes,'pm','MarkerSize', 10, 'DisplayName', 'Sampled Data');
 plot(Resultats(minI).conc*Resultats(minI).Alpha,-z_,'DisplayName', ['Rho1 = ' num2str(minRho1) ', Rho2 = ' num2str(minRho2) 'kg.m⁻³'])
-plot((Resultats(minI).conc+2*Resultats(minI).std)*Resultats(minI).Alpha,-z_, '--','DisplayName', '+2std');
-plot((Resultats(minI).conc-2*Resultats(minI).std)*Resultats(minI).Alpha,-z_, '--','DisplayName', '-2std');
+% plot((Resultats(minI).conc+2*Resultats(minI).std)*Resultats(minI).Alpha,-z_, '--','DisplayName', '+2std');
+% plot((Resultats(minI).conc-2*Resultats(minI).std)*Resultats(minI).Alpha,-z_, '--','DisplayName', '-2std');
 legend('Location', 'southeast')
 title([ttl ' -- Rho1 = ' num2str(minRho1) ', Rho2 = ' num2str(minRho2) 'kg.m⁻³'])
 hold off
