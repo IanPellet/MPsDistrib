@@ -1,4 +1,4 @@
-clear
+% clear
 
 tf = 60*60*24*2; % Simulation time
 dt_test = 60*60*2;
@@ -20,13 +20,13 @@ addpath('./fig-Visser/');
 
 rhow = interp1(-z__day,Row_day,z,'pchip'); % density of sea water 
 
-clearvars -except tf dt_test L N dz z z_ K dK rhow
+clearvars -except tf dt_test L N dz z z_ K dK rhow mean1 std1 mean2 std2
 
 %% Particules initialisation
-nPart = 1e3; % number of particles
+nPart = 5e3; % number of particles
 zPart = linspace(0, L, nPart); % depth of particles
-sizePart = linspace(250e-6, 500e-6, nPart); % size of particle
-% sizePart = ones(size(zPart))*400e-6;
+% sizePart = linspace(300e-6, 400e-6, nPart); % size of particle
+sizePart = ones(size(zPart))*350e-6;
 rhop = 1020;
 
 % allocate memory to store particles
@@ -36,9 +36,21 @@ for i = 1:(nPart)
     mp(i) = MP(sizePart(i), rhop, rhow);
 end, clear i,
 
-[zFinal] = MP_simulator(mp, zPart, K, dK, L, dz, tf, dt_test);
+[zFinal] = MP_simulator(mp, zPart, K, dK, L, dz, tf, dt_test, 60*30);
+% zFinal = reshape(zFinal, [numel(zFinal) 1]); 
 
-[groupMP,~] =  groupcounts(zFinal',z,'IncludeEmptyGroups',true);
-conc = groupMP'/dz*L/nPart;
-plot(conc,-z_);
+hConc = NaN(size(zFinal,1),length(z_));
+for hStep = 1:size(zFinal,1)
+    pp = zFinal(hStep,:);
+    [histi,~] =  groupcounts(pp',z,'IncludeEmptyGroups',true);
+    hConc(hStep,:) = histi'/dz*L/nPart;
+end, clear hStep pp histi,
+meanConc = mean(hConc, 'omitnan');
+stdConc = std(hConc, 'omitnan');
+
+plot(meanConc, -z_, meanConc+2*stdConc, -z_, '--', meanConc-2*stdConc, -z_, '--');
+
+% [groupMP,~] =  groupcounts(zFinal,z,'IncludeEmptyGroups',true);
+% conc = groupMP'/dz*L/nPart;
+% plot(conc,-z_);
 

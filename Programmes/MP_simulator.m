@@ -1,6 +1,7 @@
-function [zFinal] = MP_simulator(mp, zInit, K, dK, L, dz, tf, dt_test)
+function [zFinal] = MP_simulator(mp, zInit, K, dK, L, dz, tf, dt_test, saveLastSec)
 %MP_SIMULATOR Run simulation with particles in mp
 %
+% PARAMETERS
 % mp : MP objects array, modeled particles
 % zInit : double array, initial particle's position (m)
 % K : double array, diffusivity profile (m².s⁻¹)
@@ -9,7 +10,10 @@ function [zFinal] = MP_simulator(mp, zInit, K, dK, L, dz, tf, dt_test)
 % dz : double, water column discretisation step (m)
 % tf : double, simulation time (s)
 % dt_test : double, test interval (s)
+% saveLastSec : double, time over which to save particle's positions
+% history (s) //Optional
 %
+% OUTPUT
 % zFinal : double array, final particle's position (m)
 %
 
@@ -22,6 +26,13 @@ function [zFinal] = MP_simulator(mp, zInit, K, dK, L, dz, tf, dt_test)
     ddK = diff(dK)./dz; % double array, diffusivity gradient's derivative (s⁻¹)
     dt = min(dt, abs(min(1./ddK)/10)); % check condition dt<<min(1/ddK) 
     dt = min(dt, dz/max(max(abs(U)))); % check condition dt < dz/max|u|
+    
+    %% Init history 
+    if nargin > 8 && saveLastSec ~= 0
+        saveNstep = fix(saveLastSec/dt)+1;
+        zHistory = NaN(saveNstep,length(mp));
+        saveStep = 0;
+    end
     
     %% Simulation
     t=0; 
@@ -38,6 +49,12 @@ function [zFinal] = MP_simulator(mp, zInit, K, dK, L, dz, tf, dt_test)
         end
         % Update particle's postion
         zPart = Step_Lagrangien(zPart, uz, K(index), dK(index), dt, L);
+        
+        % Save to history
+        if t >= tf-saveLastSec
+            saveStep = saveStep+1;
+            zHistory(saveStep,:) = zPart;
+        end
     
         % Test
         if (mod(t,dt_test)<=dt/2 || dt_test-mod(t,dt_test)<=dt/2 )
@@ -52,6 +69,10 @@ function [zFinal] = MP_simulator(mp, zInit, K, dK, L, dz, tf, dt_test)
         end
 
     end
-    zFinal = zPart; % double array, final particle's position (m)
+    if nargin > 8 && saveLastSec ~= 0
+        zFinal = zHistory; % 2D double array, final particle's position (m)
+    else
+        zFinal = zPart; % 1D double array, final particle's position (m)
+    end
     
 end
