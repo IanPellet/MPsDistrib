@@ -25,7 +25,7 @@ end
 
 nPart = 10e3; % number of particles
 
-tf = 1e5; % simulation time (s)
+tf = 60*60*24*2; % simulation time (s)
 dt_test = 60*60; % test time interval (s)
 
 load('../Data/stationLonLat_CEREGE.mat','station') % load position data of stations
@@ -157,8 +157,16 @@ minI = find([Resultats.rmseErreur] == min([Resultats.rmseErreur]),1);
 minRho1 = Resultats(minI).Rho1;
 minRho2 = Resultats(minI).Rho2;
 
+pphist = [ppRho([ppRho(:).rho] == minRho1).ppHist  ppRho([ppRho(:).rho] == minRho2).ppHist];
+hConc = NaN(size(pphist,1),length(z_));
+for hStep = 1:size(ppHist,1)
+    pp = pphist(hStep,:);
+    [histi,~] =  groupcounts(pp',z,'IncludeEmptyGroups',true);
+    hConc(hStep,:) = histi'/dz*L/nPart;
+end, clear hStep pp histi,
+stdConc = std(hConc, 'omitnan');
 %% Display results
-ttl = ['Particle size : ' num2str(modSize*1e6) 'µm'];
+ttl = ['Particle size : ' num2str(modSize*1e6) 'µm - simTime : ' num2str(tf/(60*60*24)) ' days'];
 
 % f1 = figure(1); clf,
 % plot(DataInterp,-z_,'--', 'DisplayName', 'Data interpolation');
@@ -189,7 +197,7 @@ title(ttl)
 
 % figure 3 : plot best rhoP profile
 f3 = figure(3); clf,
-plot(DataInterp,-z_,'--', 'DisplayName', 'Data interpolation');
+% plot(DataInterp,-z_,'--', 'DisplayName', 'Data interpolation');
 % xlim([0 max(ConcentrationSample)])
 ylim([-L+0.75 0])
 xlabel('Concentration (mps.m⁻¹)')
@@ -197,10 +205,10 @@ ylabel('Depth (m)')
 hold on 
 plot(CMes,-ZMes,'pm','MarkerSize', 10, 'DisplayName', 'Sampled Data');
 plot(Resultats(minI).conc*Resultats(minI).Alpha,-z_,'DisplayName', ['Rho1 = ' num2str(minRho1) ', Rho2 = ' num2str(minRho2) 'kg.m⁻³'])
-% plot((Resultats(minI).conc+2*Resultats(minI).std)*Resultats(minI).Alpha,-z_, '--','DisplayName', '+2std');
-% plot((Resultats(minI).conc-2*Resultats(minI).std)*Resultats(minI).Alpha,-z_, '--','DisplayName', '-2std');
+plot((Resultats(minI).conc+2*stdConc)*Resultats(minI).Alpha,-z_, '--','DisplayName', '+2std');
+plot((Resultats(minI).conc-2*stdConc)*Resultats(minI).Alpha,-z_, '--','DisplayName', '-2std');
 legend('Location', 'southeast')
-title([ttl ' -- Rho1 = ' num2str(minRho1) ', Rho2 = ' num2str(minRho2) 'kg.m⁻³'])
+title('Time avrage over the last 30min of simulation',[ttl ' -- Rho1 = ' num2str(minRho1) ', Rho2 = ' num2str(minRho2) 'kg.m⁻³'])
 hold off
 
 if saveFig
