@@ -42,20 +42,14 @@ z_=(z(1:end-1)+z(2:end))/2; % middle of each mesh
 
 DensiteFevrierRhoma
 if nargin < 4
+    day = '10fev';
+end
+if  strcmp(day, '10fev')
     KZ_day = KZ_Fev10;
-    Row_day = Row_Fev10;
     z_day = z_Fev10;
-    z__day = z__Fev10;
-elseif  strcmp(day, '10fev')
-    KZ_day = KZ_Fev10;
-    Row_day = Row_Fev10;
-    z_day = z_Fev10;
-    z__day = z__Fev10;
 elseif  strcmp(day, '3fev')
     KZ_day = KZ_Fev03;
-    Row_day = Row_Fev03;
     z_day = z0;
-    z__day = z0_;
 else
     error('Day argument not recognised');
     %     [KZ_day,Row_day,z_day,z__day] = KsSalTemp(WindSpeed, month);
@@ -68,7 +62,7 @@ addpath('./fig-Visser/');
 
 g = 9.81 ; %m.s-1 (gravitational acceleration)
 nuw = 1.1*10^-6; %m2.s-1 (kinematic viscosity of sea water)
-rhow = interp1(-z__day,Row_day,z,'pchip'); % density of sea water 
+rhow = getCTDrhow(day,z);
 
 g_red = g.*abs(rhoP-rhow)./rhow;
 S=rhoP./rhow;

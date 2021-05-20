@@ -34,11 +34,6 @@ clear Concentration err
 % N = 500;
 dz= L/N;  z=0:dz:L; % x : boundaries of the meshes
 z_=(z(1:end-1)+z(2:end))/2; % milieu de chaque maille
-Xmin=0;Xmax=L;Cmin=-1;Cmax=2;
-        %z0=H0(I0,J0)*Sigma;
-        z0=L*Sigma;
-        %z0_=H0(I0,J0)*(Sigma(1:end-1)+Sigma(2:end))/2;
-        z0_=L*(Sigma(1:end-1)+Sigma(2:end))/2;    
 
 % conditions initiales 
 CMes=[0.62 0.34 0.06 0.02 0]; % concentrations mesurées
@@ -52,24 +47,26 @@ C=max(0*C,C);
 Concentration(1,:)=C;
 
 % Determiner rho eau
-DensiteFevrierRhoma
-if nargin < 4
-    KZ_day = KZ_Fev10;
-    Row_day = Row_Fev10;
-    z_day = z_Fev10;
-    z__day = z__Fev10;
-elseif  strcmp(day, '10fev')
-    KZ_day = KZ_Fev10;
-    Row_day = Row_Fev10;
-    z_day = z_Fev10;
-    z__day = z__Fev10;
-elseif  strcmp(day, '3fev')
-    KZ_day = KZ_Fev03;
-    Row_day = Row_Fev03;
-    z_day = z0;
-    z__day = z0_;
+if nargin < 5 && ischar(day)
+    DensiteFevrierRhoma
+    if nargin < 4
+        day = '10fev';
+    end
+    if  strcmp(day, '10fev')
+        KZ_day = KZ_Fev10;
+        z_day = z_Fev10;
+    elseif  strcmp(day, '3fev')
+        KZ_day = KZ_Fev03;
+        z_day = z0;
+    else
+        error('Day argument not recognised');
+    end
+
+    rhow = getCTDrhow(day,z);
+    
 elseif windSpeed 
     [KZ_day,Row_day,z_day,z__day] = KsSalTemp(windSpeed, date);
+    rhow = interp1(-z__day,Row_day,z,'pchip'); % density of sea water 
 else
     error('Please pass day or windSpeed and date as argument');
 end
@@ -78,7 +75,6 @@ Nu=interp1(z_day,KZ_day,-z_,'pchip');
 
 g = 9.81 ; %m.s-1 (gravitational acceleration)
 nuw = 1.1*10^-6; %m2.s-1 (kinematic viscosity of sea water)
-rhow = interp1(-z__day,Row_day,z,'pchip'); % density of sea water 
 
 g_red = g.*abs(rhoP-rhow)./rhow;
 S=rhoP./rhow;
