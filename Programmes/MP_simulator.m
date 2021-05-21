@@ -17,9 +17,11 @@ function [zFinal] = MP_simulator(mp, zInit, K, dK, L, dz, tf, dt_test, saveLastS
 % zFinal : double array, final particle's position (m)
 %
 
-    U = [mp.U_]; % 2D double array, mp fall velocities on the column (m.s⁻¹)
+    U = [mp.U_]; % 2D double array, mp fall velocities on the column (m.s⁻¹)   
     uz = NaN(size(mp)); % double array, mp fall velocities (m.s⁻¹)
     zPart = zInit; % double array, particle's position (m)
+    
+    saveHist = nargin > 8 && saveLastSec ~= 0;
     
     %% Time step initialisation
     dt = 10; % double, time step (s)
@@ -27,8 +29,12 @@ function [zFinal] = MP_simulator(mp, zInit, K, dK, L, dz, tf, dt_test, saveLastS
     dt = min(dt, abs(min(1./ddK)/10)); % check condition dt<<min(1/ddK) 
     dt = min(dt, dz/max(max(abs(U)))); % check condition dt < dz/max|u|
     
+    %% Init fragmentation rate list
+    rFragMP = [mp.fragRate_]; % Tester si on a eu fragmentation et récup que si c'est le cas
+    rFragDT = rFragMP*dt; % Get frangmentation rate for the time dt
+    
     %% Init history 
-    if nargin > 8 && saveLastSec ~= 0
+    if saveHist
         saveNstep = fix(saveLastSec/dt)+1;
         zHistory = NaN(saveNstep,length(mp));
         saveStep = 0;
@@ -40,6 +46,17 @@ function [zFinal] = MP_simulator(mp, zInit, K, dK, L, dz, tf, dt_test, saveLastS
     while OnContinue
         % Time update
         t=t+dt;
+        
+        %% Fragment particles
+        
+        draw = rand(size(rFragMP));
+        mpFrag = rFragDT >= draw;
+        if sum(mpFrag) > 0
+            [mp, zPart] = MP_fragmentation(mp, zPart, mpFrag);
+            U = [mp.U_]; % 2D double array, mp fall velocities on the column (m.s⁻¹)
+            rFragMP = [mp.fragRate_]; % Tester si on a eu fragmentation et récup que si c'est le cas
+            rFragDT = rFragMP*dt; % Get frangmentation rate for the time dt
+        end
     
         %% Particules update
         index = max(1, cast(zPart/dz, 'uint32')); % int array, index of each particle's current mesh
@@ -51,7 +68,7 @@ function [zFinal] = MP_simulator(mp, zInit, K, dK, L, dz, tf, dt_test, saveLastS
         zPart = Step_Lagrangien(zPart, uz, K(index), dK(index), dt, L);
         
         % Save to history
-        if t >= tf-saveLastSec
+        if saveHist && t >= tf-saveLastSec
             saveStep = saveStep+1;
             zHistory(saveStep,:) = zPart;
         end
@@ -69,7 +86,7 @@ function [zFinal] = MP_simulator(mp, zInit, K, dK, L, dz, tf, dt_test, saveLastS
         end
 
     end
-    if nargin > 8 && saveLastSec ~= 0
+    if saveHist
         zFinal = zHistory; % 2D double array, final particle's position (m)
     else
         zFinal = zPart; % 1D double array, final particle's position (m)

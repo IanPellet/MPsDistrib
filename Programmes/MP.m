@@ -9,10 +9,12 @@ classdef MP
         size_ % (m)
         rho_ % (kg.m⁻³)
         U_ % velocity in the water column, dep of type (m.s⁻¹)
+        fragRate_ % double in (0,1], probability for a particle to be fragmented each second
     end
 
     methods
-        function obj = MP(size, rhop, rhow)
+        %% Constructor
+        function obj = MP(size, rhop, rhow, fragRate)
             %MP Constructor
             % If no argument is passed (default constructor), everything
             % is set to 0.
@@ -21,6 +23,8 @@ classdef MP
             % size : double, particle size (m)
             % rhop : double, particle density (kg.m⁻³)
             % rhow : double, water density ((kg.m⁻³)
+            % fragRate : double in (0,1], probability for a particle to be fragmented
+            % each second 
             %
             
             obj.type_ = 0; % TYPE NOT IMPLEMENTED YET
@@ -29,13 +33,16 @@ classdef MP
                 obj.size_ = 0;
                 obj.rho_ = 0;
                 obj.rhow_ = 0;
+                obj.fragRate_ = 0;
             else
                 obj.size_ = size;
                 obj.rho_ = rhop;
                 obj.rhow_ = rhow;
+                obj.fragRate_ = fragRate;
             end           
         end
         
+        %% Setter
         function value = get.U_(obj)
             %SETU Compute fall velocity of particle in the water column
             %   
