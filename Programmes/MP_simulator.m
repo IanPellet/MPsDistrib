@@ -36,7 +36,7 @@ function [zFinal] = MP_simulator(mp, zInit, K, dK, L, dz, tf, dt_test, saveLastS
     %% Init history 
     if saveHist
         saveNstep = fix(saveLastSec/dt)+1;
-        zHistory = NaN(saveNstep,length(mp));
+        zHistory = cell(saveNstep,1);
         saveStep = 0;
     end
     
@@ -70,7 +70,7 @@ function [zFinal] = MP_simulator(mp, zInit, K, dK, L, dz, tf, dt_test, saveLastS
         % Save to history
         if saveHist && t >= tf-saveLastSec
             saveStep = saveStep+1;
-            zHistory(saveStep,:) = zPart;
+            zHistory{saveStep} = zPart;
         end
     
         % Test

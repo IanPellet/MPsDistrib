@@ -28,40 +28,50 @@ zPart = linspace(0, L, nPart); % depth of particles
 % sizePart = linspace(300e-6, 400e-6, nPart); % size of particle
 sizePart = ones(size(zPart))*350e-6;
 rhop = 1020;
-rFrag = 5e-9;
 
-% allocate memory to store particles
-mp(nPart) = MP; % array of MP objects
-% Fill the array
-disp("Creating Particles...");
-for i = 1:(nPart)
-    mp(i) = MP(sizePart(i), rhop, rhow, rFrag);
-end, clear i,
-disp("Done");
-fprintf(['\n\n'])
-
-[zFinal] = MP_simulator(mp, zPart, K, dK, L, dz, tf, dt_test);
-
-zPlot = reshape(zFinal, [numel(zFinal) 1]); 
-[groupMP,~] =  groupcounts(zPlot,z,'IncludeEmptyGroups',true);
-conc = groupMP'/dz*L/nPart;
-plot(conc,-z_);
+% create list of particles
+mp1 = getMPlist(nPart, sizePart, rhop, rhow, 5e-9);
+mp2 = getMPlist(nPart, sizePart, rhop, rhow, 0);
 
 
-% hConc = NaN(size(zFinal,1),length(z_));
-% for hStep = 1:size(zFinal,1)
-%     pp = zFinal(hStep,:);
-%     [histi,~] =  groupcounts(pp',z,'IncludeEmptyGroups',true);
-%     hConc(hStep,:) = histi'/dz*L/numel(zFinal);
-% end, clear hStep pp histi,
-% meanConc = mean(hConc, 'omitnan');
-% stdConc = std(hConc, 'omitnan');
-% 
-% figure(1), clf, hold on,
-% plot(meanConc, -z_, meanConc+2*stdConc, -z_, '--', meanConc-2*stdConc, -z_, '--');
-% 
-% zPlot = reshape(zFinal, [numel(zFinal) 1]); 
-% [groupMP,~] =  groupcounts(zPlot,z,'IncludeEmptyGroups',true);
-% conc = groupMP'/dz*L/nPart;
+[zFinal1] = MP_simulator(mp1, zPart, K, dK, L, dz, tf, dt_test, 60*30);
+[zFinal2] = MP_simulator(mp2, zPart, K, dK, L, dz, tf, dt_test, 60*30);
+
+[meanConc1, stdConc1] = getMeanConc(zFinal1, z, z_, dz, L);
+[meanConc2, stdConc2] = getMeanConc(zFinal2, z, z_, dz, L);
+
+
+figure(1), clf, hold on,
+p1 = plot(meanConc1, -z_, 'b');
+plot(meanConc1+2*stdConc1, -z_, '--b', meanConc1-2*stdConc1, -z_, '--b');
+p2 = plot(meanConc2, -z_, 'r');
+plot(meanConc2+2*stdConc2, -z_, '--r', meanConc2-2*stdConc2, -z_, '--r');
+
+legend([p1, p2],{'rFrag = 5e-9','rFrag = 0'}, 'Location', 'best');
+
+hold off
+% zPlot = zFinal{:}; 
+% [groupMP,~] =  groupcounts(zPlot',z,'IncludeEmptyGroups',true);
+% conc = groupMP'/dz*L/numel(zPlot);
 % plot(conc,-z_);
 % hold off
+
+function [mp_list] = getMPlist(nPart, sizePart, rhop, rhow, rFrag)
+    % allocate memory to store particles
+    mp_list(nPart) = MP; % array of MP objects
+    % Fill the array
+    for i = 1:(nPart)
+        mp_list(i) = MP(sizePart(i), rhop, rhow, rFrag);
+    end, clear i,
+end
+
+function [meanConc, stdConc] = getMeanConc(zPart, z, z_, dz, L)
+    hConc = NaN(size(zPart,1),length(z_));
+    for hStep = 1:size(zPart,1)
+        pp = zPart{hStep};
+        [histi,~] =  groupcounts(pp',z,'IncludeEmptyGroups',true);
+        hConc(hStep,:) = histi'/dz*L/numel(pp);
+    end, clear hStep pp histi,
+    meanConc = mean(hConc, 'omitnan');
+    stdConc = std(hConc, 'omitnan');
+end
