@@ -21,21 +21,22 @@ end
 path = '../Results/EstimRho/'; % saved figures directory
 
 % Multinet sample characteristics 
-Station = 'RN2';
-Date = datetime('3/18/2021');
+% Station = 'RN2';
+% Date = datetime('3/18/2021');
 
 
 %% Water column parameters
-ModeleHydro='2012RHOMA_arome_003.nc';
-SauvegardeModeleHydro=['DonneeBase' ModeleHydro(1:end-3)];
-% Load file with indexes corresponding to each stations
-stationFile = '../Data/stationIJ_CEREGE.mat';
-load(stationFile,'stationIJ');
-% Get the indexes of the right station
-I0 = stationIJ{stationIJ{:,'station'} == Station,'I0'};
-J0 = stationIJ{stationIJ{:,'station'} == Station,'J0'};
-load(SauvegardeModeleHydro, 'H0')
-L = H0(I0,J0); 
+% ModeleHydro='2012RHOMA_arome_003.nc';
+% SauvegardeModeleHydro=['DonneeBase' ModeleHydro(1:end-3)];
+% % Load file with indexes corresponding to each stations
+% stationFile = '../Data/stationIJ_CEREGE.mat';
+% load(stationFile,'stationIJ');
+% % Get the indexes of the right station
+% I0 = stationIJ{stationIJ{:,'station'} == Station,'I0'};
+% J0 = stationIJ{stationIJ{:,'station'} == Station,'J0'};
+% load(SauvegardeModeleHydro, 'H0')
+% L = H0(I0,J0); 
+L = 50;
 if nargin < 4
     N = 200; % number of meshes. High : +precise -fast / Low : -precise +fast
 end
@@ -44,48 +45,56 @@ z = (0:dz:L)'; % meshes boundaries
 z_ = z(1:end-1)+dz/2; % center of the meshes
 
 % day = '3fev'; % day corresponding to diffusive turbulence data
-day = false;
+day = '10fev';
+% day = false;
 
-load('../Data/stationLonLat_CEREGE.mat','station') % load position data of stations
-staName = 'RN2'; % chosen station
-iStation = station(all(station(:,'Station').Variables'==staName')',:); % corresponding row of the table station
-% Position of station
-Lon0 = iStation(:,'Lon').Variables;
-Lat0 = iStation(:,'Lat').Variables;
+% load('../Data/stationLonLat_CEREGE.mat','station') % load position data of stations
+% staName = 'RN2'; % chosen station
+% iStation = station(all(station(:,'Station').Variables'==staName')',:); % corresponding row of the table station
+% % Position of station
+% Lon0 = iStation(:,'Lon').Variables;
+% Lat0 = iStation(:,'Lat').Variables;
 
-
-% %% Data
-% 
-% dh = 0.71; % Net oppening (m)
-% 
-% % SamplingDate = datetime('3/18/2021');
-% % DataFile = '../Data/data_mps.txt';
-% % [ConcentrationSample, DepthSample] = getDataNpart(false, SizePart, true, DataFile, SamplingDate);
-% CMes=[0.27 0.08 0.09 0.1 0.2]; % Concentration
-% ZMes=[0 25 35 45 50]+dh/2; % Depth of the samples
-% ConcentrationSample = CMes(1:end)';
-% DepthSample = ZMes(1:end)';
-% DataInterp = interp1(ZMes,CMes,z_,'pchip')'; % Interpolated data
 
 %% Data
 
 dh = 0.71; % Net oppening (m)
 
-% Concentration at each depth and filtered volume
-ConcVolFile = '../Data/ConcVol_MP.txt';
-ConcVolTable = load_ConcVol_data(ConcVolFile);
+% SamplingDate = datetime('3/18/2021');
+% DataFile = '../Data/data_mps.txt';
+% [ConcentrationSample, DepthSample] = getDataNpart(false, SizePart, true, DataFile, SamplingDate);
 
-% Multinet condition
-concCond = strcmp(ConcVolTable{:,'station'},Station) & ConcVolTable{:,'date'} == Date;
+% 3fev
+% CMes=[0.27 0.08 0.09 0.1 0.2]; % Concentration
+% ZMes=[0 25 35 45 50]+dh/2; % Depth of the samples
 
-% Concentration data
-CMes = ConcVolTable{concCond,'C'};
-ZMes = ConcVolTable{concCond,'depth'}+dh/2;
+% 10fev
+CMes=[0.62 0.34 0.06 0.02 0]; % Concentration
+ZMes=[1 10 15 40 50]+dh/2; % Depth of the samples
 
+ConcentrationSample = CMes(1:end)';
+DepthSample = ZMes(1:end)';
+% DataInterp = interp1(ZMes,CMes,z_,'pchip')'; % Interpolated data
 
-ConcentrationSample = CMes(1:end);
-DepthSample = ZMes(1:end);
-DataInterp = interp1(ZMes,CMes,z_,'pchip')'; % Interpolated data
+% %% Data
+% 
+% dh = 0.71; % Net oppening (m)
+% 
+% % Concentration at each depth and filtered volume
+% ConcVolFile = '../Data/ConcVol_MP.txt';
+% ConcVolTable = load_ConcVol_data(ConcVolFile);
+% 
+% % Multinet condition
+% concCond = strcmp(ConcVolTable{:,'station'},Station) & ConcVolTable{:,'date'} == Date;
+% 
+% % Concentration data
+% CMes = ConcVolTable{concCond,'C'};
+% ZMes = ConcVolTable{concCond,'depth'}+dh/2;
+% 
+% 
+% ConcentrationSample = CMes(1:end);
+% DepthSample = ZMes(1:end);
+% DataInterp = interp1(ZMes,CMes,z_,'pchip')'; % Interpolated data
 
 
 %% Find corresponding depths to get from the model
@@ -118,7 +127,8 @@ CRho = zeros(length(RhoP_test),length(ConcentrationSample)+1);
 concRho = zeros(length(RhoP_test),N+1);
 for i = 1:length(RhoP_test)
     rho=RhoP_test(i);
-    [conc, z_] = Transport_Eulerian(modSize, rho, N, L, day, windSpeed, Date);
+%     [conc, z_] = Transport_Eulerian(modSize, rho, N, L, day, windSpeed, Date);
+    [conc, z_] = Transport_Eulerian(modSize, rho, N, L, day);
     
       % find the modeled concentration at depth corresponding with sample
     CModel = zeros(size(ConcentrationSample));
@@ -212,15 +222,15 @@ c = colorbar;
 c.Label.String = 'RMSE (mps.m⁻³)';
 xlabel('Rho_1 (kg.m⁻³)');
 ylabel('Rho_2 (kg.m⁻³)');
-xticks(RhoP_test);
-yticks(RhoP_test);
+% xticks(RhoP_test);
+% yticks(RhoP_test);
 title(ttl)
 
 % caxis([0.01 0.13])
 
 % figure 3 : plot best rhoP profile
 f3 = figure(3); clf,
-plot(DataInterp,-z_,'--', 'DisplayName', 'Data interpolation');
+% plot(DataInterp,-z_,'--', 'DisplayName', 'Data interpolation');
 xlim([0 7])
 ylim([-L 0])
 xlabel('Concentration (mps.m⁻¹)')
@@ -241,7 +251,7 @@ if saveFig
         rhoInter = [num2str(min(RhoP_test)) '-' num2str(RhoP_test(2)-RhoP_test(1)) '-' num2str(max(RhoP_test))];
     end
     
-    fileName = ['size' num2str(modSize*1e6) '_rho' rhoInter '_dataCEREGE'];
+    fileName = ['size' num2str(modSize*1e6) '_rho' rhoInter '_data10FevMarine'];
     
     F = [f2, f3];
     xPart = '2part_';

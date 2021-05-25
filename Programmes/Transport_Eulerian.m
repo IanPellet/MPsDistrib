@@ -47,7 +47,7 @@ C=max(0*C,C);
 Concentration(1,:)=C;
 
 % Determiner rho eau
-if nargin < 5 && ischar(day)
+if nargin <= 5 && ischar(day)
     DensiteFevrierRhoma
     if nargin < 4
         day = '10fev';
