@@ -59,7 +59,7 @@ function [zFinal] = MP_simulator(mp, zInit, K, dK, L, dz, tf, dt_test, saveLastS
         end
     
         %% Particules update
-        index = max(1, cast(zPart/dz, 'uint32')); % int array, index of each particle's current mesh
+        index = max(1, fix(zPart/dz)); % int array, index of each particle's current mesh
         % Find current fall velocity of each particle
         for i=1:length(zPart)
             uz = U(index(i),i);

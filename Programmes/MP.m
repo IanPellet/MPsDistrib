@@ -29,7 +29,7 @@ classdef MP
             
             obj.type_ = 0; % TYPE NOT IMPLEMENTED YET
             
-            if nargin == 0 % default constructor
+            if nargin <= 1 % default constructor
                 obj.size_ = 0;
                 obj.rho_ = 0;
                 obj.rhow_ = 0;

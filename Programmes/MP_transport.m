@@ -24,44 +24,44 @@ clearvars -except tf dt_test L N dz z z_ K dK rhow mean1 std1 mean2 std2
 
 %% Particules initialisation
 nPart = 50e3; % number of particles
-zPart = linspace(0, L, nPart); % depth of particles
+zPart = sparse(linspace(0, L, nPart)); % depth of particles
 
 sizePart1 = ones(size(zPart))*350e-6;
-pd = makedist('Normal', 'mu', 350e-6, 'sigma', 50e-6);
-sizePart2 = random(pd,size(zPart));
+% pd = makedist('Normal', 'mu', 350e-6, 'sigma', 50e-6);
+% sizePart2 = random(pd,size(zPart));
 
 rhop = 1020;
 
 % create list of particles
 mp1 = getMPlist(nPart, sizePart1, rhop, rhow, 0);
-mp2 = getMPlist(nPart, sizePart2, rhop, rhow, 0);
+% mp2 = getMPlist(nPart, sizePart2, rhop, rhow, 0);
 
 
 [zFinal1] = MP_simulator(mp1, zPart, K, dK, L, dz, tf, dt_test, 60*30);
-[zFinal2] = MP_simulator(mp2, zPart, K, dK, L, dz, tf, dt_test, 60*30);
+% [zFinal2] = MP_simulator(mp2, zPart, K, dK, L, dz, tf, dt_test, 60*30);
 
 [meanConc1, stdConc1] = getMeanConc(zFinal1, z, z_, dz, L);
-[meanConc2, stdConc2] = getMeanConc(zFinal2, z, z_, dz, L);
+% [meanConc2, stdConc2] = getMeanConc(zFinal2, z, z_, dz, L);
 
 
 figure(1), clf, hold on,
 p1 = plot(meanConc1, -z_, 'b');
 plot(meanConc1+2*stdConc1, -z_, '--b', meanConc1-2*stdConc1, -z_, '--b');
-p2 = plot(meanConc2, -z_, 'r');
-plot(meanConc2+2*stdConc2, -z_, '--r', meanConc2-2*stdConc2, -z_, '--r');
+% p2 = plot(meanConc2, -z_, 'r');
+% plot(meanConc2+2*stdConc2, -z_, '--r', meanConc2-2*stdConc2, -z_, '--r');
 
-legend([p1, p2],{'cst size','normal distrib of sizes'}, 'Location', 'best');
+% legend([p1, p2],{'cst size','normal distrib of sizes'}, 'Location', 'best');
 
 xlabel('Concentration (mps.m⁻¹)')
 ylabel('Depth (m)')
 
 hold off
 
-figure(2), clf,
-histogram(sizePart2*1e6);
-xlabel('Particle size (µm)')
-ylabel('Occurence')
-title('Particle size distribution')
+% figure(2), clf,
+% histogram(sizePart2*1e6);
+% xlabel('Particle size (µm)')
+% ylabel('Occurence')
+% title('Particle size distribution')
 % zPlot = zFinal{:}; 
 % [groupMP,~] =  groupcounts(zPlot',z,'IncludeEmptyGroups',true);
 % conc = groupMP'/dz*L/numel(zPlot);
@@ -71,6 +71,7 @@ title('Particle size distribution')
 function [mp_list] = getMPlist(nPart, sizePart, rhop, rhow, rFrag)
     % allocate memory to store particles
     mp_list(nPart) = MP; % array of MP objects
+%     mp_list = sparse(1,nPart);
     % Fill the array
     for i = 1:(nPart)
         mp_list(i) = MP(sizePart(i), rhop, rhow, rFrag);
