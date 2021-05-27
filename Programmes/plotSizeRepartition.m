@@ -6,7 +6,9 @@ function [resE] = plotSizeRepartition(D_test, RhoP, nDepth, saveFig, windSpeed)
 % saveFig : (boolean) default = false, if true figures will be saved to '../Results/SizeRep/'
 
 path = '../Results/SizeRep/';
-
+if nargin < 5
+    windSpeed = 50;
+end
 if nargin < 4
     saveFig = false;
 end

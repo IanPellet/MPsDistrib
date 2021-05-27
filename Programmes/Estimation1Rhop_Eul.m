@@ -13,23 +13,23 @@ function [Resultats,ConcentrationSample,Ztest_,z_] = Estimation1Rhop_Eul(SizePar
 path = '../Results/EstimRho/'; % saved figures directory
 
 % Multinet sample characteristics 
-% Station = 'RN2';
-% Date = datetime('3/18/2021');
+Station = 'RN2';
+Date = datetime('3/18/2021');
 
 %% Water column parameters
 % Find depth at station RN2
-% ModeleHydro='2012RHOMA_arome_003.nc';
-% SauvegardeModeleHydro=['DonneeBase' ModeleHydro(1:end-3)];
+ModeleHydro='2012RHOMA_arome_003.nc';
+SauvegardeModeleHydro=['DonneeBase' ModeleHydro(1:end-3)];
 % Load file with indexes corresponding to each stations
-% stationFile = '../Data/stationIJ_CEREGE.mat';
-% load(stationFile,'stationIJ');
+stationFile = '../Data/stationIJ_CEREGE.mat';
+load(stationFile,'stationIJ');
 % Get the indexes of the right station
-% I0 = stationIJ{stationIJ{:,'station'} == Station,'I0'};
-% J0 = stationIJ{stationIJ{:,'station'} == Station,'J0'};
+I0 = stationIJ{stationIJ{:,'station'} == Station,'I0'};
+J0 = stationIJ{stationIJ{:,'station'} == Station,'J0'};
 % Get depth at RN2
-% load(SauvegardeModeleHydro, 'H0')
-% L = H0(I0,J0);
-L = 50;
+load(SauvegardeModeleHydro, 'H0')
+L = H0(I0,J0);
+% L = 50;
 
 if nargin < 4
     N = 500; % number of meshes. High : +precise -fast / Low : -precise +fast
@@ -39,26 +39,26 @@ dz= L/N; % size of meshes
 z = (0:dz:L)'; % meshes boundaries
 z_ = z(1:end-1)+dz/2; % center of the meshes
 
-day = '10fev'; % day corresponding to diffusive turbulence data
-% day = false;
+% day = '10fev'; % day corresponding to diffusive turbulence data
+day = false;
 
 %% Data
 
 dh = 0.71; % Net oppening (m)
 
 % Concentration at each depth and filtered volume
-% ConcVolFile = '../Data/ConcVol_MP.txt';
-% ConcVolTable = load_ConcVol_data(ConcVolFile);
+ConcVolFile = '../Data/ConcVol_MP.txt';
+ConcVolTable = load_ConcVol_data(ConcVolFile);
 
 % Multinet condition
-% concCond = strcmp(ConcVolTable{:,'station'},Station) & ConcVolTable{:,'date'} == Date;
+concCond = strcmp(ConcVolTable{:,'station'},Station) & ConcVolTable{:,'date'} == Date;
 
 % Concentration data
-% CMes = ConcVolTable{concCond,'C'};
-% ZMes = ConcVolTable{concCond,'depth'}+dh/2;
+CMes = ConcVolTable{concCond,'C'};
+ZMes = ConcVolTable{concCond,'depth'}+dh/2;
 
-CMes=[0.62 0.34 0.06 0.02 0]'; % Concentration
-ZMes=[1 10 15 40 50]'+dh/2; % Depth of the samples
+% CMes=[0.62 0.34 0.06 0.02 0]'; % Concentration
+% ZMes=[1 10 15 40 50]'+dh/2; % Depth of the samples
 ConcentrationSample = CMes;
 DepthSample = ZMes;
 % DataInterp = interp1(ZMes,CMes,z_,'pchip')'; % Interpolated data
@@ -95,8 +95,8 @@ end
 for iRes = 1:length(RhoP_test)
     RhoP = RhoP_test(iRes);    
     
-%     [conc, z_] = Transport_Eulerian(modSize, RhoP, N, L, day, windSpeed, Date);
-    [conc, z_] = Transport_Eulerian(modSize, RhoP, N, L, day);
+    [conc, z_] = Transport_Eulerian(modSize, RhoP, N, L, day, windSpeed, Date);
+%     [conc, z_] = Transport_Eulerian(modSize, RhoP, N, L, day);
     
     % find the modeled concentration at depth corresponding with sample
     ConcentrationModel = zeros(size(ConcentrationSample));
@@ -109,7 +109,6 @@ for iRes = 1:length(RhoP_test)
     % Compute the proportionnality coefficient minimizing the square error
     % between model and data
     alpha = ConcentrationModel\ConcentrationSample;
-%     alpha = conc'\DataInterp';
     
     % Compute the root mean square error between model and data
     Erreur = abs(ConcentrationModel.*alpha - ConcentrationSample);

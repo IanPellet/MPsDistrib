@@ -23,8 +23,10 @@ SauvegardeModeleHydro=['DonneeBase' ModeleHydro(1:end-3)];
 load(SauvegardeModeleHydro)
 %[I0,J0]=ReperePoint(Lon,Lat,Lon0,Lat0);
 
-tf= 100*86400; dtmax=0.01; 
-Tdes=60*60; dConcMax=5E-6; % Tdes : intervalle de temps entre les tests d'équilibre 
+tf= 100*86400; 
+dtmax=0.01; 
+Tdes=60*60*2; dConcMax=5E-10; % Tdes : intervalle de temps entre les tests d'équilibre 
+tmin = 0.5*24*3600;
 % dConcMax : seuil de delta de concentration à partir duquel on de considère à l'équilibre 
 dh=0.15; % profondeur sur laquelle le filet prélève
 
@@ -40,6 +42,7 @@ CMes=[0.62 0.34 0.06 0.02 0]; % concentrations mesurées
 ZMes=[1 10 15 40 L]; % profondeur de chaque mesure
 C = interp1(ZMes,CMes,z(1:end-1)+dz/2,'pchip'); % interpolation sur z
 C=max(0*C,C);
+% C = ones(size(z_))*0.15;
 
 
     
@@ -108,8 +111,8 @@ while OnContinue
 
        Concentration(index,:)=C;
        Ecart(index,:)=max((Concentration(index-1)-Concentration(index)).^2);
-       if Ecart(index,:) < dConcMax ...
-               | t>tf
+       if (Ecart(index,:) < dConcMax && t >= tmin) || Ecart(index,:) == 0  ...
+               | t>tf 
            OnContinue = false;
        end
        disp([' Temps : ' num2str(t/3600/24) 'j -' ...
