@@ -1,7 +1,7 @@
 AfficheDessin=false;
 GainTemps=1;
-FichDiffusion='/media/ian/Elements/Ian_Plastique/Data/Diffusion';
-FichSomlit='/media/ian/Elements/Ian_Plastique/Data/DataSomlit';
+FichDiffusion='../Data/Diffusion';
+FichSomlit='../Data/DataSomlit';
 ModeleHydro='2012RHOMA_arome_003.nc';
 SauvegardeModeleHydro=['DonneeBase' ModeleHydro(1:end-3)];
 
