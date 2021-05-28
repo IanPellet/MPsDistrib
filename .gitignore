@@ -1,0 +1,7 @@
+# exclude everything except directory Programmes
+/*
+!/Programmes/
+/Programmes/*.asv
+/Programmes/*.zip
+/Programmes/fig-Visser/*.asv
+/Programmes/fig-Visser/results/*
