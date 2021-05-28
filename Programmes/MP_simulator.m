@@ -17,6 +17,8 @@ function [zFinal] = MP_simulator(mp, zInit, K, dK, L, dz, tf, dt_test, saveLastS
 % zFinal : double array, final particle's position (m)
 %
 
+fprintf(['\n\n--------------------- nPart = ' num2str(length(mp)) ' -- save last ' num2str(saveLastSec) 's ---------------------\n'])
+
     U = [mp.U_]; % 2D double array, mp fall velocities on the column (m.s⁻¹)   
     uz = NaN(size(mp)); % double array, mp fall velocities (m.s⁻¹)
     zPart = zInit; % double array, particle's position (m)
