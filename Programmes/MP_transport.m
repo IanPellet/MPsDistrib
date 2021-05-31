@@ -36,8 +36,8 @@ mp1 = getMPlist(nPart, sizePart1, rhop, rhow, 0);
 mp2 = getMPlist(nPart, sizePart2, rhop, rhow, 0);
 
 
-[zFinal1] = MP_simulator(mp1, zPart, K, dK, L, dz, tf, dt_test, 60*30);
-[zFinal2] = MP_simulator(mp2, zPart, K, dK, L, dz, tf, dt_test, 60*30);
+[zFinal1,~] = MP_simulator(mp1, zPart, K, dK, L, dz, tf, dt_test, 60*30);
+[zFinal2,~] = MP_simulator(mp2, zPart, K, dK, L, dz, tf, dt_test, 60*30);
 
 [meanConc1, stdConc1] = getMeanConc(zFinal1, z, z_, dz, L);
 [meanConc2, stdConc2] = getMeanConc(zFinal2, z, z_, dz, L);
@@ -66,22 +66,23 @@ ylabel('Occurence')
 title('Particle size distribution')
 
 
-function [mp_list] = getMPlist(nPart, sizePart, rhop, rhow, rFrag)
-    % allocate memory to store particles
-    mp_list(nPart) = MP; % array of MP objects
-    % Fill the array
-    for i = 1:(nPart)
-        mp_list(i) = MP(sizePart(i), rhop, rhow, rFrag);
-    end, clear i,
-end
+% function [mp_list] = getMPlist(nPart, sizePart, rhop, rhow, rFrag)
+%     % allocate memory to store particles
+%     mp_list(nPart) = MP; % array of MP objects
+%     % Fill the array
+%     for i = 1:(nPart)
+%         mp_list(i) = MP(sizePart(i), rhop, rhow, rFrag);
+%     end, clear i,
+% end
+% 
+% function [meanConc, stdConc] = getMeanConc(zPart, z, z_, dz, L)
+%     hConc = NaN(size(zPart,1),length(z_));
+%     for hStep = 1:size(zPart,1)
+%         pp = zPart{hStep};
+%         [histi,~] =  groupcounts(pp',z,'IncludeEmptyGroups',true);
+%         hConc(hStep,:) = histi'/dz*L/numel(pp);
+%     end, clear hStep pp histi,
+%     meanConc = mean(hConc, 'omitnan');
+%     stdConc = std(hConc, 'omitnan');
+% end
 
-function [meanConc, stdConc] = getMeanConc(zPart, z, z_, dz, L)
-    hConc = NaN(size(zPart,1),length(z_));
-    for hStep = 1:size(zPart,1)
-        pp = zPart{hStep};
-        [histi,~] =  groupcounts(pp',z,'IncludeEmptyGroups',true);
-        hConc(hStep,:) = histi'/dz*L/numel(pp);
-    end, clear hStep pp histi,
-    meanConc = mean(hConc, 'omitnan');
-    stdConc = std(hConc, 'omitnan');
-end

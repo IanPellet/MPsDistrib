@@ -1,4 +1,4 @@
-function [zFinal] = MP_simulator(mp, zInit, K, dK, L, dz, tf, dt_test, saveLastSec)
+function [zFinal, dt] = MP_simulator(mp, zInit, K, dK, L, dz, tf, dt_test, saveLastSec)
 %MP_SIMULATOR Run simulation with particles in mp
 %
 % PARAMETERS
@@ -22,7 +22,7 @@ fprintf(['\n\n--------------------- nPart = ' num2str(length(mp)) ' -- save last
     U = [mp.U_]; % 2D double array, mp fall velocities on the column (m.s⁻¹)   
     uz = NaN(size(mp)); % double array, mp fall velocities (m.s⁻¹)
     zPart = zInit; % double array, particle's position (m)
-    
+    clear zInit,
     saveHist = nargin > 8 && saveLastSec ~= 0;
     
     %% Time step initialisation
@@ -30,6 +30,7 @@ fprintf(['\n\n--------------------- nPart = ' num2str(length(mp)) ' -- save last
     ddK = diff(dK)./dz; % double array, diffusivity gradient's derivative (s⁻¹)
     dt = min(dt, abs(min(1./ddK)/10)); % check condition dt<<min(1/ddK) 
     dt = min(dt, dz/max(max(abs(U)))); % check condition dt < dz/max|u|
+    clear ddK,
     
     %% Init fragmentation rate list
     rFragMP = [mp.fragRate_]; % Tester si on a eu fragmentation et récup que si c'est le cas
@@ -37,7 +38,7 @@ fprintf(['\n\n--------------------- nPart = ' num2str(length(mp)) ' -- save last
     
     %% Init history 
     if saveHist
-        saveNstep = fix(saveLastSec/dt)+1;
+        saveNstep = ceil(saveLastSec/dt);
         zHistory = cell(saveNstep,1);
         saveStep = 0;
     end
