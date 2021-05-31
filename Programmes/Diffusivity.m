@@ -7,11 +7,15 @@ if nargin == 5
     DensiteFevrierRhoma
 end
 
-
-z0 = [-z(end) ; z0];
-KZ_Fev10 = [0 KZ_Fev10];
+if -z(end) == z0(1)
+    KZ_Fev10(1) = 0;
+else
+    z0 = [-z(end) ; z0];
+    KZ_Fev10 = [0 KZ_Fev10];
+end
 
 Kinter = interp1(z0, KZ_Fev10, -z,'linear');
+Kinter(isnan(Kinter))=0;
 
 %% 8-point moving average
 npts = 8;
