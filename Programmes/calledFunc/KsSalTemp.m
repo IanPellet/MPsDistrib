@@ -53,7 +53,7 @@ end
 iDay = find(TAU == TAU_period(iTAU_period)); % day index
 
 % Load Kz Sal Temp from mat files
-load("../Data/waterCol_RN2.mat", 'Sal', 'Temp', 'Kz', 'z0');
+load("waterCol_RN2.mat", 'Sal', 'Temp', 'Kz', 'z0');
 
 KZ_day = Kz(iDay,:);
 Sal_day = Sal(iDay,:);
