@@ -1,6 +1,6 @@
-function [meanConc, stdConc] = getMeanConc(zPart, z, z_, dz, L)
+function [meanConc, stdConc] = getMeanConc(zPart, nCat, dz)
 % zPart = zFinal(end-10:end);
-    hConc = NaN(size(zPart,1),length(z_));
+    hConc = NaN(size(zPart,1),nCat);
     for hStep = 1:size(zPart,1)
 
         pp = zPart{hStep};
@@ -9,7 +9,7 @@ function [meanConc, stdConc] = getMeanConc(zPart, z, z_, dz, L)
 
         topBound = dz;
         j = 1;
-        count = zeros(size(z_));
+        count = zeros(nCat,1);
 
         for i=1:length(ppSort)
             if ppSort(i) > topBound
@@ -20,7 +20,7 @@ function [meanConc, stdConc] = getMeanConc(zPart, z, z_, dz, L)
         end, clear i,
 
         histi = count;
-        hConc(hStep,:) = histi'/dz*L/numel(pp);
+        hConc(hStep,:) = histi'*nCat/numel(pp);
 
     end, clear hStep pp histi,
     meanConc = mean(hConc, 'omitnan');
