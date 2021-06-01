@@ -1,0 +1,34 @@
+# CalledFunc
+Subfunctions used in models or to treat input and output data.
+
+# EstimationRhop
+Estimation of one or two particles density for which the model best fit given data.
+The model (Eulerian or Lagrangian) is tested for a range of particle densities given as an input by the user. Model's results are compared to *in-situ* data, the error between the model and the data is computed for each value of particle density. The result with the minimal error is considered as the best particle density to a priximate the data.
+
+For an estimation of two densities, the simulations's results for one density are added two by two then compared to data.
+
+Ploted figures : 
+- all concentration profiles tested
+- error for each tested profile
+- final concentration profile best fitting the data
+
+# fig-Visser
+Programs used to recreate figures of Visser1997
+
+# mainModel
+Main programs to run models
+
+- Transport_Eulerian : Eulerian model (function)
+- Transport_ian : Eulerian model (script)
+- Transport_Laagrangien : Lagrangian model (script)
+- varMP_model : Lagrangian model (function)
+- varMP_tests : run Lagrangian model with varying inputs
+
+# MPmodel
+- MP : Particle object MP implementation
+- MP_runStabTest : run stability test of the model
+- MP_simulator : Lagrangian model simulator for MP objects
+- MP_transport : run MP_simulator and treat/plot outputs
+
+# Validation
+Programs used for validation 
