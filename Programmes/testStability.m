@@ -6,8 +6,8 @@ function [dCmax, dC] = testStability(zPart, z, z_, dz, L)
 
     partition = ceil(length(zPart)/2);
 
-    [meanConcTest, ~] = getMeanConc(zPart(1:partition), z, z_, dz, L);
-    [meanConcFinal, ~] = getMeanConc(zPart(partition+1:end), z, z_, dz, L);
+    [meanConcTest, ~] = getMeanConc(zPart(1:partition), length(z_), dz);
+    [meanConcFinal, ~] = getMeanConc(zPart(partition+1:end), length(z_), dz);
 
     dC = abs(meanConcTest-meanConcFinal)/mean(meanConcFinal);
     dCmax = max(dC);
