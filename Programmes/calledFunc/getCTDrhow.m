@@ -10,9 +10,9 @@ function [rhow] = getCTDrhow(day,z)
 %
     
     if strcmp(day,'10fev')
-        CTDfile= '../Data/CTD7708-20200210-0841-ave'; 
+        CTDfile= '../Data/CTD_Marine/CTD7708-20200210-0841-ave'; 
     elseif strcmp(day,'3fev')
-        CTDfile = '../Data/CTD7708-20200203-0849';
+        CTDfile = '../Data/CTD_Marine/CTD7708-20200203-0849';
     else
         error('Unrecognised day');
     end
