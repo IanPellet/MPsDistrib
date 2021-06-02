@@ -117,3 +117,8 @@ end
 % disp(['MSE analytical // model : ', num2str( MSE(C,Ccalc) ), ' MP.m^-3'])
 % figure(3),clf,
 % plot(Ccalc, -z_, 'g')
+
+figure(3),clf,
+plot(C,-z_)
+xlabel("Concentration (mps.m⁻³)")
+ylabel("Depth (m)")

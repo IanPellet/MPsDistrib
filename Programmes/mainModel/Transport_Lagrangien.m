@@ -124,7 +124,7 @@ while OnContinue
     
     % Particules update
     temp_part = part; % part(t-1)
-    part(1,:) = Step_Lagrangien(part(1,:), part(2,:), part(3,:), part(4,:));
+    part(1,:) = Step_Lagrangien(part(1,:), part(2,:), part(3,:), part(4,:), dt, L);
     %part(1,:) = step(part(1,:), part(2,:), part(3,:), part(4,:), alpha, dz);
     index = max(1, cast(part(1,:)/dz, 'uint32'));
     part(2,:) = u(index);
@@ -183,6 +183,4 @@ Ccalc = C_analytical(mean(Ws), K_val, z_, N_part, L);
 disp(sum(Ccalc*dz))
 plot(Ccalc*dz, -z_, C*dz, -z_)
 
-mse = MSE(C,Ccalc) ;
-disp(['MSE analytical // model : ', num2str(sqrt(mse)), ' MPs.m⁻¹'])
 
