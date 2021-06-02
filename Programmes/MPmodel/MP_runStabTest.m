@@ -1,10 +1,10 @@
-DensiteFevrierRhoma
-clearvars -except KZ_Fev10 Row_Fev10 z_Fev10 z__Fev10,
+% DensiteFevrierRhoma
+% clearvars -except KZ_Fev10 Row_Fev10 z_Fev10 z__Fev10,
 
 dt_test = 60*60*2;
-% date = datetime(2020,03,18);
-date = "10Fev";
-tf = 60*60*24*5;
+date = datetime(2020,03,18);
+% date = "10Fev";
+tf = 60*60*24*10;
 
 %% Water column parameters
 %% Load hydrodinamic model data
@@ -14,10 +14,17 @@ load(SauvegardeModeleHydro, 'H0', 'Lon', 'Lat')
 
 %% Water column parameters
 % Find depth of the column
-Lon0 = 5.29; Lat0 = 43.24; %point Somlit
-[I0,J0] = ReperePoint(Lon,Lat,Lon0,Lat0); % data indices corresponding to the location
+% Lon0 = 5.29; Lat0 = 43.24; %point Somlit
+% [I0,J0] = ReperePoint(Lon,Lat,Lon0,Lat0); % data indices corresponding to the location
+Station = 'RN2';
+% Load file with indexes corresponding to each stations
+stationFile = '../Data/stationIJ_CEREGE.mat';
+load(stationFile,'stationIJ');
+% Get the indexes of the right station
+I0 = stationIJ{stationIJ{:,'station'} == Station,'I0'};
+J0 = stationIJ{stationIJ{:,'station'} == Station,'J0'};
 L = H0(I0,J0); % depth
-clear H0 Lon Lat,
+clear H0 Lon Lat stationIJ,
 
 N = 50;
 dz= L/N;  z=0:dz:L; % z : boundaries of the meshes
@@ -25,12 +32,12 @@ z_=(z(1:end-1)+z(2:end))/2; % middle of each mesh
 
 nPart = 10e3;
 pd = makedist('Normal', 'mu', 350e-6, 'sigma', 50e-6);
-sizeP = random(pd,nPart);
+sizeP = random(pd,nPart,1);
 clear pd,
 zPart = linspace(0,L,nPart);
 frag = 0;
 
-wind_test = NaN;
+wind_test = [0 10 50 100];
 rhop_test = 1025;
 
 dtStab = 30*60;
@@ -56,12 +63,12 @@ for iRhop = 1:length(rhop_test)
         simIDs{iID} = runID;
 
         % Diffusivity
-%         [KZ_day,Row_day,z_day,z__day] = KsSalTemp(wind, date);
+        [KZ_day,Row_day,z_day,z__day] = KsSalTemp(wind, date);
         
-        KZ_day = KZ_Fev10;
-        Row_day = Row_Fev10;
-        z_day = z_Fev10;
-        z__day = z__Fev10;
+%         KZ_day = KZ_Fev10;
+%         Row_day = Row_Fev10;
+%         z_day = z_Fev10;
+%         z__day = z__Fev10;
       
         [K,dK] = Diffusivity(z,z_,dz,0.8,0,KZ_day,z_day');
 
@@ -87,7 +94,7 @@ for iRhop = 1:length(rhop_test)
                     [meanConc{iConc},stdConc{iConc}] = getMeanConc(zHistory(iHist-nCase+1:iHist), N, dz);
                 end
             end, clear iHist,
-        end, clear iFile iConc,
+        end, clear iFile iConc zHistory,
         
         
         disp('Compute dC')
@@ -101,7 +108,7 @@ for iRhop = 1:length(rhop_test)
         save([path runID '.mat'],...
             'runID', 'dt_test', 'date', 'tf', 'L', 'N', 'dz', 'nPart',...
             'sizeP', 'zPart', 'frag', 'wind', 'rhop', 'dtStab', 'path',...
-            'historyFiles', 'meanConc', 'dC', 'K', 'dK');
+            'historyFiles', 'meanConc', 'stdConc', 'dC', 'K', 'dK');
         
         f1 = figure(1);
         plot(dtdC/60/60,dC*100)
@@ -119,11 +126,19 @@ for iRhop = 1:length(rhop_test)
         ylabel('Depth (m)')
         title('Evolution of the concentration profile over time',...
             ['Time average on every ' num2str(dtStab/60) ' min of simulation'])
+        
+        f3 = figure(3); clf,
+        plot(K,-z_)
+        xlabel('Diffusivity (m².s⁻¹)')
+        ylabel('Depth (m)')
+        title('Diffusivity profile');
 
         figName = [path runID '-dC.fig'];
         savefig(f1, figName);
         figName = [path runID '-C.fig'];
         savefig(f2, figName);
+        
+        clear dC figName historyFiles meanC meanConc
         
     end, clear iWind,
 end, clear iRhop iID,

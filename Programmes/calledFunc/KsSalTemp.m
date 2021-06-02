@@ -1,6 +1,6 @@
 function [KZ_day,Row_day,z_day,z__day] = KsSalTemp(WindSpeed_kmh, date)
 %KSSALTEMP Summary of this function goes here
-% Find the day in the 2012RHOMA_arome database with the closest wind
+% Find the day in the 2012RHOMA_arome database with the closest wind at RN2
 % situation to return the values of diffusivity, salinity, temperature and
 % water density that day.
 %   WindSpeed_kmh : Wind Speed in km/h
