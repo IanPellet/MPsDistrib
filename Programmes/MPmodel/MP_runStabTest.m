@@ -100,8 +100,7 @@ for iRhop = 1:length(rhop_test)
         disp('Compute dC')
         dC = NaN(1,length(meanConc)-1);
         for idC = 1:length(meanConc)-1
-            deltaC = abs(meanConc{idC}-meanConc{idC+1})/mean(meanConc{idC+1});
-            dC(idC) = max(deltaC);
+            dC(idC) = sqrt(mean((meanConc{idC}-meanConc{idC+1}).^2));
         end, clear idC,
         
         disp('Save parameters and results')
@@ -113,7 +112,7 @@ for iRhop = 1:length(rhop_test)
         f1 = figure(1);
         plot(dtdC/60/60,dC*100)
         xlabel('simulation time (h)')
-        ylabel('concentration profile variation (%)')
+        ylabel('Root Mean Square Error (mps.m⁻³)')
         title('Evolution of the stability of the concentration profile over time',...
             ['Time average on every ' num2str(dtStab/60) ' min of simulation'])
         
