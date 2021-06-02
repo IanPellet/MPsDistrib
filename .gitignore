@@ -5,4 +5,6 @@
 /Programmes/*.zip
 /Programmes/fig-Visser/*.asv
 /Programmes/fig-Visser/results/*
+/programmes/mainModel/*.asv
+/programmes/*/*/*.asv
 pathdef.m
