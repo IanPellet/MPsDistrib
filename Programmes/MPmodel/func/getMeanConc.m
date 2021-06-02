@@ -20,7 +20,7 @@ function [meanConc, stdConc] = getMeanConc(zPart, nCat, dz)
         end, clear i,
 
         histi = count;
-        hConc(hStep,:) = histi'*nCat/numel(pp);
+        hConc(hStep,:) = histi'/dz;
 
     end, clear hStep pp histi,
     meanConc = mean(hConc, 'omitnan');
