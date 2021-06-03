@@ -15,19 +15,20 @@ indNom = 3; % Ahrens's speed computation formula is chosen
 
 %% Equilibrium test parameters
 tf= 60*60*24*2; % maximum simulation time
-dt_test = 30; % time interval between images
+dt_test = 60*60; % time interval between images
 
 %% Load hydrodinamic model data
 ModeleHydro='2012RHOMA_arome_003.nc';
 SauvegardeModeleHydro=['DonneeBase' ModeleHydro(1:end-3)];
 load(SauvegardeModeleHydro, 'H0', 'Lon', 'Lat')
 
-%% Water column parameters
-% Find depth of the column
-Lon0 = 5.29; Lat0 = 43.24; %point Somlit
-[I0,J0] = ReperePoint(Lon,Lat,Lon0,Lat0); % data indices corresponding to the location
-L = H0(I0,J0); % depth
-clear H0 Lon Lat,
+% %% Water column parameters
+% % Find depth of the column
+% Lon0 = 5.29; Lat0 = 43.24; %point Somlit
+% [I0,J0] = ReperePoint(Lon,Lat,Lon0,Lat0); % data indices corresponding to the location
+% L = H0(I0,J0); % depth
+% clear H0 Lon Lat,
+L = 50;
 
 % Column discretisation
 N = 50; % number of meshes
@@ -37,8 +38,8 @@ z_=(z(1:end-1)+z(2:end))/2; % middle of each mesh
 
 %% Particules initialisation
 D=350e-6; % Particle diametre
-rop=1010.5; % Particle density
-nPart = 10e3; % number of particles initialisated in the column
+rop = 950; % Particle density
+nPart = 1e3; % number of particles initialisated in the column
 zPart = linspace(0,L,nPart); % initial particle's positions (uniform repartition)
 
 %% Use diffusivity data 10fev
@@ -58,6 +59,7 @@ D_ = ((g*(abs(S-1))/nuw^2).^(1/3))*D;
 Ws = eval(['Vitesse' cell2mat(Nom(indNom)) '(D,S,D_);']); % absolute speed
 u = Ws; 
 u(rop<rhoW) = -Ws(rop<rhoW); % speed direction
+
 
 %% Particules matrix definition
 % part = [z1 z2 ... zn ; 
@@ -100,13 +102,13 @@ while OnContinue
         disp([' Temps : ' num2str(t/3600/24) 'j'])
 
         % Plot particle position
-        plot(-part(1,:),'x')
+        plot(-part(1,:),'.')
         ylim([-L 0])
-        grid on
+%         grid on
 %         inv = z(end:-1:1);
 %         yticks(-inv)
         
-        pause(0.01) % pause code to visualise plot
+        pause(0) % pause code to visualise plot
 
     end
 end
@@ -138,6 +140,7 @@ hold on
 plot(Ccalc, -z_, 'DisplayName', 'Analytical solution')
 plot(Conc, -z_, 'DisplayName', 'Model output')
 hold off
+legend('Location', 'best')
 xlabel("Concentration (mps.m⁻³)")
 ylabel("Depth (m)")
 
