@@ -4,7 +4,7 @@
 dt_test = 60*60*2;
 date = datetime(2020,03,18);
 % date = "10Fev";
-tf = 60*60*24*10;
+tf = 60*60*24*5;
 
 %% Water column parameters
 %% Load hydrodinamic model data
@@ -37,13 +37,13 @@ clear pd,
 zPart = linspace(0,L,nPart);
 frag = 0;
 
-wind_test = [0 10 50 100];
+wind_test = [10 50];
 rhop_test = 1025;
 
-dtStab = 30*60;
-dtinter = 0:dtStab:tf;
-dtC = dtinter(1:end-1)+dtStab/2;
-dtdC = dtinter(2:end-1);
+testStab = 60*60*5; % stability test interval
+dtAvgC = 30*60;
+tinter = 0:dtAvgC:tf;
+tC = tinter(1:end-1)+dtAvgC/2;
 
 path = '../Results/MP_runStabTest/';
 
@@ -78,13 +78,14 @@ for iRhop = 1:length(rhop_test)
         % create list of particles
         mp = getMPlist(nPart, sizeP, rhop, rhow, frag);
 
-        % run simulation
+%% Run simulation
         [dt, historyFiles] = MP_simStabTest(mp, zPart, K, dK, L, dz, tf, dt_test, runID, 60*60*24);
         
+%% Compute concentration profiles time average
         disp('Compute C')
-        nCase = dtStab/dt;
-        meanConc = cell(ceil(tf/dtStab),1);
-        stdConc = cell(ceil(tf/dtStab),1);
+        nCase = dtAvgC/dt;
+        meanConc = cell(ceil(tf/dtAvgC),1);
+        stdConc = cell(ceil(tf/dtAvgC),1);
         iConc = 0;
         for iFile = 1:length(historyFiles)
             load(historyFiles{iFile}, "zHistory");
@@ -96,35 +97,35 @@ for iRhop = 1:length(rhop_test)
             end, clear iHist,
         end, clear iFile iConc zHistory,
         
+%% Evaluate stability of the concentration profile
+        disp('Compute StabC')
+        [StabC,tStabC] = getStability(meanConc, testStab, dtAvgC, tC);
         
-        disp('Compute dC')
-        dC = NaN(1,length(meanConc)-1);
-        for idC = 1:length(meanConc)-1
-            dC(idC) = sqrt(mean((meanConc{idC}-meanConc{idC+1}).^2));
-        end, clear idC,
-        
+%% Save parameters and results to file
         disp('Save parameters and results')
         save([path runID '.mat'],...
             'runID', 'dt_test', 'date', 'tf', 'L', 'N', 'dz', 'nPart',...
             'sizeP', 'zPart', 'frag', 'wind', 'rhop', 'dtStab', 'path',...
-            'historyFiles', 'meanConc', 'stdConc', 'dC', 'K', 'dK');
+            'historyFiles', 'meanConc', 'stdConc', 'StabC', 'K', 'dK', 'dt',...
+            'testStab', 'tC', 'tStabC', 'dtAvgC');
         
+%% Plot figures
         f1 = figure(1);
-        plot(dtdC/60/60,dC*100)
+        plot(tStabC/60/60,StabC*100)
         xlabel('simulation time (h)')
         ylabel('Root Mean Square Error (mps.m⁻³)')
         title('Evolution of the stability of the concentration profile over time',...
-            ['Time average on every ' num2str(dtStab/60) ' min of simulation'])
+            ['Tested between profiles separated by ' num2str(testStab/60/60) ' h of simulation'])
         
         meanC = cell2mat(meanConc);
         f2 = figure(2); clf,
-        pcolor(dtC/60/60',-z_,meanC')
+        pcolor(tC/60/60',-z_,meanC')
         a = colorbar;
         a.Label.String = 'Concentration (mps.m⁻³)';
         xlabel('Simulation time (h)')
         ylabel('Depth (m)')
         title('Evolution of the concentration profile over time',...
-            ['Time average on every ' num2str(dtStab/60) ' min of simulation'])
+            ['Time average on every ' num2str(dtAvgC/60) ' min of simulation'])
         
         f3 = figure(3); clf,
         plot(K,-z_)
@@ -132,10 +133,13 @@ for iRhop = 1:length(rhop_test)
         ylabel('Depth (m)')
         title('Diffusivity profile');
 
+%% Save figures
         figName = [path runID '-dC.fig'];
         savefig(f1, figName);
         figName = [path runID '-C.fig'];
         savefig(f2, figName);
+        figName = [path runID '-K.fig'];
+        savefig(f3, figName);
         
         clear dC figName historyFiles meanC meanConc
         
