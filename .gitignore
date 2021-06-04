@@ -1,10 +1,6 @@
 # exclude everything except directory Programmes
 /*
 !/Programmes/
-/Programmes/*.asv
-/Programmes/*.zip
-/Programmes/fig-Visser/*.asv
-/Programmes/fig-Visser/results/*
-/programmes/mainModel/*.asv
-/programmes/*/*/*.asv
+/Programmes/**/*.asv
+/Programmes/**/*.zip
 pathdef.m
