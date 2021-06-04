@@ -4,7 +4,7 @@
 dt_test = 60*60*2;
 date = datetime(2020,03,18);
 % date = "10Fev";
-tf = 60*60*24*5;
+tf = 60*60*24*10;
 
 %% Water column parameters
 %% Load hydrodinamic model data
@@ -31,13 +31,14 @@ dz= L/N;  z=0:dz:L; % z : boundaries of the meshes
 z_=(z(1:end-1)+z(2:end))/2; % middle of each mesh  
 
 nPart = 10e3;
-pd = makedist('Normal', 'mu', 350e-6, 'sigma', 50e-6);
-sizeP = random(pd,nPart,1);
-clear pd,
+% pd = makedist('Normal', 'mu', 350e-6, 'sigma', 50e-6);
+% sizeP = random(pd,nPart,1);
+% clear pd,
+sizeP = ones(nPart,1)*350e-6;
 zPart = linspace(0,L,nPart);
 frag = 0;
 
-wind_test = [10 50];
+wind_test = [100];
 rhop_test = 1025;
 
 testStab = 60*60*5; % stability test interval
@@ -105,7 +106,7 @@ for iRhop = 1:length(rhop_test)
         disp('Save parameters and results')
         save([path runID '.mat'],...
             'runID', 'dt_test', 'date', 'tf', 'L', 'N', 'dz', 'nPart',...
-            'sizeP', 'zPart', 'frag', 'wind', 'rhop', 'dtStab', 'path',...
+            'sizeP', 'zPart', 'frag', 'wind', 'rhop', 'testStab', 'path',...
             'historyFiles', 'meanConc', 'stdConc', 'StabC', 'K', 'dK', 'dt',...
             'testStab', 'tC', 'tStabC', 'dtAvgC');
         
@@ -119,13 +120,14 @@ for iRhop = 1:length(rhop_test)
         
         meanC = cell2mat(meanConc);
         f2 = figure(2); clf,
-        pcolor(tC/60/60',-z_,meanC')
+        h = pcolor(tC/60/60',-z_,meanC');
         a = colorbar;
         a.Label.String = 'Concentration (mps.m⁻³)';
         xlabel('Simulation time (h)')
         ylabel('Depth (m)')
         title('Evolution of the concentration profile over time',...
             ['Time average on every ' num2str(dtAvgC/60) ' min of simulation'])
+        set(h, 'EdgeColor', 'none');
         
         f3 = figure(3); clf,
         plot(K,-z_)
