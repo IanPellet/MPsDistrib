@@ -1,4 +1,4 @@
-function [meanConc, stdConc] = getMeanConc(zPart, nCat, dz)
+function [meanConc, stdConc, hConc] = getMeanConc(zPart, nCat, dz)
 % zPart = zFinal(end-10:end);
     hConc = NaN(size(zPart,1),nCat);
     for hStep = 1:size(zPart,1)
