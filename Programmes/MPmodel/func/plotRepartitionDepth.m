@@ -23,14 +23,16 @@ legend('Location', 'best')
 xlabel('Concentration (mps.m⁻³)')
 ylabel('Depth (m)')
 
-deltaConc = (meanConc-meanConcRef)./meanConcRef;
+% deltaConc = abs(meanConc-meanConcRef)./meanConcRef;
+deltaConc = (meanConc-meanConcRef);
+deltaConc(isnan(deltaConc)) = 0;
 % Plot deltaConc after t = 100h
 tStab = 100*60*60;
 iStab = tStab/dtAvgC;
 
 figure(2), clf,
 plot(deltaConc(iStab:end,:)*100, -z_)
-xlabel('deltaConcentration (%)')
+xlabel('deltaConcentration (mps.m⁻³)')
 ylabel('Depth (m)')
 title('Average concentration differance between simulation with constant and variable particle size',...
     ['Computed each ' num2str(dtAvgC/60) ' min since t_s_t_a_b = ' num2str(tStab/60/60) ' h'])
@@ -42,24 +44,24 @@ hold on
 plot(meanDeltaConc*100, -z_)
 plot((meanDeltaConc+2*stdDeltaConc)*100, -z_, '--')
 plot((meanDeltaConc-2*stdDeltaConc)*100, -z_, '--')
-xlabel('deltaConcentration (%)')
+xlabel('deltaConcentration (mps.m⁻³)')
 ylabel('Depth (m)')
 title('Mean concentration profile difference +/- 2 std', ['from t_s_t_a_b = '...
     num2str(tStab/60/60) ' h to t_f_i_n_a_l = ' num2str(tf/60/60) ' h'])
 
 
 %% Compute time average of size repartition
-bTopT = 0;
-bBottomT = 5;
-bTopB = 60;
-bBottomB = L;
 load(['/media/ian/Transcend/MPsDistrib/Results/MP_runStabTest/Data/' ID '-zHist864000.mat'])
 
+bTopT = 0;
+bBottomT = 5;
+bTopB = 10;
+bBottomB = 20;
 [meanSizeT, stdSizeT, meanNT, ~] = getDomainSizeCDF(bTopT, bBottomT, mp, zHistory(end-60*60/dt:end));
 [meanSizeB, stdSizeB, meanNB, s] = getDomainSizeCDF(bTopB, bBottomB, mp, zHistory(end-60*60/dt:end));
 [meanSizeM, stdSizeM, meanNM, ~] = getDomainSizeCDF(bBottomT, bTopB, mp, zHistory(end-60*60/dt:end));
 
-clear zHistory mp,
+% clear zHistory mp,
 
 
 [iecdf,x] = ecdf(sizeP);
@@ -72,7 +74,7 @@ f4 = figure(4); clf,
 hold on
 plot(s,sizeCDFinit, 'DisplayName', 'Initial size CDF')
 plot(s,meanSizeT, 'DisplayName', ['Size CDF : ' num2str(bTopT) '-' num2str(bBottomT) ' m'])
-% plot(s,meanSizeM, 'DisplayName', ['Size CDF : ' num2str(bBottomT) '-' num2str(bTopB) ' m'])
+plot(s,meanSizeM, 'DisplayName', ['Size CDF : ' num2str(bBottomT) '-' num2str(bTopB) ' m'])
 plot(s,meanSizeB, 'DisplayName', ['Size CDF : ' num2str(bTopB) '-' num2str(bBottomB) ' m'])
 hold off
 legend('Location', 'best')
