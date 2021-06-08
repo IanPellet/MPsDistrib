@@ -31,14 +31,14 @@ dz= L/N;  z=0:dz:L; % z : boundaries of the meshes
 z_=(z(1:end-1)+z(2:end))/2; % middle of each mesh  
 
 nPart = 10e3;
-% pd = makedist('Normal', 'mu', 350e-6, 'sigma', 50e-6);
-% sizeP = random(pd,nPart,1);
-% clear pd,
-sizeP = ones(nPart,1)*350e-6;
+pd = makedist('Uniform', 'upper', 450e-6, 'lower', 250e-6);
+sizeP = random(pd,nPart,1);
+clear pd,
+% sizeP = ones(nPart,1)*350e-6;
 zPart = linspace(0,L,nPart);
 frag = 0;
 
-wind_test = [100];
+wind_test = [10 100];
 rhop_test = 1025;
 
 testStab = 60*60*5; % stability test interval
