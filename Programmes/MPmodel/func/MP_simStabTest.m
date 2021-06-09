@@ -27,7 +27,7 @@ fprintf(['\n\n--------------------- nPart = ' num2str(length(mp)) ' ------------
 %% Init particle speed and position
 U = [mp.U_]; % 2D double array, mp fall velocities on the column (m.s⁻¹)   
 uz = NaN(size(mp)); % double array, mp fall velocities (m.s⁻¹)
-zPart = zInit; % double array, particle's position (m)
+zPart = reshape(zInit,1,numel(zInit)); % double array, particle's position (m)
 clear zInit mp,
 
 
@@ -55,10 +55,10 @@ while OnContinue
     t=t+dt;
 
     %% Particules update
-    index = max(1, fix(zPart/dz)); % int array, index of each particle's current mesh
+    index = cast(max(1, fix(zPart/dz)), 'uint8'); % int array, index of each particle's current mesh
     % Find current fall velocity of each particle
     for i=1:length(zPart)
-        uz = U(index(i),i);
+        uz(i) = U(index(i),i);
     end
     % Update particle's postion
     zPart = Step_Lagrangien(zPart, uz, K(index), dK(index), dt, L);

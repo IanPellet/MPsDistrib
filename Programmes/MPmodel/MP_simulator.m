@@ -21,7 +21,7 @@ fprintf(['\n\n--------------------- nPart = ' num2str(length(mp)) ' -- save last
 
     U = [mp.U_]; % 2D double array, mp fall velocities on the column (m.s⁻¹)   
     uz = NaN(size(mp)); % double array, mp fall velocities (m.s⁻¹)
-    zPart = zInit; % double array, particle's position (m)
+    zPart = reshape(zInit,1,numel(zInit)); % double array, particle's position (m)
     clear zInit,
     saveHist = nargin > 8 && saveLastSec ~= 0;
     
@@ -34,8 +34,15 @@ fprintf(['\n\n--------------------- nPart = ' num2str(length(mp)) ' -- save last
     
     %% Init fragmentation rate list
     rFragMP = [mp.fragRate_]; % Tester si on a eu fragmentation et récup que si c'est le cas
-    rFragDT = rFragMP*dt; % Get frangmentation rate for the time dt
-    
+    if unique(rFragMP) == 0
+        frag = false;
+        clear rFragMP,
+    else
+        frag = true;
+    end
+    if frag
+        rFragDT = rFragMP*dt; % Get frangmentation rate for the time dt
+    end
     %% Init history 
     if saveHist
         saveNstep = ceil(saveLastSec/dt);
@@ -51,21 +58,21 @@ fprintf(['\n\n--------------------- nPart = ' num2str(length(mp)) ' -- save last
         t=t+dt;
         
         %% Fragment particles
-        
-        draw = rand(size(rFragMP));
-        mpFrag = rFragDT >= draw;
-        if sum(mpFrag) > 0
-            [mp, zPart] = MP_fragmentation(mp, zPart, mpFrag);
-            U = [mp.U_]; % 2D double array, mp fall velocities on the column (m.s⁻¹)
-            rFragMP = [mp.fragRate_]; % Tester si on a eu fragmentation et récup que si c'est le cas
-            rFragDT = rFragMP*dt; % Get frangmentation rate for the time dt
+        if frag
+            draw = rand(size(rFragMP));
+            mpFrag = rFragDT >= draw;
+            if sum(mpFrag) > 0
+                [mp, zPart] = MP_fragmentation(mp, zPart, mpFrag);
+                U = [mp.U_]; % 2D double array, mp fall velocities on the column (m.s⁻¹)
+                rFragMP = [mp.fragRate_]; % Tester si on a eu fragmentation et récup que si c'est le cas
+                rFragDT = rFragMP*dt; % Get frangmentation rate for the time dt
+            end
         end
-    
         %% Particules update
-        index = max(1, fix(zPart/dz)); % int array, index of each particle's current mesh
+        index = cast(max(1, fix(zPart/dz)), 'uint8'); % int array, index of each particle's current mesh
         % Find current fall velocity of each particle
         for i=1:length(zPart)
-            uz = U(index(i),i);
+            uz(i) = U(index(i),i);
         end
         % Update particle's postion
         zPart = Step_Lagrangien(zPart, uz, K(index), dK(index), dt, L);
