@@ -30,15 +30,17 @@ end, clear i,
 
 % Define the size interval to evaluate CDF
 ds = 5e-6;
-s = 0:ds:600e-6;
+s = 0:ds:max([mp.size_]);
 
 % Get size CDF at each time step
 cdfHistory = cell(size(sizeHistory));
 for hStep = 1:size(sizeHistory,1)
     pp = sizeHistory{hStep};
     ppSort = sort(pp);
-    x = [1:length(ppSort)]/length(ppSort);
-    cdfHistory{hStep} = interp1(ppSort,x,s);
+    if length(ppSort) > 1
+        x = [1:length(ppSort)]/length(ppSort);
+        cdfHistory{hStep} = interp1(ppSort,x,s);
+    end
 end, clear hStep pp ppSort x,
 
 cdfMat = cell2mat(cdfHistory);

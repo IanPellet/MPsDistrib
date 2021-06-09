@@ -1,5 +1,5 @@
-IDref = '2021-6-4-14-47-29_686516';
-ID = '2021-6-7-15-7-28_342636';
+IDref = '2021-6-8-15-14-26_722505';
+ID = '2021-6-8-16-18-23_554119';
 
 load(['/media/ian/Transcend/MPsDistrib/Results/MP_runStabTest/' IDref '.mat'], 'meanConc')
 meanConcRef = cell2mat(meanConc);
@@ -62,6 +62,11 @@ load(['/media/ian/Transcend/MPsDistrib/Results/MP_runStabTest/Data/' ID '-zHist8
 % [meanSizeB, stdSizeB, meanNB, s] = getDomainSizeCDF(bTopB, bBottomB, mp, zHistory(end-60*60/dt:end));
 % [meanSizeM, stdSizeM, meanNM, ~] = getDomainSizeCDF(bBottomT, bTopB, mp, zHistory(end-60*60/dt:end));
 
+% if wind == 10
+%     bEnd = 20;
+% else
+%     bEnd = L;
+% end
 bound = 0:5:L;
 bound_ = (bound(1:end-1) + bound(2:end))/2;
 [meanSize1, stdSize1, meanN1, s] = getDomainSizeCDF(bound(1), bound(2), mp, zHistory(end-60*60/dt:end));
@@ -74,7 +79,7 @@ meanN(1) = meanN1;
 for i = 2:length(bound)-1
     [meanSize(i,:), stdSize(i,:), meanN(i), ~] = getDomainSizeCDF(bound(i), bound(i+1), mp, zHistory(end-60*60/dt:end));
 end, clear i,
-
+meanSize = meanSize(sum(meanSize,2, 'omitnan')~=0,:);
 % clear zHistory mp,
 
 
@@ -87,7 +92,7 @@ clear x iecdf C ia
 f4 = figure(4); clf,
 hold on
 plot(s,sizeCDFinit, 'DisplayName', 'Initial size CDF')
-for i = 1:length(meanN)
+for i = 1:size(meanSize,1)
     plot(s,meanSize(i,:), 'DisplayName', ['Size CDF : ' num2str(bound(i)) '-' num2str(bound(i+1)) ' m'])  
 end, clear i,
 hold off
@@ -98,9 +103,10 @@ lines = get(gca, 'Children');
 set(lines, {'Color'}, nToColorMap(length(lines)))
 
 %% Kolmogorov–Smirnov test
-rej = NaN(length(bound_),1);
-D = NaN(length(bound_),1);
-for i = 1:length(bound_)
+nKS = size(meanSize,1);
+rej = NaN(nKS,1);
+D = NaN(nKS,1);
+for i = 1:nKS
     [rej(i), D(i)] = MP_kstest(sizeCDFinit, nPart, meanSize(i,:), meanN(i), 0.05);
 end, clear i,
 
@@ -111,5 +117,9 @@ figName = [path ID '-VS-' IDref '-deltaC.fig'];
 savefig(f3, figName);
 figName = [path ID '-sizeRep.fig'];
 savefig(f4, figName);
+
+%% Save KS
+KSName = [path ID '-VS-' IDref '-KS.mat'];
+save(KSName, 'rej', 'D');
         
 
