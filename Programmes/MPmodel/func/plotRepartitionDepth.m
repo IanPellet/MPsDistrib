@@ -1,11 +1,23 @@
-IDref = '2021-6-8-15-14-26_722505';
-ID = '2021-6-8-16-18-23_554119';
+IDs = {'2021-6-8-15-42-18_158014'
+'2021-6-8-15-51-37_84898'
+'2021-6-8-16-10-52_993057'
+'2021-6-8-16-18-23_554119'
+};
+refs = {'2021-6-8-15-6-21_833235'
+'2021-6-8-15-14-26_722505'};
 
-load(['/media/ian/Transcend/MPsDistrib/Results/MP_runStabTest/' IDref '.mat'], 'meanConc')
+for iID = 1:length(IDs)
+    clearvars -except iID IDs refs,
+    ID = IDs{iID};
+    IDref = refs{[mod(iID,2)==0]+1};
+
+%% LOAD DATA
+load(['/media/ian/Transcend/MPsDistrib/Results/MP_runStabTest/' IDref '.mat'], 'meanConc', 'stdConc')
 meanConcRef = cell2mat(meanConc);
+stdConcRef = cell2mat(stdConc);
 load(['/media/ian/Transcend/MPsDistrib/Results/MP_runStabTest/' ID '.mat'])
 meanConc = cell2mat(meanConc);
-
+stdConc = cell2mat(stdConc);
 
 dz= L/N;  z=0:dz:L; % z : boundaries of the meshes
 z_=(z(1:end-1)+z(2:end))/2; % middle of each mesh  
@@ -15,14 +27,27 @@ nProfile = length(meanConc);
 rhow = interp1(-z__day,Row_day,z,'pchip'); % density of sea water 
 mp = getMPlist(nPart, sizeP, rhop, rhow, 0);
 
+
+%% PLOT CONCENTRATION
 f1 = figure(1); clf, hold on,
-plot(meanConcRef(end,:), -z_, '--', 'DisplayName', 'Constant Size Repartition')
-plot(meanConc(end,:), -z_, 'DisplayName', 'Uniform Size Repartition')
+
+pMCref = plot(meanConcRef(end,:), -z_, 'DisplayName', 'Constant Size Repartition');
+pMC = plot(meanConc(end,:), -z_, 'DisplayName', 'Uniform Size Repartition');
+
+plot(meanConcRef(end,:)+2*stdConcRef(end,:), -z_, '--', 'Color', pMCref.Color, 'DisplayName', 'Constant Size Repartition + 2std');
+plot(meanConcRef(end,:)-2*stdConcRef(end,:), -z_, '--', 'Color', pMCref.Color, 'DisplayName', 'Constant Size Repartition - 2std');
+
+plot(meanConc(end,:)+2*stdConc(end,:), -z_, '--', 'Color', pMC.Color, 'DisplayName', 'Uniform Size Repartition + 2std');
+plot(meanConc(end,:)-2*stdConc(end,:), -z_, '--', 'Color', pMC.Color, 'DisplayName', 'Uniform Size Repartition - 2std');
+
 hold off
 legend('Location', 'best')
 xlabel('Concentration (mps.m⁻³)')
 ylabel('Depth (m)')
+title("Last average concentration profile", ['Average on the last ' num2str(dtAvgC/30) ' min']) 
 
+
+%% DELTA CONCENTRATION
 % deltaConc = abs(meanConc-meanConcRef)./meanConcRef;
 deltaConc = (meanConc-meanConcRef);
 deltaConc(isnan(deltaConc)) = 0;
@@ -31,7 +56,7 @@ tStab = 100*60*60;
 iStab = tStab/dtAvgC;
 
 figure(2), clf,
-plot(deltaConc(iStab:end,:)*100, -z_)
+plot(deltaConc(iStab:end,:), -z_)
 xlabel('deltaConcentration (mps.m⁻³)')
 ylabel('Depth (m)')
 title('Average concentration differance between simulation with constant and variable particle size',...
@@ -41,9 +66,9 @@ meanDeltaConc = mean(deltaConc(iStab:end,:));
 stdDeltaConc = std(deltaConc(iStab:end,:),0);
 f3 = figure(3); clf,
 hold on
-plot(meanDeltaConc*100, -z_)
-plot((meanDeltaConc+2*stdDeltaConc)*100, -z_, '--')
-plot((meanDeltaConc-2*stdDeltaConc)*100, -z_, '--')
+p = plot(meanDeltaConc, -z_);
+plot((meanDeltaConc+2*stdDeltaConc), -z_, '--', 'Color', p.Color)
+plot((meanDeltaConc-2*stdDeltaConc), -z_, '--', 'Color', p.Color)
 xlabel('deltaConcentration (mps.m⁻³)')
 ylabel('Depth (m)')
 title('Mean concentration profile difference +/- 2 std', ['from t_s_t_a_b = '...
@@ -111,15 +136,23 @@ for i = 1:nKS
 end, clear i,
 
 %% Save fig
-figName = [path ID '-VS-' IDref '-C.fig'];
-savefig(f1, figName);
-figName = [path ID '-VS-' IDref '-deltaC.fig'];
-savefig(f3, figName);
-figName = [path ID '-sizeRep.fig'];
-savefig(f4, figName);
+pause(0.01)
+
+figName = [path ID '-VS-' IDref '-C.'];
+savefig(f1,[figName '.fig']);
+exportgraphics(f1, [figName '.png']);
+
+figName = [path ID '-VS-' IDref '-deltaC'];
+savefig(f3, [figName '.fig']);
+exportgraphics(f3, [figName '.png']);
+
+figName = [path ID '-sizeRep'];
+savefig(f4, [figName '.fig']);
+exportgraphics(f4, [figName '.png']);
+
 
 %% Save KS
 KSName = [path ID '-VS-' IDref '-KS.mat'];
 save(KSName, 'rej', 'D');
         
-
+end

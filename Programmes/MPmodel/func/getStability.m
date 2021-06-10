@@ -23,6 +23,7 @@ StabC = NaN(1,length(meanConc)-diStab);
 for idC = 1:length(meanConc)-diStab
     % Compute root mean square error
     StabC(idC) = sqrt(mean((meanConc{idC}-meanConc{idC+diStab}).^2));
+%     StabC(idC) = mean(abs(meanConc{idC}-meanConc{idC+diStab}));
 end, clear idC,
 
 end

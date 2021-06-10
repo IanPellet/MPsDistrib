@@ -102,6 +102,8 @@ for iRhop = 1:length(rhop_test)
 %% Evaluate stability of the concentration profile
         disp('Compute StabC')
         [StabC,tStabC] = getStability(meanConc, testStab, dtAvgC, tC);
+        stdConcMat = cell2mat(stdConc);
+        RMSstd = sqrt(mean(stdConcMat.^2,2));
         
 %% Save parameters and results to file
         disp('Save parameters and results')
@@ -112,10 +114,18 @@ for iRhop = 1:length(rhop_test)
             'testStab', 'tC', 'tStabC', 'dtAvgC', 'rhow');
         
 %% Plot figures
-        f1 = figure(1);
-        plot(tStabC/60/60,StabC*100)
+        f1 = figure(1); clf,
+        hold on
+        plot(tStabC/60/60,StabC, 'DisplayName',...
+            ['RMS(C(t) - C(t+' num2str(testStab/60/60) 'h))'])
+        plot(tStabC/60/60,RMSstd(testStab/dtAvgC+1:end), '--',...
+            'DisplayName', ['RMS(std_C(t+' num2str(testStab/60/60) 'h))'])
+%         plot(tStabC/60/60,2*RMSstd(testStab/dtAvgC+1:end), '--',...
+%             'DisplayName', ['2RMS(std_C(t+' num2str(testStab/60/60) 'h))'])
+        hold off
+        legend('Location', 'best')
         xlabel('simulation time (h)')
-        ylabel('Root Mean Square Error (mps.m⁻³)')
+        ylabel('Root Mean Square Difference (mps.m⁻³)')
         title('Evolution of the stability of the concentration profile over time',...
             ['Tested between profiles separated by ' num2str(testStab/60/60) ' h of simulation'])
         
