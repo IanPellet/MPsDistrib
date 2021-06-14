@@ -16,7 +16,8 @@ function [dt, historyFiles] = MP_simStabTest(mp, zInit, K, dK, L, dz, tf, dt_tes
 % dtSave : int, saving time intevals (s)
 %
 % OUTPUT
-% zFinal : double array, final particle's position (m)
+% dt : int, simulation's time step (s)
+% historyFiles : string cell array, files containing concentration history
 %
 
 path = ['../Results/MP_runStabTest/Data/' ID '-zHist'];
