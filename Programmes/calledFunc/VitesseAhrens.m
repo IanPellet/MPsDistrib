@@ -4,6 +4,7 @@ function [ w ] = VitesseAhrens( d, S, ~, ~, ~)
 
 g = 9.81 ; %m.s-1 (gravitational acceleration)
 nuw = 1.1*10^-6; %m2.s-1 (kinematic viscosity of sea water)
+% Pourquoi cette val de nuw ??
 
 Delta=abs(S-1);
 
