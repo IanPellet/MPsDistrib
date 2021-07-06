@@ -3,10 +3,12 @@ classdef MP
     %  
     properties
         rhow_
+        size_ % (m)
+        sticky_ = 0.7
     end
     properties (SetAccess = private)
         type_ % int {0,1,2,3} NON IMPLÉMENTÉ
-        size_ % (m)
+        
         rho_ % (kg.m⁻³)
         U_ % velocity in the water column, dep of type (m.s⁻¹)
         fragRate_ % double in (0,1], probability for a particle to be fragmented each second

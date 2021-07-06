@@ -27,7 +27,7 @@ toc
 % fullSal = ncFile{'SAL'};
 % fullTemp = ncFile{'TEMP'};
 % fullKz = ncFile{'KZ'};
-
+load("waterCol_RN2_2020.mat");
 % Get the data at the station's point
 % Sal = ncFile{'SAL'}(:,:,I0,J0);
 % toc
@@ -35,12 +35,11 @@ toc
 % toc
 % Kz = ncFile{'KZ'}(:,:,I0,J0);
 % toc
-load("waterCol_RN2_2020.mat", 'Sal', 'Temp', 'Kz');
-TauX = ncFile{'TAUX'}(:,I0,J0);
-TauY = ncFile{'TAUY'}(:,I0,J0);
+% TauX = ncFile{'TAUX'}(:,I0,J0);
+% TauY = ncFile{'TAUY'}(:,I0,J0);
 % Get time array
-t = seconds(ncFile{'time'}(:,:));
-toc
+% t = seconds(ncFile{'time'}(:,:));
+% toc
 
 H0 = ncFile{'H0'}(I0,J0); % bathymetry relative to the mean level
 toc
@@ -48,6 +47,12 @@ eta = ncFile{'XE'}(:,I0,J0); % sea surface height
 toc
 sigma_w = ncFile{'level_w'}(:,:); % sigma level at the interface
 toc
+
+% Uz = ncFile{'UZ'}(:,:,I0,J0);
+% toc
+% Vz = ncFile{'VZ'}(:,:,I0,J0);
+% toc
+Chl = ncFile{'phy_phyto_Chl'}(:,:,I0,J0);
 
 % Compute depth of data points
 z0 = zeros(length(t), length(sigma_w));
@@ -57,7 +62,7 @@ end
 toc
 % Save data to file
 fileName = join(['../Data/waterCol_' station "_2020.mat"],"");
-save(fileName, 'Sal', 'Temp', 'Kz', 't', 'H0', 'z0', 'TauX', 'TauY');
+save(fileName, 'Sal', 'Temp', 'Kz', 't', 'H0', 'z0', 'TauX', 'TauY', 'Uz', 'Vz', 'Chl');
 toc
 disp(join(['Saved to' fileName]))
 end
