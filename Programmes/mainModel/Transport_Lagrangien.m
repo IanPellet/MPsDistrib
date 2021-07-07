@@ -2,8 +2,10 @@
 % 
 % 
 
-DensiteFevrierRhoma % load diffusivity data
-clearvars -except KZ_Fev10 z_Fev10,
+% DensiteFevrierRhoma % load diffusivity data
+% clearvars -except KZ_Fev10 z_Fev10,
+
+date = datetime(2020,02,10);
 
 %% Speed computation formulas
 Nom=[... 
@@ -43,15 +45,18 @@ nPart = 1e3; % number of particles initialisated in the column
 zPart = linspace(0,L,nPart); % initial particle's positions (uniform repartition)
 
 %% Use diffusivity data 10fev
-KZ_day = KZ_Fev10;
-z_day = z_Fev10;
+
+[KZ_day,Row_day,z_day,z__day,Sal_day,Temp_day] = KsSalTemp2020(NaN, date);
+% KZ_day = KZ_Fev10;
+% z_day = z_Fev10;
 % Interpolation and smoothing of the diffusivity data
 [K,dK] = Diffusivity(z,z_,dz,0.8,0,KZ_day,z_day);
 
 %% Speed initialisation
 g = 9.81 ; %m.s-1 (gravitational acceleration)
 nuw = 1.1*10^-6; %m2.s-1 (kinematic viscosity of sea water)
-rhoW = getCTDrhow('10fev',z); % measured water density for 10fev
+% rhoW = getCTDrhow('10fev',z); % measured water density for 10fev
+rhoW = interp1(-z__day,Row_day,z,'pchip'); % density of sea water
 
 % compute particle's speed
 S = rop./rhoW;     

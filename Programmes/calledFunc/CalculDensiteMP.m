@@ -1,4 +1,4 @@
-function [densite] = CalculDensite(T,S)
+function [densite] = CalculDensiteMP(T,S)
 %UNTITLED3 Summary of this function goes here
 %   Detailed explanation goes here
     %densite = 1000-0.12*T+0.35*S;
