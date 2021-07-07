@@ -4,7 +4,9 @@ classdef MP
     properties
         rhow_
         size_ % (m)
-        sticky_ = 0.7
+        sticky_ = 0.5
+        aggr_ = false
+        dp_ = 0
     end
     properties (SetAccess = private)
         type_ % int {0,1,2,3} NON IMPLÉMENTÉ
@@ -59,6 +61,10 @@ classdef MP
             value = Ws'; 
             test = obj.rho_<obj.rhow_;
             value(test) = -Ws(test);
+            
+            if obj.aggr_
+                value = VitesseLiLogan(obj.size_, obj.dp_, 2.5, value);
+            end
         end
 
     end

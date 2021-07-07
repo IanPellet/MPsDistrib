@@ -97,6 +97,8 @@ fprintf(['\n\n--------------------- nPart = ' num2str(length(mp)) ' -- save last
         for i=iClose
             if rand < mp(i+1).sticky_
                 mp(i+1).size_ = mp(i).size_ + mp(i+1).size_;
+                mp(i+1).aggr_ = true;
+                mp(i+1).dp_ = mp(i).size_;
                 iAgg(i) = 1;
             end
         end
@@ -123,6 +125,12 @@ fprintf(['\n\n--------------------- nPart = ' num2str(length(mp)) ' -- save last
             if (t>=tf)
                OnContinue = false;
             end
+%             scatter(1:length(zPart), -zPart, [mp.size_]*1e4)
+%             xlim([1 nPart])
+%             ylim([-L 0])
+%             xlabel("Particles")
+%             ylabel("Depth (m)")
+%             pause(0)
             % Display progress
             if mod(t,60)<dt/2
                 disp([' Temps : ' num2str(t/tf*100) '%'])
