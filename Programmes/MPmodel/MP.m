@@ -7,6 +7,7 @@ classdef MP
         sticky_ = 0
         aggr_ = false
         dp_
+        D_
     end
     properties (SetAccess = private)
         type_ % int {0,1,2,3} NON IMPLÉMENTÉ
@@ -18,7 +19,7 @@ classdef MP
 
     methods
         %% Constructor
-        function obj = MP(size, rhop, rhow, fragRate, sticky, aggr, dp)
+        function obj = MP(size, rhop, rhow, fragRate, sticky)
             %MP Constructor
             % If no argument is passed (default constructor), everything
             % is set to 0.
@@ -48,12 +49,6 @@ classdef MP
             if nargin > 4
                 obj.sticky_ = sticky;
             end
-            if nargin > 5
-                obj.aggr_ = aggr;
-                if aggr
-                    obj.dp_ = dp;
-                end
-            end
         end
         
         %% Setter
@@ -70,11 +65,21 @@ classdef MP
             Ws = eval(['Vitesse' cell2mat(Nom(indNom)) '(obj.size_,S);']);
             value = Ws'; 
             test = obj.rho_<obj.rhow_;
-            value(test) = -Ws(test);
+            value(test) = -value(test);
             
             if obj.aggr_
-                value = VitesseLiLogan(obj.size_, obj.dp_, 2.5, value);
+                value = VitesseLiLogan(obj.size_, obj.dp_, obj.D_, Ws);
             end
+            
+            
+        end
+        
+        %% Methods
+        function obj = aggregate(obj, dp, D)
+            obj.aggr_ = true;
+            obj.dp_ = dp;
+            obj.size_ = obj.size_ + dp;
+            obj.D_ = D;
         end
 
     end
