@@ -59,9 +59,9 @@ KZ_day = Kz(iDay,:);
 Sal_day = Sal(iDay,:);
 Temp_day = Temp(iDay,:);
 z_day = z0(iDay,:);
-z__day = z_day(1:end-1) + diff(z_day(:))'/2;
+z__day = z_day(1:end-1) + gidiff(z_day(:))'/2;
  
-Row_day = CalculDensite(Temp_day,Sal_day); %source: edu.obs-mip.fr
+Row_day = CalculDensiteMP(Temp_day,Sal_day); %source: edu.obs-mip.fr
 
 
 end
