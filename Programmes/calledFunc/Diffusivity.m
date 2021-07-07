@@ -10,6 +10,7 @@ end
 if -z(end) == z0(1)
     KZ_Fev10(1) = 0;
 else
+    z0 = reshape(z0, length(z0),1);
     z0 = [-z(end) ; z0];
     KZ_Fev10 = [0 KZ_Fev10];
 end

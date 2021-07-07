@@ -6,48 +6,57 @@ function [KZ_day,Row_day,z_day,z__day,Sal_day,Temp_day,Uz_day,Vz_day, Chl_day] =
 %   WindSpeed_kmh : Wind Speed in km/h
 %   date : (datetime) sampling date
 
-% clear
-% date = datetime('18/03/2012','InputFormat', 'dd/MM/yyyy');
-% WindSpeed_kmh = 50;
-date = datetime(2020,month(date),day(date));
-monthStart = date - calmonths(2);
-monthEnd = date + calmonths(2);
 origin = datetime(1900,1,1,0,0,0);
-tStart = days(days(monthStart - origin));
-tEnd = days(days(monthEnd - origin));
-tDate = days(days(date - origin));
-
-load("waterCol_RN2_2020.mat", 'Sal', 'Temp', 'Kz', 'z0', 'TauX', 'TauY', 't', 'Uz', 'Vz', 'Chl');
+load("waterCol_RN2_2020.mat", 'Sal', 'Temp', 'Kz', 'z0', 'TauX', 'TauY', 'Uz', 'Vz', 'Chl', 't');
 t = days(t);
 
-TAU=sqrt(TauX.^2 + TauY.^2); % TAU = tension de surface liée au vent
+if isnan(WindSpeed_kmh)
+    if year(date) ~= 2020
+        error("Date must be in 2020")
+    end
+    tDate = seconds(seconds(date - origin));
+    iDay = find(abs(t-tDate) == min(abs(t-tDate)),1);
+else
+    % clear
+    % date = datetime('18/03/2012','InputFormat', 'dd/MM/yyyy');
+    % WindSpeed_kmh = 50;
+    date = datetime(2020,month(date),day(date));
+    monthStart = date - calmonths(2);
+    monthEnd = date + calmonths(2);
+    
+    tStart = days(days(monthStart - origin));
+    tEnd = days(days(monthEnd - origin));
+    tDate = days(days(date - origin));
 
-% Extract tau on the 2 month period around month inputed
-itStart = find(abs(t-tStart) == min(abs(t-tStart)));
-itEnd = find(abs(t-tEnd) == min(abs(t-tEnd)));
-itDate = find(abs(t-tDate) == min(abs(t-tDate)));
-TAU_period = TAU(itStart:itEnd); % Extract data from dStart to dStop
+   
+    TAU=sqrt(TauX.^2 + TauY.^2); % TAU = tension de surface liée au vent
 
-%%%Contampump 10.02.20 (10:22 a 11:54 Vent moyen=7.7 Force2)
-WindSpeed_ms = WindSpeed_kmh/3.6; % Wind speed m/s
+    % Extract tau on the 2 month period around month inputed
+    itStart = find(abs(t-tStart) == min(abs(t-tStart)));
+    itEnd = find(abs(t-tEnd) == min(abs(t-tEnd)));
+    itDate = find(abs(t-tDate) == min(abs(t-tDate)));
+    TAU_period = TAU(itStart:itEnd); % Extract data from dStart to dStop
 
-Cd_day=10^-3*(0.43+0.096*WindSpeed_ms); %Geernaert               %% ????
+    %%%Contampump 10.02.20 (10:22 a 11:54 Vent moyen=7.7 Force2)
+    WindSpeed_ms = WindSpeed_kmh/3.6; % Wind speed m/s
 
-TAU_day=1.292*Cd_day.*WindSpeed_ms.*WindSpeed_ms;
+    Cd_day=10^-3*(0.43+0.096*WindSpeed_ms); %Geernaert               %% ????
 
-% Find a day with similar wind in our data
-iTAU_period =find(abs(TAU_period-TAU_day) == min(abs(TAU_period-TAU_day))); % index
+    TAU_day=1.292*Cd_day.*WindSpeed_ms.*WindSpeed_ms;
 
-% If several days are found, we take the one closer to the middle of the
-% month
-if length(iTAU_period ) > 1   
-    dDist = abs(iTAU_period-itDate);
-    dClose = min(dDist);
-    iTAU_period = iTAU_period(dDist == dClose);
+    % Find a day with similar wind in our data
+    iTAU_period =find(abs(TAU_period-TAU_day) == min(abs(TAU_period-TAU_day))); % index
+
+    % If several days are found, we take the one closer to the middle of the
+    % month
+    if length(iTAU_period ) > 1   
+        dDist = abs(iTAU_period-itDate);
+        dClose = min(dDist);
+        iTAU_period = iTAU_period(dDist == dClose);
+    end
+
+    iDay = find(TAU == TAU_period(iTAU_period)); % day index
 end
-
-iDay = find(TAU == TAU_period(iTAU_period)); % day index
-
 
 KZ_day = Kz(iDay,:);
 Sal_day = Sal(iDay,:);
