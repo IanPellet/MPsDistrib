@@ -4,9 +4,9 @@ classdef MP
     properties
         rhow_
         size_ % (m)
-        sticky_ = 0.5
+        sticky_ = 0
         aggr_ = false
-        dp_ = 0
+        dp_
     end
     properties (SetAccess = private)
         type_ % int {0,1,2,3} NON IMPLÉMENTÉ
@@ -18,7 +18,7 @@ classdef MP
 
     methods
         %% Constructor
-        function obj = MP(size, rhop, rhow, fragRate)
+        function obj = MP(size, rhop, rhow, fragRate, sticky, aggr, dp)
             %MP Constructor
             % If no argument is passed (default constructor), everything
             % is set to 0.
@@ -43,7 +43,17 @@ classdef MP
                 obj.rho_ = rhop;
                 obj.rhow_ = rhow;
                 obj.fragRate_ = fragRate;
-            end           
+            end
+            
+            if nargin > 4
+                obj.sticky_ = sticky;
+            end
+            if nargin > 5
+                obj.aggr_ = aggr;
+                if aggr
+                    obj.dp_ = dp;
+                end
+            end
         end
         
         %% Setter
