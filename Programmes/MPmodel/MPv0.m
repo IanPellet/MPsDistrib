@@ -1,4 +1,4 @@
-classdef MP
+classdef MPv0
     %MP Micro-plastic class, represents one particle
     %  
     properties
