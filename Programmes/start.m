@@ -121,4 +121,4 @@ else
        ' you should provide the paths of your own loaddap and mexcdf directories'])
 end
 
-clear matversion mysystem mysystem2 myversion NetCdfPath currDir,
+clear
