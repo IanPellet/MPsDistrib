@@ -4,7 +4,7 @@ classdef MP
     properties
         rhow_
         size_ % (m)
-        sticky_ = 0
+        sticky_ = 0.5
         aggr_ = false
         dp_
         D_
