@@ -1,9 +1,9 @@
-classdef OrgaAggr < Particle
-    %AGGRORGA Organic aggregate particle
+classdef Aggr < Particle
+    %AGGR Organic aggregate particle
     %   Particle subclass representing organic mater aggregates that can
     %   trap MP particles
     properties (Constant)
-        Type = 'OrgaAggr' % Type of particle, constant = 'AggrOrga'
+        Type = 'Aggr' % Type of particle, constant = 'AggrOrga'
     end
     properties
         Adh % particle adherence
@@ -13,7 +13,7 @@ classdef OrgaAggr < Particle
     end
     methods
         %% Constructor
-        function obj = OrgaAggr(size, rhop, rhow, index, adherence)
+        function obj = Aggr(size, rhop, rhow, index, adherence)
             %AGGRORGA Constructor
             %   If no argument is passed (default constructor), everything
             %   is set to 0.
@@ -36,7 +36,7 @@ classdef OrgaAggr < Particle
             obj.Content = [];
         end
         
-        function obj = aggrMP(obj, mp)
+        function [obj, mp] = aggrMP(obj, mp)
             % AGGRMP aggregation of one MP particle into the aggregate
             mp = mp.lock(obj);
             obj.Content = [obj.Content mp];
