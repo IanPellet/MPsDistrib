@@ -85,13 +85,21 @@ fprintf(['\n\n--------------------- Simulation running ---------------------\n']
         end
         
         %% Plot
-%         scatter(1:length(zPart), -zPart, sizePart*1e4)
-%         xlim([1 nPart])
-%         ylim([-L 0])
-%         xlabel("Particles")
-%         ylabel("Depth (m)")
-%         pause(0)
-%         
+        mpUnLock = [mpList.Locked] == 0;
+        mpLock = ~mpUnLock;
+        col = [repmat([0 0.4470 0.7410],length(mpZ),1) ; repmat([0.4660 0.6740 0.1880],length(aggZ),1)];
+        if sum(mpLock)~=0
+            col(mpLock,:) = repmat([0.8500 0.3250 0.0980], sum(mpLock),1);
+            col(length(mpZ) + [mpList(mpLock).Locked], :) = repmat([0.4940 0.1840 0.5560], sum(mpLock),1);
+        end
+        
+        scatter(1:length(zPart), -zPart, sizePart*1e5/2, col,'filled')
+        xlim([1 nPart])
+        ylim([-L 0])
+        xlabel("Particles")
+        ylabel("Depth (m)")
+        pause(0)
+        
 %         % Save to history
 %         if saveHist && t >= tf-saveLastSec
 %             saveStep = saveStep+1;
