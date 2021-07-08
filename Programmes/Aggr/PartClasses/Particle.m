@@ -9,6 +9,7 @@ classdef (Abstract) Particle
     end
     properties
         RhoW % water density (kg.m⁻³)
+        Index % list index of the particle
     end
     properties (Dependent)
         Ws % Settling velocity (m.s⁻¹)
@@ -19,7 +20,7 @@ classdef (Abstract) Particle
 
     methods
         %% Constructor
-        function obj = Particle(size, rhop, rhow)
+        function obj = Particle(size, rhop, rhow, index)
             %PARTICLE Constructor
             %   If no argument is passed (default constructor), everything
             %   is set to 0.
@@ -30,14 +31,15 @@ classdef (Abstract) Particle
             % rhow : double, water density ((kg.m⁻³)
             
             if nargin == 0 % default constructor
-                obj.Size = 0;
-                obj.RhoP = 0;
-                obj.RhoW = 0;
-            else
-                obj.Size = size;
-                obj.RhoP = rhop;
-                obj.RhoW = rhow;
+                size = 0;
+                rhop = 0;
+                rhow = 0;
+                index = 0;
             end
+            obj.Size = size;
+            obj.RhoP = rhop;
+            obj.RhoW = rhow;
+            obj.Index = index;
         end
         
         %% Setter

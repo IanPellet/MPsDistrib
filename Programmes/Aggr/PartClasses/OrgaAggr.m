@@ -13,7 +13,7 @@ classdef OrgaAggr < Particle
     end
     methods
         %% Constructor
-        function obj = OrgaAggr(size, rhop, rhow, adherence)
+        function obj = OrgaAggr(size, rhop, rhow, index, adherence)
             %AGGRORGA Constructor
             %   If no argument is passed (default constructor), everything
             %   is set to 0.
@@ -25,11 +25,12 @@ classdef OrgaAggr < Particle
                 size = 0;
                 rhop = 0;
                 rhow = 0;
+                index = 0;
                 adherence = 0;
             end
             
             % Call Particle constructor
-            obj@Particle(size, rhop, rhow);
+            obj@Particle(size, rhop, rhow, index);
             
             obj.Adh = adherence;
             obj.Content = [];
@@ -37,6 +38,7 @@ classdef OrgaAggr < Particle
         
         function obj = aggrMP(obj, mp)
             % AGGRMP aggregation of one MP particle into the aggregate
+            mp = mp.lock(obj);
             obj.Content = [obj.Content mp];
         end
     end
