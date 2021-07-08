@@ -12,8 +12,7 @@ fprintf(['\n\n--------------------- Simulation running ---------------------\n']
     
     mpUz = NaN(size(mpList)); % mp fall velocities at depth z (m.s⁻¹)
     aggUz = NaN(size(aggList)); % OrgaAggr fall velocities at depth z (m.s⁻¹)
-    
-%     part = [mpList aggList];
+
     sizePart = [mpList.Size aggList.Size];
     nPart = length(sizePart);
     
@@ -53,9 +52,12 @@ fprintf(['\n\n--------------------- Simulation running ---------------------\n']
         
         % Update particle's postion
         mpUnLock = [mpList.Locked] == 0;
+        mpLock = ~mpUnLock;
         
         mpZ(mpUnLock) = Step_Lagrangien(mpZ(mpUnLock), mpUz(mpUnLock), K(mpI(mpUnLock)), dK(mpI(mpUnLock)), dt, L);
         aggZ = Step_Lagrangien(aggZ, aggUz, K(aggI), dK(aggI), dt, L);
+        
+        mpZ(mpLock) = aggZ([mpList(mpLock).Locked]);
         
         %% Aggregation
         zPart = [mpZ aggZ];
@@ -63,8 +65,7 @@ fprintf(['\n\n--------------------- Simulation running ---------------------\n']
         % Sort particles by position
         [zPartSort, iSort] = sort(zPart);
         rayonSort = sizePart(iSort)/2;
-%         partSort = part(iSort);
-        
+
         % Compute particles distances
         movSumRayon2 = movsum(rayonSort,2);
         minEquart = movSumRayon2(2:end);
@@ -76,7 +77,6 @@ fprintf(['\n\n--------------------- Simulation running ---------------------\n']
             % ADHERENCEN VARIABLE DES AGGRÉGATS NON IMPLÉMENTÉE
             if (iSort(i)<=length(mpList) && iSort(i+1)>length(mpList))...
                     || (iSort(i+1)<=length(mpList) && iSort(i)>length(mpList))
-%                 partSort(i).Type ~= partSort(i+1).Type 
                 iagg = max(iSort(i),iSort(i+1))-length(mpList); % find the index of the aggregate
                 imp = min(iSort(i),iSort(i+1)); % find the index of the MP
                 
@@ -85,13 +85,13 @@ fprintf(['\n\n--------------------- Simulation running ---------------------\n']
         end
         
         %% Plot
-        scatter(1:length(zPart), -zPart, sizePart*1e4)
-        xlim([1 nPart])
-        ylim([-L 0])
-        xlabel("Particles")
-        ylabel("Depth (m)")
-        pause(0)
-        
+%         scatter(1:length(zPart), -zPart, sizePart*1e4)
+%         xlim([1 nPart])
+%         ylim([-L 0])
+%         xlabel("Particles")
+%         ylabel("Depth (m)")
+%         pause(0)
+%         
 %         % Save to history
 %         if saveHist && t >= tf-saveLastSec
 %             saveStep = saveStep+1;
