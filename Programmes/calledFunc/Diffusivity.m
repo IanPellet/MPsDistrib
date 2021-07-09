@@ -1,21 +1,38 @@
-function [K,dK] = Diffusivity(z,z_,dz,tension,cutoff,KZ_Fev10,z0)
+function [K,dK] = Diffusivity(z,z_,dz,tension,cutoff,KZ_data,z0_data)
 %DIFFUSIVITY Returns diffusivity profile
-%   Pt Somlit, 10 Fev
+%   Kz data is interpolated on z_ and smoothed to avoid rappid changes in K
+%   and dK. It returns the diffusivity K and its derivative allong the
+%   depth z  at each points of z_.
+%
+% ARGUMENTS :
+% z : double 1D array, water column disscretization, boundaries of the meshes (m)
+% z_ : double 1D array, middle of the meshes (m)
+% tension : double, tension parameter for the tension spline
+% cutoff : double, cutt-off parameter for the tension spline
+% KZ_data : double 1D array, K data to intepolate (m².s⁻¹)
+% z0_data : double 1D array, depth of data points in KZ_data (m)
+%
+% RETURNS :
+% K : double 1D array, diffusivity at each point of z_ (m².s⁻¹)
+% dK : double 1D array, diffusivity gradiant at each point of z_ (m.s⁻¹)
+%
 
-if nargin == 5
-    addpath('../');
-    DensiteFevrierRhoma
-end
+% % If no data was passed : use data in DensiteFevrierRhoma
+% if nargin == 5
+%     DensiteFevrierRhoma
+%     KZ_data = KZ_Fev10;
+%     z0_data = z0;
+% end
 
-if -z(end) == z0(1)
-    KZ_Fev10(1) = 0;
+if -z(end) == z0_data(1)
+    KZ_data(1) = 0;
 else
-    z0 = reshape(z0, length(z0),1);
-    z0 = [-z(end) ; z0];
-    KZ_Fev10 = [0 KZ_Fev10];
+    z0_data = reshape(z0_data, length(z0_data),1);
+    z0_data = [-z(end) ; z0_data];
+    KZ_data = [0 KZ_data];
 end
 
-Kinter = interp1(z0, KZ_Fev10, -z,'linear');
+Kinter = interp1(z0_data, KZ_data, -z,'linear');
 Kinter(isnan(Kinter))=0;
 
 %% 8-point moving average
@@ -31,6 +48,7 @@ K = spline1d (z_, zmavg, Kmavg, [min(z_) max(z_)], [0 0], tension, cutoff)';
 Kspl(Kspl<0) = 0;
 K(K<0) = 0;
 
+% Compute diffusivity gradiant
 dK = diff(Kspl)/dz;
 % 
 % figure(1), clf
