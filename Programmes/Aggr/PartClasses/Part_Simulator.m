@@ -2,6 +2,9 @@ function [zFinal, dt, mpList, aggList] = Part_Simulator(mpList, aggList, mpZinit
 
 
 fprintf(['\n\n--------------------- Simulation running ---------------------\n'])
+    
+    saveHist = true;
+    saveLastSec = tf;
 
     path = '../Results/Aggr/Video/';
     f1 = figure(1); clf,
@@ -19,6 +22,14 @@ fprintf(['\n\n--------------------- Simulation running ---------------------\n']
     sizePart = [mpList.Size aggList.Size];
     nPart = length(sizePart);
     
+    mpSize = reshape([mpList.Size], 1, length(mpList));
+    aggSize = reshape([aggList.Size], length(aggList), 1);
+    
+    mpFree = [mpList.Locked]==0;
+    mpIndex = 1:length(mpList);
+    
+    col = [repmat([0 0.4470 0.7410],length(mpZ),1) ; repmat([0.4660 0.6740 0.1880],length(aggZ),1)];
+    
     %% Time step initialisation
     dt = 10; % double, time step (s)
     ddK = diff(dK)./dz; % double array, diffusivity gradient's derivative (s⁻¹)
@@ -35,24 +46,22 @@ fprintf(['\n\n--------------------- Simulation running ---------------------\n']
     clear ddK,
 % dt = dtTheo;
 
-%     %% Init history 
+    %% Init history 
 %     saveHist = nargin > 8 && saveLastSec ~= 0;
-%     if saveHist
-%         saveNstep = ceil(saveLastSec/dt);
-%         zHistory = cell(saveNstep,1);
-%         saveStep = 0;
-%     end
+    if saveHist
+        saveNstep = ceil(saveLastSec/dt);
+        zHistory = cell(saveNstep,1);
+        saveStep = 0;
+    end
     
     %% Simulation
     t=0; 
     OnContinue=true;
       %% Plot
-        mpUnLock = [mpList.Locked] == 0;
-        mpLock = ~mpUnLock;
         col = [repmat([0 0.4470 0.7410],length(mpZ),1) ; repmat([0.4660 0.6740 0.1880],length(aggZ),1)];
-        if sum(mpLock)~=0
-            col(mpLock,:) = repmat([0.8500 0.3250 0.0980], sum(mpLock),1);
-            col(length(mpZ) + [mpList(mpLock).Locked], :) = repmat([0.4940 0.1840 0.5560], sum(mpLock),1);
+        if sum(~mpFree)~=0
+            col(~mpFree,:) = repmat([0.8500 0.3250 0.0980], sum(~mpFree),1);
+            col(length(mpZ) + [mpList(~mpFree).Locked], :) = repmat([0.4940 0.1840 0.5560], sum(~mpFree),1);
         end
         zPart = [mpZ aggZ];
         scatter(1:length(zPart), -zPart, sizePart*1e5/2, col,'filled')
@@ -82,60 +91,86 @@ fprintf(['\n\n--------------------- Simulation running ---------------------\n']
             aggUz(i) = aggU(aggI(i),i);
         end
         
-        % Update particle's postion
-        mpUnLock = [mpList.Locked] == 0;
-        mpLock = ~mpUnLock;
         
-        mpZ(mpUnLock) = Step_Lagrangien(mpZ(mpUnLock), mpUz(mpUnLock), K(mpI(mpUnLock)), dK(mpI(mpUnLock)), dt, L);
+        % Update position of aggregates and free MPs
+        mpZ(mpFree) = Step_Lagrangien(mpZ(mpFree), mpUz(mpFree), K(mpI(mpFree)), dK(mpI(mpFree)), dt, L);
         aggZ = Step_Lagrangien(aggZ, aggUz, K(aggI), dK(aggI), dt, L);
         
-        mpZ(mpLock) = aggZ([mpList(mpLock).Locked]);
+        % Update position of locked MPs (same position as the aggregate
+        % it's locked on)
+        mpZ(~mpFree) = aggZ([mpList(~mpFree).Locked]);
         
+%         %% Aggregation
+%         closeParticles = true;
+%         
+%         while closeParticles && t>=60+dt
+%             mpFree = [mpList.Locked] == 0; % isfree MPs
+%             
+%             zPart = [mpZ(mpFree) aggZ]; % get position of aggregates and free MPs
+% 
+%             % Sort particles by position
+%             [zPartSort, iSort] = sort(zPart);
+%             rayonSort = sizePart(iSort)/2;
+% 
+%             % Compute particles distances
+%             movSumRayon2 = movsum(rayonSort,2);
+%             minEquart = movSumRayon2(2:end);
+%             diffZpart = diff(zPartSort);
+% 
+%             iClose = find(diffZpart<=minEquart);
+%             for i=iClose
+%                 % 1 AGG PEUT INTÉGRER PLUSIEURS MP À CHAQUE STEP PAS ENCORE IMPLEMENTÉ 
+%                 % ADHERENCEN VARIABLE DES AGGRÉGATS NON IMPLÉMENTÉE
+%                 iagg = max(iSort(i),iSort(i+1))-length(mpList); % find the index of the aggregate
+%                 imp = min(iSort(i),iSort(i+1)); % find the index of the MP
+%                 if iagg>0 && imp<=length(mpList) && mpList(imp).Locked ==0
+%                     test = abs(aggZ(iagg)-mpZ(imp)) <= (aggList(iagg).Size+mpList(imp).Size)/2;
+%                     disp(test)
+%                     if ~test
+%                         error('Pouet')
+%                     end
+%                     [aggList(iagg), mpList(imp)] = aggList(iagg).aggrMP(mpList(imp));
+% %                     disp(['AGG ' num2str(iagg) ' ' num2str(imp)])
+%                 else
+%                     closeParticles = false;
+%                 end
+%             end
+%             if isempty(iClose)
+%                 closeParticles = false;
+%             end
+%         end
         %% Aggregation
-        closeParticles = true;
+        mpPos = reshape(mpZ(mpFree), 1, length(mpZ(mpFree)));
+        aggPos = reshape(aggZ, length(aggZ), 1);
+        DeltaPos = abs(mpPos - aggPos);
+
+        mpSizeFree = mpSize(mpFree);
+        SumR = (mpSizeFree + aggSize)./2;
+
+        [aggClose, mpClose] = find(DeltaPos <= SumR);
         
-        while closeParticles && t>=60+dt
-            zPart = [mpZ([mpList.Locked]==0) aggZ];
+        mpIndexFree = mpIndex(mpFree);
 
-            % Sort particles by position
-            [zPartSort, iSort] = sort(zPart);
-            rayonSort = sizePart(iSort)/2;
-
-            % Compute particles distances
-            movSumRayon2 = movsum(rayonSort,2);
-            minEquart = movSumRayon2(2:end);
-            diffZpart = diff(zPartSort);
-
-            iClose = find(diffZpart<=minEquart);
-            for i=iClose
-                % 1 AGG PEUT INTÉGRER PLUSIEURS MP À CHAQUE STEP PAS ENCORE IMPLEMENTÉ 
-                % ADHERENCEN VARIABLE DES AGGRÉGATS NON IMPLÉMENTÉE
-                iagg = max(iSort(i),iSort(i+1))-length(mpList); % find the index of the aggregate
-                imp = min(iSort(i),iSort(i+1)); % find the index of the MP
-                if ((iSort(i)<=length(mpList) && iSort(i+1)>length(mpList))...
-                        || (iSort(i+1)<=length(mpList) && iSort(i)>length(mpList)))...
-                        && mpList(imp).Locked ==0
-                    
-                    
-
-                    [aggList(iagg), mpList(imp)] = aggList(iagg).aggrMP(mpList(imp));
-%                     disp(['AGG ' num2str(iagg) ' ' num2str(imp)])
-                else
-                    closeParticles = false;
-                end
+        for iClose = 1:length(aggClose)
+            iagg = aggClose(iClose);
+            imp = mpIndexFree(mpClose(iClose));
+            
+            if mpList(imp).Locked ~= 0
+                error('Locked')
             end
-            if isempty(iClose)
-                closeParticles = false;
+            if abs(mpZ(imp)-aggZ(iagg)) > (mpList(imp).Size+aggList(iagg).Size)/2
+                error('Far')
             end
+                
+            [aggList(iagg), mpList(imp)] = aggList(iagg).aggrMP(mpList(imp));
+            mpFree(imp) = false;
         end
-        
+
         %% Plot
-        mpUnLock = [mpList.Locked] == 0;
-        mpLock = ~mpUnLock;
-        col = [repmat([0 0.4470 0.7410],length(mpZ),1) ; repmat([0.4660 0.6740 0.1880],length(aggZ),1)];
-        if sum(mpLock)~=0
-            col(mpLock,:) = repmat([0.8500 0.3250 0.0980], sum(mpLock),1);
-            col(length(mpZ) + [mpList(mpLock).Locked], :) = repmat([0.4940 0.1840 0.5560], sum(mpLock),1);
+        
+        if sum(~mpFree)~=0
+            col(~mpFree,:) = repmat([0.8500 0.3250 0.0980], sum(~mpFree),1);
+            col(length(mpZ) + [mpList(~mpFree).Locked], :) = repmat([0.4940 0.1840 0.5560], sum(~mpFree),1);
         end
         
         zPartPlot = [mpZ aggZ];
@@ -150,11 +185,11 @@ fprintf(['\n\n--------------------- Simulation running ---------------------\n']
         pause(0)
 %         exportgraphics(f1, [path 'aggrdt' num2str(t) '.png']);
         
-%         % Save to history
-%         if saveHist && t >= tf-saveLastSec
-%             saveStep = saveStep+1;
-%             zHistory{saveStep} = zPart;
-%         end
+        % Save to history
+        if saveHist && t >= tf-saveLastSec
+            saveStep = saveStep+1;
+            zHistory{saveStep} = zPartPlot;
+        end
     
         % Test
         if (mod(t,dt_test)<=dt/2 || dt_test-mod(t,dt_test)<=dt/2 )
@@ -169,11 +204,11 @@ fprintf(['\n\n--------------------- Simulation running ---------------------\n']
         end
 
     end
-%     if saveHist
-%         zFinal = zHistory; % 2D double array, final particle's position (m)
-%     else
-%         zFinal = zPart; % 1D double array, final particle's position (m)
-%     end
-    zFinal = {mpZ ; aggZ};
+    if saveHist
+        zFinal = zHistory; % 2D double array, final particle's position (m)
+    else
+        zFinal = {mpZ ; aggZ}; % 1D double array, final particle's position (m)
+    end
+    
 
 end
