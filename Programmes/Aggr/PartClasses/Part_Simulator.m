@@ -7,7 +7,8 @@ fprintf(['\n\n--------------------- Simulation running ---------------------\n']
     saveLastSec = tf;
 
     path = '../Results/Aggr/Video/';
-    f1 = figure(1); clf,
+    fileName = 'aggrGauss';
+    f1 = figure(5); clf,
 
     mpU = [mpList.Ws]; % MP fall velocities on the column (m.s⁻¹) 
     aggU = [aggList.Ws]; % OrgaAggr fall velocities on the column (m.s⁻¹) 
@@ -31,7 +32,11 @@ fprintf(['\n\n--------------------- Simulation running ---------------------\n']
     col = [repmat([0 0.4470 0.7410],length(mpZ),1) ; repmat([0.4660 0.6740 0.1880],length(aggZ),1)];
     
     %% Time step initialisation
-    dt = 10; % double, time step (s)
+    if nargin == 11
+        dt = dtTheo;
+    else
+        dt = 60; % double, time step (s)
+    end
     ddK = diff(dK)./dz; % double array, diffusivity gradient's derivative (s⁻¹)
     
 %     cumulU = max(abs(mpU-aggU),[], 2);
@@ -73,7 +78,7 @@ fprintf(['\n\n--------------------- Simulation running ---------------------\n']
         mm = fix(t/60-hh*60);
         title(['t = ', num2str(hh), ':', num2str(mm)])
         pause(0)
-%         exportgraphics(f1, [path 'aggrdt' num2str(t) '.png']);
+%         exportgraphics(f1, [path fileName num2str(t) '.png']);
         
     while OnContinue
         % Time update
@@ -145,9 +150,40 @@ fprintf(['\n\n--------------------- Simulation running ---------------------\n']
         DeltaPos = abs(mpPos - aggPos);
 
         mpSizeFree = mpSize(mpFree);
-        SumR = (mpSizeFree + aggSize)./2;
+%         SumR = (mpSizeFree + aggSize)./2;
+        SumD = (mpSizeFree + aggSize);
+        
+        mpI= cast(max(1, fix(mpPos/dz)), 'uint8'); % int array, index of each MP's current mesh
+        aggI= cast(max(1, fix(aggPos/dz)), 'uint8'); % int array, index of each Agg's current mesh
+        % Find current fall velocity of each particle
+        mpUz2 = nan(size(mpPos));
+        for i=1:length(mpPos)
+            mpUz2(i) = mpU(mpI(i),i);
+        end
+        
+        aggUz2 = nan(size(aggPos));
+        for i=1:length(aggPos)
+            aggUz2(i) = aggU(aggI(i),i);
+        end
+        delU = mpUz2 - aggUz2;
+        deldK = dK(mpI)-dK(aggI)';
+        sumSqrtK = sqrt(K(mpI)) + sqrt(K(aggI)');
+        delMax = abs(delU + deldK).*dt + sumSqrtK.*sqrt(6*dt);
+%         DelMean = abs(delU + deldK).*dt;
+        
+%         a = -1./DelMax;
+%         b = 1 + SumR./DelMax;
+%         
+%         p = a.*DeltaPos+b;
 
-        [aggClose, mpClose] = find(DeltaPos <= SumR);
+        c2 = 0.5;
+        d = 1./(1-exp(delMax.*(delMax+SumD)./(2*c2)));
+        a = (1-d).*exp(SumD.^2/(8*c2));
+        p = a.*exp(-DeltaPos.^2./(2*c2))+d;
+        
+
+%         [aggClose, mpClose] = find(DeltaPos <= SumR);
+        [aggClose, mpClose] = find(p > 0);
         
         mpIndexFree = mpIndex(mpFree);
 
@@ -155,25 +191,28 @@ fprintf(['\n\n--------------------- Simulation running ---------------------\n']
             iagg = aggClose(iClose);
             imp = mpIndexFree(mpClose(iClose));
             
-            if mpList(imp).Locked ~= 0
-                error('Locked')
+%             if mpList(imp).Locked ~= 0
+%                 error('Locked')
+%             end
+%             if abs(mpZ(imp)-aggZ(iagg)) > (mpList(imp).Size+aggList(iagg).Size)/2
+%                 error('Far')
+%             end
+            
+            if p(aggClose(iClose),mpClose(iClose))>=rand
+                [aggList(iagg), mpList(imp)] = aggList(iagg).aggrMP(mpList(imp));
+                mpFree(imp) = false;
             end
-            if abs(mpZ(imp)-aggZ(iagg)) > (mpList(imp).Size+aggList(iagg).Size)/2
-                error('Far')
-            end
-                
-            [aggList(iagg), mpList(imp)] = aggList(iagg).aggrMP(mpList(imp));
-            mpFree(imp) = false;
         end
 
         %% Plot
+        zPartPlot = [mpZ aggZ];
         
         if sum(~mpFree)~=0
             col(~mpFree,:) = repmat([0.8500 0.3250 0.0980], sum(~mpFree),1);
             col(length(mpZ) + [mpList(~mpFree).Locked], :) = repmat([0.4940 0.1840 0.5560], sum(~mpFree),1);
         end
         
-        zPartPlot = [mpZ aggZ];
+        
         scatter(1:length(zPartPlot), -zPartPlot, sizePart*1e5/2, col,'filled')
         xlim([1 nPart])
         ylim([-L 0])
@@ -183,8 +222,8 @@ fprintf(['\n\n--------------------- Simulation running ---------------------\n']
         mm = fix(t/60-hh*60);
         title(['t = ', num2str(hh), ':', num2str(mm)])
         pause(0)
-%         exportgraphics(f1, [path 'aggrdt' num2str(t) '.png']);
-        
+%         exportgraphics(f1, [path fileName num2str(t) '.png']);
+        %%
         % Save to history
         if saveHist && t >= tf-saveLastSec
             saveStep = saveStep+1;
