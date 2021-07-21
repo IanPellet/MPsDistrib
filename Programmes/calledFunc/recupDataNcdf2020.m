@@ -27,14 +27,12 @@ ncFile = netcdf('../Data/rhoma2020/2020RHOMA_WRF6h_003.nc');
 % fullTemp = ncFile{'TEMP'};
 % fullKz = ncFile{'KZ'};
 
+<<<<<<< HEAD
 
 % Get the data at the station's point
 Sal = ncFile{'SAL'}(:,:,I0,J0);
-
 Temp = ncFile{'TEMP'}(:,:,I0,J0);
-
 Kz = ncFile{'KZ'}(:,:,I0,J0);
-
 TauX = ncFile{'TAUX'}(:,I0,J0);
 TauY = ncFile{'TAUY'}(:,I0,J0);
 
@@ -43,11 +41,8 @@ t = seconds(ncFile{'time'}(:,:));
 
 
 H0 = ncFile{'H0'}(I0,J0); % bathymetry relative to the mean level
-toc
 eta = ncFile{'XE'}(:,I0,J0); % sea surface height
-toc
 sigma_w = ncFile{'level_w'}(:,:); % sigma level at the interface
-toc
 
 % Uz = ncFile{'UZ'}(:,:,I0,J0);
 % Vz = ncFile{'VZ'}(:,:,I0,J0);
@@ -61,7 +56,9 @@ end
 toc
 % Save data to file
 fileName = join(['../Data/waterCol_' station "_2020.mat"],"");
-save(fileName, 'Sal', 'Temp', 'Kz', 't', 'H0', 'z0', 'TauX', 'TauY', 'Uz', 'Vz', 'Chl');
-toc
+% save(fileName, 'Sal', 'Temp', 'Kz', 't', 'H0', 'z0', 'TauX', 'TauY', 'Uz', 'Vz', 'Chl');
+
+save(fileName, 'Sal', 'Temp', 'Kz', 't', 'H0', 'z0', 'TauX', 'TauY');
+
 disp(join(['Saved to' fileName]))
 end

@@ -100,7 +100,7 @@ while OnContinue
     part(4,:) = dK(index);
 
     if (mod(t,dt_test)<=dt/2 || dt_test-mod(t,dt_test)<=dt/2 ) 
-        if (t>tf)
+        if (t+dt>tf)
            OnContinue = false;
         end
 
