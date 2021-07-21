@@ -147,7 +147,7 @@ while OnContinue
                 
         dC = max(abs(CpresentNorm - CpastNorm)/dt);
         
-        if (t>=tf || dC/sum(CpresentNorm)*100 <= 0.0005)
+        if (t+dt>=tf || dC/sum(CpresentNorm)*100 <= 0.0005)
            OnContinue = false;
         end
         

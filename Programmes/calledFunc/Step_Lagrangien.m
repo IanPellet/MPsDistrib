@@ -5,9 +5,9 @@ function [new_x] = Step_Lagrangien(x, u, Kz, dKz, dt, L)
 %disp(Nu)
 %disp(x)
 % 
-pd = makedist('Uniform', 'lower', -1, 'upper', 1);
+% pd = makedist('Uniform', 'lower', -1, 'upper', 1);
 d = 1/3;
-% pd = makedist('Normal', 'mu', 0, 'sigma', 1);
+pd = makedist('Normal', 'mu', 0, 'sigma', d);
 % d = 1;
 R = random(pd,size(x));
 new_x = x + dt*u + dKz*dt + R.*(2/d*Kz*dt).^(1/2);
