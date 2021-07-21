@@ -28,6 +28,7 @@ zmavg = conv(z,wts,'valid');
 % cutoff = 0.1;
 Kspl = spline1d (z, zmavg, Kmavg, [min(z) max(z)], [0 0], tension, cutoff)';
 K = spline1d (z_, zmavg, Kmavg, [min(z_) max(z_)], [0 0], tension, cutoff)';
+
 Kspl(Kspl<0) = 0;
 K(K<0) = 0;
 

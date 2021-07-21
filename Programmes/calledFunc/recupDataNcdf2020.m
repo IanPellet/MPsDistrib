@@ -27,6 +27,7 @@ ncFile = netcdf('../Data/rhoma2020/2020RHOMA_WRF6h_003.nc');
 % fullTemp = ncFile{'TEMP'};
 % fullKz = ncFile{'KZ'};
 
+
 % Get the data at the station's point
 Sal = ncFile{'SAL'}(:,:,I0,J0);
 
