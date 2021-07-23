@@ -105,60 +105,27 @@ fprintf(['\n\n--------------------- Simulation running ---------------------\n']
         % it's locked on)
         mpZ(~mpFree) = aggZ([mpList(~mpFree).Locked]);
         
-%         %% Aggregation
-%         closeParticles = true;
-%         
-%         while closeParticles && t>=60+dt
-%             mpFree = [mpList.Locked] == 0; % isfree MPs
-%             
-%             zPart = [mpZ(mpFree) aggZ]; % get position of aggregates and free MPs
-% 
-%             % Sort particles by position
-%             [zPartSort, iSort] = sort(zPart);
-%             rayonSort = sizePart(iSort)/2;
-% 
-%             % Compute particles distances
-%             movSumRayon2 = movsum(rayonSort,2);
-%             minEquart = movSumRayon2(2:end);
-%             diffZpart = diff(zPartSort);
-% 
-%             iClose = find(diffZpart<=minEquart);
-%             for i=iClose
-%                 % 1 AGG PEUT INTÉGRER PLUSIEURS MP À CHAQUE STEP PAS ENCORE IMPLEMENTÉ 
-%                 % ADHERENCEN VARIABLE DES AGGRÉGATS NON IMPLÉMENTÉE
-%                 iagg = max(iSort(i),iSort(i+1))-length(mpList); % find the index of the aggregate
-%                 imp = min(iSort(i),iSort(i+1)); % find the index of the MP
-%                 if iagg>0 && imp<=length(mpList) && mpList(imp).Locked ==0
-%                     test = abs(aggZ(iagg)-mpZ(imp)) <= (aggList(iagg).Size+mpList(imp).Size)/2;
-%                     disp(test)
-%                     if ~test
-%                         error('Pouet')
-%                     end
-%                     [aggList(iagg), mpList(imp)] = aggList(iagg).aggrMP(mpList(imp));
-% %                     disp(['AGG ' num2str(iagg) ' ' num2str(imp)])
-%                 else
-%                     closeParticles = false;
-%                 end
-%             end
-%             if isempty(iClose)
-%                 closeParticles = false;
-%             end
-%         end
+
         %% Aggregation
+        
+        
         mpPos = reshape(mpZ(mpFree), 1, length(mpZ(mpFree)));
         aggPos = reshape(aggZ, length(aggZ), 1);
-        DeltaPos = abs(mpPos - aggPos);
+        DeltaPos = (mpPos - aggPos);
 
-        mpSizeFree = mpSize(mpFree);
-%         SumR = (mpSizeFree + aggSize)./2;
-        SumD = (mpSizeFree + aggSize);
+        SumD = (mpSize(mpFree) + aggSize);
         
         mpI= cast(max(1, fix(mpPos/dz)), 'uint8'); % int array, index of each MP's current mesh
         aggI= cast(max(1, fix(aggPos/dz)), 'uint8'); % int array, index of each Agg's current mesh
+        
         % Find current fall velocity of each particle
-        mpUz2 = nan(size(mpPos));
-        for i=1:length(mpPos)
-            mpUz2(i) = mpU(mpI(i),i);
+        mpUz2 = nan(1,sum(mpFree));
+        mpi=0;
+        for i=1:length(mpFree)
+            if mpFree(i)
+                mpi = mpi+1;
+                mpUz2(mpi) = mpU(mpI(mpi),i);
+            end
         end
         
         aggUz2 = nan(size(aggPos));
@@ -167,22 +134,43 @@ fprintf(['\n\n--------------------- Simulation running ---------------------\n']
         end
         delU = mpUz2 - aggUz2;
         deldK = dK(mpI)-dK(aggI)';
-        sumSqrtK = sqrt(K(mpI)) + sqrt(K(aggI)');
-        delMax = abs(delU + deldK).*dt + sumSqrtK.*sqrt(6*dt);
-%         DelMean = abs(delU + deldK).*dt;
-        
-%         a = -1./DelMax;
-%         b = 1 + SumR./DelMax;
-%         
-%         p = a.*DeltaPos+b;
 
-        c2 = 0.5;
-        d = 1./(1-exp(delMax.*(delMax+SumD)./(2*c2)));
-        a = (1-d).*exp(SumD.^2/(8*c2));
-        p = a.*exp(-DeltaPos.^2./(2*c2))+d;
+        eqtyp = 1;
+        
+        delMax = abs(delU + deldK).*dt + 10.*eqtyp.*sqrt(K(mpI)) + sqrt(K(aggI)').*sqrt(6*dt);
+        
+        
+        mu = (delU + deldK).*dt;
+        sigma = sqrt(2.*eqtyp.*(K(mpI)+K(aggI)').*dt);
+        
+        p = nan(size(DeltaPos));
+        for i1 = 1:size(DeltaPos,1)
+            for i2 = 1:size(DeltaPos,2)
+                
+                if abs(DeltaPos(i1,i2)) <= 10*abs(delMax(i1,i2)) % only compute proba if the particles are close enought
+
+                    dist_move = makedist('Normal','mu',mu(i1,i2),'sigma',sigma(i1,i2));
+
+
+                    if DeltaPos(i1,i2) < -SumD(i1,i2)/2
+
+                        p(i1,i2) = 1-cdf(dist_move, -SumD(i1,i2)/2-DeltaPos(i1,i2));
+                
+                    elseif DeltaPos(i1,i2) > SumD(i1,i2)/2
+               
+                        p(i1,i2) = cdf(dist_move, SumD(i1,i2)/2-DeltaPos(i1,i2));
+                   
+                    else
+                 
+                        p(i1,i2) = 1;
+                     
+                    end
+                end
+    
+            end
+        end
         
 
-%         [aggClose, mpClose] = find(DeltaPos <= SumR);
         [aggClose, mpClose] = find(p > 0);
         
         mpIndexFree = mpIndex(mpFree);
@@ -190,13 +178,6 @@ fprintf(['\n\n--------------------- Simulation running ---------------------\n']
         for iClose = 1:length(aggClose)
             iagg = aggClose(iClose);
             imp = mpIndexFree(mpClose(iClose));
-            
-%             if mpList(imp).Locked ~= 0
-%                 error('Locked')
-%             end
-%             if abs(mpZ(imp)-aggZ(iagg)) > (mpList(imp).Size+aggList(iagg).Size)/2
-%                 error('Far')
-%             end
             
             if p(aggClose(iClose),mpClose(iClose))>=rand
                 [aggList(iagg), mpList(imp)] = aggList(iagg).aggrMP(mpList(imp));
