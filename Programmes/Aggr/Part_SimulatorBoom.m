@@ -12,6 +12,8 @@ fprintf(['\n\n--------------------- Simulation running ---------------------\n']
 
     mpU = [mpList.Ws]; % MP fall velocities on the column (m.s⁻¹) 
     aggU = [aggList.Ws]; % OrgaAggr fall velocities on the column (m.s⁻¹) 
+%     mpU = mpU.*0;
+    aggU = aggU.*0;
     
     mpZ = reshape(mpZinit, 1, numel(mpZinit)); % MP positions (m)
     aggZ = reshape(aggZinit, 1, numel(aggZinit)); % OrgaAggr positions (m)
@@ -19,6 +21,8 @@ fprintf(['\n\n--------------------- Simulation running ---------------------\n']
     
     mpUz = NaN(size(mpList)); % mp fall velocities at depth z (m.s⁻¹)
     aggUz = NaN(size(aggList)); % OrgaAggr fall velocities at depth z (m.s⁻¹)
+%     mpUz = zeros(size(mpUz));
+    aggUz = zeros(size(aggUz));
 
     sizePart = [mpList.Size aggList.Size];
     nPart = length(sizePart);
@@ -67,45 +71,42 @@ fprintf(['\n\n--------------------- Simulation running ---------------------\n']
     %% Simulation
     t=0; 
     boom = 0; % number of collisions 
-    
-    %% Aggregation
-    p = pAgg(mpZ,mpFree,aggZ,mpSize,aggSize,mpU,aggU,dK,K,dt,dz,d);
-    [aggClose, mpClose] = find(p > 0);
-
-    mpIndexFree = mpIndex(mpFree);
-
-    for iClose = 1:length(aggClose)
-        iagg = aggClose(iClose);
-        imp = mpIndexFree(mpClose(iClose));
-
-        if p(aggClose(iClose),mpClose(iClose))>=rand
-            boom = boom +1;
-            collision{boom} = [mpZ(imp)-aggZ(iagg) (mpList(imp).Size+aggList(iagg).Size)/2];
-            [aggList(iagg), mpList(imp)] = aggList(iagg).aggrMP(mpList(imp));
-            mpFree(imp) = false;
-        end
-    end
-    
+        
     OnContinue=true;
-%       %% Plot
-%         col = [repmat([0 0.4470 0.7410],length(mpZ),1) ; repmat([0.4660 0.6740 0.1880],length(aggZ),1)];
-%         if sum(~mpFree)~=0
-%             col(~mpFree,:) = repmat([0.8500 0.3250 0.0980], sum(~mpFree),1);
-%             col(length(mpZ) + [mpList(~mpFree).Locked], :) = repmat([0.4940 0.1840 0.5560], sum(~mpFree),1);
-%         end
-%         zPart = [mpZ aggZ];
-%         scatter(1:length(zPart), -zPart, sizePart*1e5/2, col,'filled')
-%         xlim([1 nPart])
-%         ylim([-L 0])
-%         xlabel("Particles")
-%         ylabel("Depth (m)")
-%         hh = fix(t/60/60);
-%         mm = fix(t/60-hh*60);
-%         title(['t = ', num2str(hh), ':', num2str(mm)])
-%         pause(0)
-% %         exportgraphics(f1, [path fileName num2str(t) '.png']);
+
         
     while OnContinue
+         %% Aggregation
+        p = pAgg(mpZ,mpFree,aggZ,mpSize,aggSize,mpU,aggU,dK,K,dt,dz,d);
+        pVect = reshape(p,[],1);
+%         IaggVect = repelem(1:length(aggList),length(mpList(mpFree)));
+%         ImpVect = repmat(1:length(mpList(mpFree)),1,length(aggList));
+        IaggVect = repmat(1:length(aggList),1,length(mpList(mpFree)));
+        ImpVect = repelem(1:length(mpList(mpFree)),length(aggList));
+        
+        [pVectSort, iSort] = sort(pVect, 'Descend');
+        aggClose = IaggVect(iSort);
+        mpClose = ImpVect(iSort);
+        
+%         [aggClose, mpClose] = find(p > 0);
+        
+        mpIndexFree = mpIndex(mpFree);
+
+        for iClose = 1:length(aggClose)
+            iagg = aggClose(iClose);
+            imp = mpIndexFree(mpClose(iClose));
+            
+%             if p(aggClose(iClose),mpClose(iClose))>=rand
+            if mpFree(imp) && pVectSort(iClose)>=rand
+                boom = boom +1;
+                collision{boom} = [mpZ(imp)-aggZ(iagg) (mpList(imp).Size+aggList(iagg).Size)/2];
+                [aggList(iagg), mpList(imp)] = aggList(iagg).aggrMP(mpList(imp));
+                mpFree(imp) = false;
+            end
+        end
+        
+        
+        
         % Time update
         t=t+dt;
         
@@ -117,9 +118,9 @@ fprintf(['\n\n--------------------- Simulation running ---------------------\n']
         for i=1:length(mpZ)
             mpUz(i) = mpU(mpI(i),i);
         end
-        for i=1:length(aggZ)
-            aggUz(i) = aggU(aggI(i),i);
-        end
+%         for i=1:length(aggZ)
+%             aggUz(i) = aggU(aggI(i),i);
+%         end
         
         
         % Update position of aggregates and free MPs
@@ -131,23 +132,7 @@ fprintf(['\n\n--------------------- Simulation running ---------------------\n']
         mpZ(~mpFree) = aggZ([mpList(~mpFree).Locked]);
         
 
-        %% Aggregation
-        p = pAgg(mpZ,mpFree,aggZ,mpSize,aggSize,mpU,aggU,dK,K,dt,dz,d);
-        [aggClose, mpClose] = find(p > 0);
-        
-        mpIndexFree = mpIndex(mpFree);
-
-        for iClose = 1:length(aggClose)
-            iagg = aggClose(iClose);
-            imp = mpIndexFree(mpClose(iClose));
-            
-            if p(aggClose(iClose),mpClose(iClose))>=rand
-                boom = boom +1;
-                collision{boom} = [mpZ(imp)-aggZ(iagg) (mpList(imp).Size+aggList(iagg).Size)/2];
-                [aggList(iagg), mpList(imp)] = aggList(iagg).aggrMP(mpList(imp));
-                mpFree(imp) = false;
-            end
-        end
+       
 
 %         %% Plot
         zPartPlot = [mpZ aggZ];
@@ -207,7 +192,7 @@ fprintf(['\n\n--------------------- Simulation running ---------------------\n']
 %         hh = fix(t/60/60);
 %         mm = fix(t/60-hh*60);
 %         title(['t = ', num2str(hh), ':', num2str(mm)])
-        title(['t = ', num2str(t)])
+        title(['Model -- t = ', num2str(t)])
         pause(0)
 
 end
@@ -217,9 +202,9 @@ function [p] = pAgg(mpZ,mpFree,aggZ,mpSize,aggSize,mpU,aggU,dK,K,dt,dz,d)
 
     mpPos = reshape(mpZ(mpFree), 1, length(mpZ(mpFree)));
     aggPos = reshape(aggZ, length(aggZ), 1);
-    DeltaPos = (mpPos - aggPos);
+    DeltaPos = (mpPos - aggPos); % Dz(t)
 
-    SumD = (mpSize(mpFree) + aggSize);
+    SumD = (mpSize(mpFree) + aggSize); % d1 + d2
 
     mpI= cast(max(1, fix(mpPos/dz)), 'uint8'); % int array, index of each MP's current mesh
     aggI= cast(max(1, fix(aggPos/dz)), 'uint8'); % int array, index of each Agg's current mesh
@@ -238,16 +223,17 @@ function [p] = pAgg(mpZ,mpFree,aggZ,mpSize,aggSize,mpU,aggU,dK,K,dt,dz,d)
     for i=1:length(aggPos)
         aggUz2(i) = aggU(aggI(i),i);
     end
-    delU = mpUz2 - aggUz2;
+    
+    delU = mpUz2 - aggUz2; 
     deldK = dK(mpI)-dK(aggI)';
 
 %         d = 1;
 
-    delMax = abs(delU + deldK).*dt + 2.*d.*sqrt(K(mpI)) + sqrt(K(aggI)').*sqrt(6*dt);
+%     delMax = abs(delU + deldK).*dt + 2.*d.*sqrt(K(mpI)) + sqrt(K(aggI)').*sqrt(6*dt);
 
 
-    mu = (delU + deldK).*dt;
-    sigma = sqrt(2.*d.*(K(mpI)+K(aggI)').*dt);
+    mu = (delU + deldK).*dt + DeltaPos;
+    sigma = sqrt(2.*abs(d).*(K(mpI)+K(aggI)').*dt);
 
     p = nan(size(DeltaPos));
     for i1 = 1:size(DeltaPos,1)
@@ -255,21 +241,19 @@ function [p] = pAgg(mpZ,mpFree,aggZ,mpSize,aggSize,mpU,aggU,dK,K,dt,dz,d)
 
 %             if abs(DeltaPos(i1,i2)) <= 10*abs(delMax(i1,i2)) % only compute proba if the particles are close enought
 
-                dist_move = makedist('Normal','mu',mu(i1,i2),'sigma',sigma(i1,i2));
+                Dztdt = makedist('Normal','mu',mu(i1,i2),'sigma',sigma(i1,i2));
 
 
                 if DeltaPos(i1,i2) < -SumD(i1,i2)/2
 
-                    p(i1,i2) = 1-cdf(dist_move, -SumD(i1,i2)/2-DeltaPos(i1,i2));
+                    p(i1,i2) = 1-cdf(Dztdt, -SumD(i1,i2)/2);
 
                 elseif DeltaPos(i1,i2) > SumD(i1,i2)/2
 
-                    p(i1,i2) = cdf(dist_move, SumD(i1,i2)/2-DeltaPos(i1,i2));
+                    p(i1,i2) = cdf(Dztdt, SumD(i1,i2)/2);
 
                 else
-
                     p(i1,i2) = 1;
-
                 end
 %             end
 
