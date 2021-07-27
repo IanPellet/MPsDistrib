@@ -1,4 +1,4 @@
-function [collision, dt] = Collision_Simulator(mpList, aggList, mpZinit, aggZinit, K, dK, L, dz, tf, dt_test, dt_coll)
+function [collision, dt,mpZ,aggZ,mpList,aggList] = Collision_Simulator(mpList, aggList, mpZinit, aggZinit, K, dK, L, dz, tf, dt_test, dt_coll)
 
 
 fprintf(['\n\n--------------------- Simulation running ---------------------\n'])
@@ -227,7 +227,7 @@ fprintf(['\n\n--------------------- Simulation running ---------------------\n']
         
         scatter(1:length(zPartPlot), -zPartPlot, sizePart*1e5/2, col,'filled')
         xlim([1 nPart])
-        ylim([-31 -30])
+%         ylim([-max(zPartPlot) -min(zPartPlot)])
         xlabel("Particles")
         ylabel("Depth (m)")
 %         hh = fix(t/60/60);
