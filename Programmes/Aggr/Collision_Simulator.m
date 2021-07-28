@@ -166,7 +166,7 @@ fprintf(['\n\n--------------------- Simulation running ---------------------\n']
         
         % Update position of aggregates and free MPs 
         mpZ(mpFree) = Step_Lagrangien_noDist(mpZ(mpFree), mpUz(mpFree), K(mpI(mpFree)), dK(mpI(mpFree)), dt, L, StepPD);
-        aggZ = Step_Lagrangien_noDist(aggZ, aggUz, K(aggI), dK(aggI), dt, L, StepPD);
+%         aggZ = Step_Lagrangien_noDist(aggZ, aggUz, K(aggI), dK(aggI), dt, L, StepPD);
         
         % Update position of locked MPs (same position as the aggregate
         % it's locked on)

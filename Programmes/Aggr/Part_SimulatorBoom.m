@@ -125,7 +125,7 @@ fprintf(['\n\n--------------------- Simulation running ---------------------\n']
         
         % Update position of aggregates and free MPs
         mpZ(mpFree) = Step_Lagrangien_noDist(mpZ(mpFree), mpUz(mpFree), K(mpI(mpFree)), dK(mpI(mpFree)), dt, L, StepPD);
-        aggZ = Step_Lagrangien_noDist(aggZ, aggUz, K(aggI), dK(aggI), dt, L, StepPD);
+%         aggZ = Step_Lagrangien_noDist(aggZ, aggUz, K(aggI), dK(aggI), dt, L, StepPD);
         
         % Update position of locked MPs (same position as the aggregate
         % it's locked on)
@@ -233,7 +233,8 @@ function [p] = pAgg(mpZ,mpFree,aggZ,mpSize,aggSize,mpU,aggU,dK,K,dt,dz,d)
 
 
     mu = (delU + deldK).*dt + DeltaPos;
-    sigma = sqrt(2.*abs(d).*(K(mpI)+K(aggI)').*dt);
+%     sigma = sqrt(2.*abs(d).*(K(mpI)+K(aggI)').*dt);
+    sigma = sqrt(2.*abs(d).*(K(mpI)).*dt); %% REMOVED DIFFUSIVITY FOR THE AGGREGATE
 
     p = nan(size(DeltaPos));
     for i1 = 1:size(DeltaPos,1)
