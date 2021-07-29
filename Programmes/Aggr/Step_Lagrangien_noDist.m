@@ -9,7 +9,7 @@ function [new_x] = Step_Lagrangien_noDist(x, u, Kz, dKz, dt, L, pd)
 % d = 1/3;
 % pd = makedist('Normal', 'mu', 0, 'sigma', d);
 % d = 1;
-d = pd.sigma;
+d = (pd.sigma)^2;
 R = random(pd,size(x));
 new_x = x + dt*u + dKz*dt + R.*(2/d*Kz*dt).^(1/2);
 

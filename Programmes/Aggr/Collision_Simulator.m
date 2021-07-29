@@ -34,39 +34,38 @@ fprintf(['\n\n--------------------- Simulation running ---------------------\n']
     
     
     d = 1;
-    StepPD = makedist('Normal', 'mu', 0, 'sigma', d);
+    StepPD = makedist('Normal', 'mu', 0, 'sigma', sqrt(d));
     
     %% Time step initialisation
 
     ddK = diff(dK)./dz; % double array, diffusivity gradient's derivative (s⁻¹)
-    Rmax = d*4;
+    Rmax = sqrt(d)*4;
     D = mpList(1).Size + aggList(1).Size;
-    
-%     ampu = mat2cell(mpU, [length(mpList(1).Ws)], ones(1,length(mpList)));
-%     baggu = mat2cell(aggU, [length(aggList(1).Ws)], ones(1,length(aggList)));
-%     
-%     B = 6.*Rmax.*sqrt(2/d.*K');
-%     
-% 
-%     dtmax = nan(length(ampu), length(baggu));
-%     for ia = 1:length(ampu)
-%         for ib = 1:length(baggu)
-%             cdelu = abs(ampu{ia}-baggu{ib});
-%             cdelu_ = (cdelu(1:end-1)+cdelu(2:end))./2;
-%             
-%             det = 4.*Rmax^2.*2/d.*K' + 4.*cdelu_.*D;
-%             X = [(-B + sqrt(det))./(2.*cdelu_) (-B - sqrt(det))./(2.*cdelu_)];
-%             X = X(X>=0);
-%             dtmax(ia,ib) = min(X.^2);
-%             
-% 
-%         end, clear ib,
-%     end, clear ia,
-%     
-%     dt = min(min(dtmax));
-%     clear ampu baggu cdelu dtmax X det,
 
-    dt = min((D./(2.*Rmax.*sqrt(2/d.*K'))).^2);
+    ampu = mat2cell(mpU, [length(mpList(1).Ws)], ones(1,length(mpList)));
+    baggu = mat2cell(aggU, [length(aggList(1).Ws)], ones(1,length(aggList)));
+    
+    B = 2.*Rmax.*sqrt(2/d.*K');
+    
+    dtmax = nan(length(ampu), length(baggu));
+    for ia = 1:length(ampu)
+        for ib = 1:length(baggu)
+            cdelu = abs(ampu{ia}-baggu{ib});
+            cdelu_ = (cdelu(1:end-1)+cdelu(2:end))./2;
+            
+            det = B.^2 + 4.*cdelu_.*D;
+            X = [(-B + sqrt(det))./(2.*cdelu_) (-B - sqrt(det))./(2.*cdelu_)];
+            X = X(X>=0);
+            dtmax(ia,ib) = min(X.^2);
+            
+
+        end, clear ib,
+    end, clear ia,
+    
+    dt = min(min(dtmax));
+    clear ampu baggu cdelu dtmax X det,
+
+%     dt = min((D./(2.*Rmax.*sqrt(2/d.*K'))).^2);
 
     dt = min(dt, abs(min(1./ddK)/10)); % check condition dt<<min(1/ddK) 
     dt = min(dt, dz/max(max(abs([mpU aggU])))); % check condition dt < dz/max|u|

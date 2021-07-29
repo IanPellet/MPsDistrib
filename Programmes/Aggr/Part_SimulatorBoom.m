@@ -36,7 +36,7 @@ fprintf(['\n\n--------------------- Simulation running ---------------------\n']
     col = [repmat([0 0.4470 0.7410],length(mpZ),1) ; repmat([0.4660 0.6740 0.1880],length(aggZ),1)];
     
     d = 1;
-    StepPD = makedist('Normal', 'mu', 0, 'sigma', d);
+    StepPD = makedist('Normal', 'mu', 0, 'sigma', sqrt(d));
     
     
     collision = cell(0);
@@ -234,7 +234,7 @@ function [p] = pAgg(mpZ,mpFree,aggZ,mpSize,aggSize,mpU,aggU,dK,K,dt,dz,d)
 
     mu = (delU + deldK).*dt + DeltaPos;
 %     sigma = sqrt(2.*abs(d).*(K(mpI)+K(aggI)').*dt);
-    sigma = sqrt(2.*abs(d).*(K(mpI)).*dt); %% REMOVED DIFFUSIVITY FOR THE AGGREGATE
+    sigma = sqrt(2.*(K(mpI)).*dt); %% REMOVED DIFFUSIVITY FOR THE AGGREGATE
 
     p = nan(size(DeltaPos));
     for i1 = 1:size(DeltaPos,1)
