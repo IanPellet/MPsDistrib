@@ -13,7 +13,7 @@ fprintf(['\n\n--------------------- Simulation running ---------------------\n']
     mpU = [mpList.Ws]; % MP fall velocities on the column (m.s⁻¹) 
     aggU = [aggList.Ws]; % OrgaAggr fall velocities on the column (m.s⁻¹) 
 %     mpU = mpU.*0;
-    aggU = aggU.*0;
+%     aggU = aggU.*0;
     
     mpZ = reshape(mpZinit, 1, numel(mpZinit)); % MP positions (m)
     aggZ = reshape(aggZinit, 1, numel(aggZinit)); % OrgaAggr positions (m)
@@ -22,7 +22,7 @@ fprintf(['\n\n--------------------- Simulation running ---------------------\n']
     mpUz = NaN(size(mpList)); % mp fall velocities at depth z (m.s⁻¹)
     aggUz = NaN(size(aggList)); % OrgaAggr fall velocities at depth z (m.s⁻¹)
 %     mpUz = zeros(size(mpUz));
-    aggUz = zeros(size(aggUz));
+%     aggUz = zeros(size(aggUz));
 
     sizePart = [mpList.Size aggList.Size];
     nPart = length(sizePart);
@@ -118,14 +118,14 @@ fprintf(['\n\n--------------------- Simulation running ---------------------\n']
         for i=1:length(mpZ)
             mpUz(i) = mpU(mpI(i),i);
         end
-%         for i=1:length(aggZ)
-%             aggUz(i) = aggU(aggI(i),i);
-%         end
+        for i=1:length(aggZ)
+            aggUz(i) = aggU(aggI(i),i);
+        end
         
         
         % Update position of aggregates and free MPs
         mpZ(mpFree) = Step_Lagrangien_noDist(mpZ(mpFree), mpUz(mpFree), K(mpI(mpFree)), dK(mpI(mpFree)), dt, L, StepPD);
-%         aggZ = Step_Lagrangien_noDist(aggZ, aggUz, K(aggI), dK(aggI), dt, L, StepPD);
+        aggZ = Step_Lagrangien_noDist(aggZ, aggUz, K(aggI), dK(aggI), dt, L, StepPD);
         
         % Update position of locked MPs (same position as the aggregate
         % it's locked on)
@@ -233,12 +233,12 @@ function [p] = pAgg(mpZ,mpFree,aggZ,mpSize,aggSize,mpU,aggU,dK,K,dt,dz,d)
 %         d = 1;
 
 %     delMax = abs(delU + deldK).*dt + 2.*d.*sqrt(K(mpI)) + sqrt(K(aggI)').*sqrt(6*dt);
-    meanK = (K(mpI) + K(aggI))./2;
+    meanK = (K(mpI) + K(aggI)')./2;
     gamma = alpha.*log(dt.*meanK)+beta;
 
     mu = (delU + deldK).*dt + DeltaPos;
-%     sigma = sqrt(2.*abs(d).*(K(mpI)+K(aggI)').*dt);
-    sigma = sqrt(2.*(K(mpI)).*dt); %% REMOVED DIFFUSIVITY FOR THE AGGREGATE
+    sigma = sqrt(2.*(K(mpI)+K(aggI)').*dt);
+%     sigma = sqrt(2.*(K(mpI)).*dt); %% REMOVED DIFFUSIVITY FOR THE AGGREGATE
 
     p = nan(size(DeltaPos));
     for i1 = 1:size(DeltaPos,1)

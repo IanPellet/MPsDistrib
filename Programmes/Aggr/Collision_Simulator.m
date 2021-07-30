@@ -8,7 +8,7 @@ fprintf(['\n\n--------------------- Simulation running ---------------------\n']
     mpU = [mpList.Ws]; % MP fall velocities on the column (m.s⁻¹) 
     aggU = [aggList.Ws]; % OrgaAggr fall velocities on the column (m.s⁻¹) 
 %     mpU = mpU.*0;
-    aggU = aggU.*0;
+%     aggU = aggU.*0;
     
     mpZ = reshape(mpZinit, 1, numel(mpZinit)); % MP positions (m)
     aggZ = reshape(aggZinit, 1, numel(aggZinit)); % OrgaAggr positions (m)
@@ -17,7 +17,7 @@ fprintf(['\n\n--------------------- Simulation running ---------------------\n']
     mpUz = NaN(size(mpList)); % mp fall velocities at depth z (m.s⁻¹)
     aggUz = NaN(size(aggList)); % OrgaAggr fall velocities at depth z (m.s⁻¹)
 %     mpUz = zeros(size(mpUz));
-    aggUz = zeros(size(aggUz));
+%     aggUz = zeros(size(aggUz));
 
     sizePart = [mpList.Size aggList.Size];
     nPart = length(sizePart);
@@ -159,13 +159,13 @@ fprintf(['\n\n--------------------- Simulation running ---------------------\n']
         for i=1:length(mpZ)
             mpUz(i) = mpU(mpI(i),i);
         end
-%         for i=1:length(aggZ)
-%             aggUz(i) = aggU(aggI(i),i);
-%         end
+        for i=1:length(aggZ)
+            aggUz(i) = aggU(aggI(i),i);
+        end
         
         % Update position of aggregates and free MPs 
         mpZ(mpFree) = Step_Lagrangien_noDist(mpZ(mpFree), mpUz(mpFree), K(mpI(mpFree)), dK(mpI(mpFree)), dt, L, StepPD);
-%         aggZ = Step_Lagrangien_noDist(aggZ, aggUz, K(aggI), dK(aggI), dt, L, StepPD);
+        aggZ = Step_Lagrangien_noDist(aggZ, aggUz, K(aggI), dK(aggI), dt, L, StepPD);
         
         % Update position of locked MPs (same position as the aggregate
         % it's locked on)
