@@ -200,6 +200,9 @@ end
 
 function [p] = pAgg(mpZ,mpFree,aggZ,mpSize,aggSize,mpU,aggU,dK,K,dt,dz,d)
 
+    alpha = 0.0834;
+    beta = 2.516;
+
     mpPos = reshape(mpZ(mpFree), 1, length(mpZ(mpFree)));
     aggPos = reshape(aggZ, length(aggZ), 1);
     DeltaPos = (mpPos - aggPos); % Dz(t)
@@ -230,7 +233,8 @@ function [p] = pAgg(mpZ,mpFree,aggZ,mpSize,aggSize,mpU,aggU,dK,K,dt,dz,d)
 %         d = 1;
 
 %     delMax = abs(delU + deldK).*dt + 2.*d.*sqrt(K(mpI)) + sqrt(K(aggI)').*sqrt(6*dt);
-
+    meanK = (K(mpI) + K(aggI))./2;
+    gamma = alpha.*log(dt.*meanK)+beta;
 
     mu = (delU + deldK).*dt + DeltaPos;
 %     sigma = sqrt(2.*abs(d).*(K(mpI)+K(aggI)').*dt);
@@ -260,4 +264,6 @@ function [p] = pAgg(mpZ,mpFree,aggZ,mpSize,aggSize,mpU,aggU,dK,K,dt,dz,d)
 
         end
     end
+    
+    p = gamma.*p;
 end
