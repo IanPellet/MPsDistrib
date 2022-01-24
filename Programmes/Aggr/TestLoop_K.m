@@ -1,3 +1,4 @@
+%TESTLOOP_DT Test K variation impact on aggregation simulation
 K_test = logspace(-6,-2,50);
 
 dtTheoB = 0.5;

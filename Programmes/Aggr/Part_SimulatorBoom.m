@@ -1,4 +1,5 @@
 function [collision, dt,mpZ,aggZ,mpList,aggList] = Part_SimulatorBoom(mpList, aggList, mpZinit, aggZinit, K, dK, L, dz, tf, dt_test, dtTheo)
+%PART_SIMULATORBOOM Part_Simulator anterior version
 
 
 fprintf(['\n\n--------------------- Simulation running ---------------------\n'])

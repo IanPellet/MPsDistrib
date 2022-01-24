@@ -1,5 +1,5 @@
 function [new_x, new_y, new_z] = Step_Aggr(x, y, z, u, Kz, dKz, dt, L)
-%STEP_LAGRANGIEN One step foward in time for the Lagrangian transport model
+%STEP_AGGR One step foward in time for the Lagrangian transport model 3D
 %   The new value of x after dt is computed and returned by this function.
 %disp(u)
 %disp(Nu)

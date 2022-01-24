@@ -1,5 +1,6 @@
 function [zFinal, dt, mpList, aggList] = Part_Simulator(mpList, aggList, mpZinit, aggZinit, K, dK, L, dz, tf, dt_test, dtTheo)
 %PART_SIMULATOR Simulator with aggregation
+% Final simulator
 %
 % PARAMETERS
 % mpList : MP objects array, modeled MP particles

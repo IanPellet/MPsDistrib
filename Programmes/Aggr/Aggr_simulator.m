@@ -1,9 +1,11 @@
 function [zFinal, dt] = Aggr_simulator(mp, xInit, yInit, zInit, K, dK, L, dz, tf, dt_test, saveLastSec)
-%MP_SIMULATOR Run simulation with particles in mp
+%AGGR_SIMULATOR Run 3D simulation 
 %
 % PARAMETERS
 % mp : MP objects array, modeled particles
-% zInit : double array, initial particle's position (m)
+% xInit : double array, initial particle's position, x-axis (m)
+% yInit : double array, initial particle's position, y-axis (m)
+% zInit : double array, initial particle's position, z-axis (m)
 % K : double array, diffusivity profile (m².s⁻¹)
 % dK : double array, diffusivity gradient (m.s⁻¹)
 % L : double, water column depth (m)
@@ -15,7 +17,9 @@ function [zFinal, dt] = Aggr_simulator(mp, xInit, yInit, zInit, K, dK, L, dz, tf
 %
 % OUTPUT
 % zFinal : double array, final particle's position (m)
+% dt : double, time step used for simulation (s)
 %
+% (not shure it's really usefull)
 
 fprintf(['\n\n--------------------- nPart = ' num2str(length(mp)) ' -- save last ' num2str(saveLastSec) 's ---------------------\n'])
 

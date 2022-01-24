@@ -1,34 +1,37 @@
-dtTheo_test = logspace(-6,0,50);
+%TESTLOOP_DT Test dtTheo variation impact on aggregation simulation
 
-dt_test = 1e-7;
+dtTheo_test = logspace(-6,0,50); % tested values
+
+dt_test = 1e-7; 
 date = datetime(2020,03,18);
 
 
 %% Water column parameters
 % Find depth of the column
-load('../Data/2020waterCol_RN2.mat', 'H0')
+load('../Data/2020waterCol_RN2.mat', 'H0') 
 L = H0; % depth
 clear H0,
 
+% water column discretisation
 N = 20;
 dz= L/N;  z=0:dz:L; % z : boundaries of the meshes
 z_=(z(1:end-1)+z(2:end))/2; % middle of each mesh  
 
-nMP = 1e3;
-sizeMP = ones(nMP,1)*450e-6;
-zInitMP = linspace(29.9,30.1,nMP);
-rhoMP = 1000;
+nMP = 1e3; % number of MP particles
+sizeMP = ones(nMP,1)*450e-6; % size of MP particles
+zInitMP = linspace(29.9,30.1,nMP); % initial particle position : uniformly distributed over the coluln
+rhoMP = 1000; % particle density
 
-nAgg = 1;
-sizeAgg = ones(nAgg,1)*1e-3;
-zInitAgg = 30;
-rhoAgg = 1040;
+nAgg = 1; % number of aggregate
+sizeAgg = ones(nAgg,1)*1e-3; % aggregate size
+zInitAgg = 30; % initial position
+rhoAgg = 1040; % aggregate density
 
-wind = 50;
+wind = 50; % wind speed
 
-[KZ_day,Row_day,z_day,z__day] = KsSalTemp2020(wind, date);
-[K,dK] = Diffusivity(z,z_,dz,0.8,0,KZ_day,z_day');
-K = 0.01*ones(size(K));
+[KZ_day,Row_day,z_day,z__day] = KsSalTemp2020(wind, date); % get corresponding diffusivity and salinity profiles
+[K,dK] = Diffusivity(z,z_,dz,0.8,0,KZ_day,z_day'); % diffusivity data interpolation
+K = 0.01*ones(size(K)); % constant diffusivity
 dK = zeros(size(dK));
 rhow = interp1(-z__day,Row_day,z,'pchip'); % density of sea water 
 clear KZ_day Row_day z_day z__day,

@@ -1,6 +1,11 @@
 Before the first execution, run the script *start.m* to setup the needed paths.
 All programs should then be executable from anywhere in the directory *Programmes*.
 
+# Aggr
+Final simulator version is in ./PartClasses, files not in this folder are incremental version of the simulator and all calibration done for the aggregation model.
+## PartClasses
+Object classes representing particles and main simulator.
+
 # CalledFunc
 Subfunctions used in models or to treat input and output data.
 

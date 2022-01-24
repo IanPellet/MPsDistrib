@@ -1,5 +1,6 @@
 function [zFinal, dt, mp] = MP_simulatorAgg(mp, zInit, K, dK, L, dz, tf, dt_test, saveLastSec)
-%MP_SIMULATOR Run simulation with particles in mp
+%MP_SIMULATORAGG Run simulation with MP aggregation
+% This simulator was reamplaced with Part_Simulator
 %
 % PARAMETERS
 % mp : MP objects array, modeled particles
@@ -15,7 +16,8 @@ function [zFinal, dt, mp] = MP_simulatorAgg(mp, zInit, K, dK, L, dz, tf, dt_test
 %
 % OUTPUT
 % zFinal : double array, final particle's position (m)
-%
+% dt : double, time step used for simulation (s)
+% mp : MP objects array, modeled MP particles
 
 fprintf(['\n\n--------------------- nPart = ' num2str(length(mp)) ' -- save last ' num2str(saveLastSec) 's ---------------------\n'])
 

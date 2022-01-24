@@ -1,5 +1,28 @@
 function [collision, dt,mpZ,aggZ,mpList,aggList] = Collision_Simulator(mpList, aggList, mpZinit, aggZinit, K, dK, L, dz, tf, dt_test, dt_coll)
-
+%COLLISION_SIMULATOR Simulator detecting real collisions (needs small dt)
+%
+% PARAMETERS
+% mpList : MP objects array, modeled MP particles
+% aggList : Aggr object array, modeled aggregates
+% mpZinit : double array, initial MP positions (m)
+% aggZinit : double array, initial Aggr positions (m)
+% K : double array, diffusivity profile (m².s⁻¹)
+% dK : double array, diffusivity gradient (m.s⁻¹)
+% L : double, water column depth (m)
+% dz : double, water column discretisation step (m)
+% tf : double, simulation time (s)
+% dt_test : double, test interval (s)
+% dt_coll : double, time step (s) /!\ needs to be small enought to detect
+% collisions (cf. collisionCalibr.mlx)
+%
+% OUTPUTS
+% collision : cell array, particle distance and mean size when collision
+%             happens (m)
+% dt : double, time step used for simulation (s)
+% mpZ : double array, finial MP position (m)
+% aggZ : double array, finial Aggr position (m)
+% mpList : MP objects array, modeled MP particles
+% aggList : Aggr object array, modeled aggregates
 
 fprintf(['\n\n--------------------- Simulation running ---------------------\n'])
 
@@ -175,7 +198,6 @@ fprintf(['\n\n--------------------- Simulation running ---------------------\n']
 %         sauveXdt{iSauve,1} = mpZ;
 %         sauveXdt{iSauve,2} = aggZ;
         if t+dt/2 >= X*dt_coll
-%             disp('POUET')
             X = X+1;
             mpt_Xdt = mpZ;
             aggt_Xdt = aggZ;
