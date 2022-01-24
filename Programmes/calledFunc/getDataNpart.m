@@ -1,10 +1,16 @@
 function [nPartDepth, depthSamples] = getDataNpart(MPtypeName, MPsize, getConcentration, DataFile, SamplingDate)
-%%GETDATADONCENTRATION number of particles per sampling depth
+%% GETDATANPART number of particles per sampling depth
+%
+% PARAMETERS
 % MPtypeName : selected type of particles (string), if all type =false
 % MPsize : selected size of particles (m), if all sier =false
 % getConcentration : if true, nPartDepth is converted to concentrations
 % DataFile : path to the data file
-% SamplingDate : date corresponding to the samples of interest 
+% SamplingDate : date corresponding to the samples of interest
+%
+% OUTPUT
+% nPartDepth : int array, number of particles at each sampling depth
+% depthSamples : double array, sorted sampling depths (m)
 
 %% Default arguments
 if nargin < 5

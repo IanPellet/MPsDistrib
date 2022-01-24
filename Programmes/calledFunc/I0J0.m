@@ -1,4 +1,5 @@
 function [IJ_tab] = I0J0(LonLat_tab)
+%% I0J0 Get indices corresponding to lon-lat table (2012 data)
     ModeleHydro='2012RHOMA_arome_003.nc';
     SauvegardeModeleHydro=['DonneeBase' ModeleHydro(1:end-3)];
     load(SauvegardeModeleHydro)

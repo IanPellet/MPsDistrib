@@ -1,5 +1,5 @@
 function [fileName] = recupDataNcdf2020(station)
-%RECUPDATANCDF2020 Saves data at station's point 
+%% RECUPDATANCDF2020 Saves data at station's point 
 % Saves salinity, temperature, diffusivity, depth, data points levels
 % at the data point corresponding to the station and the time array t.
 %

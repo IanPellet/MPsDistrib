@@ -1,7 +1,11 @@
 function [densite] = CalculDensiteMP(T,S)
-%UNTITLED3 Summary of this function goes here
-%   Detailed explanation goes here
-    %densite = 1000-0.12*T+0.35*S;
+%CALCULDENSITEMP Water density (kg.m⁻³) computation
+%
+% PARAMETERS
+% T : double array, temperature (°C)
+% S : double array, salinity
+   
+%densite = 1000-0.12*T+0.35*S;
     Ro0 = 999.842594 ...
             + 6.793952E-2*T - 9.095290E-3 * T.^2 + 1.001685E-4 * T.^3 ...
             -1.120083E-6 * T.^4 + 6.536332E-9 * T.^5;
