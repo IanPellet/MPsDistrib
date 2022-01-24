@@ -1,3 +1,5 @@
+%%VARMP_TESTS Run Lagrangian model with varying inputs
+
 path = '../Results/varMP/';
 
 wind = 10; % km/h

@@ -1,6 +1,5 @@
 function [z_, CfinalNorm, PartPos, ppHistory] = varMP_model(D, rhoP, type, nPart, tf, dt_test, WindSpeed, month, Lon0, Lat0, L, N, day, saveNsec)
-%VARMP_MODEL Summary of this function goes here
-%   Detailed explanation goes here
+%VARMP_MODEL Lagrangian model 
 
 global g nuw rhow 
 
