@@ -1,5 +1,24 @@
 function [zFinal, dt, mpList, aggList] = Part_Simulator(mpList, aggList, mpZinit, aggZinit, K, dK, L, dz, tf, dt_test, dtTheo)
-
+%PART_SIMULATOR Simulator with aggregation
+%
+% PARAMETERS
+% mpList : MP objects array, modeled MP particles
+% aggList : Aggr object array, modeled aggregates
+% mpZinit : double array, initial MP positions (m)
+% aggZinit : double array, initial Aggr positions (m)
+% K : double array, diffusivity profile (m².s⁻¹)
+% dK : double array, diffusivity gradient (m.s⁻¹)
+% L : double, water column depth (m)
+% dz : double, water column discretisation step (m)
+% tf : double, simulation time (s)
+% dt_test : double, test interval (s)
+% dtTheo : double, time step (s) can be changed if needed
+%
+% OUTPUTS
+% zFinal : double array, finial particle position (m)
+% dt : double, time step used for simulation (s)
+% mpList : MP objects array, modeled MP particles
+% aggList : Aggr object array, modeled aggregates
 
 fprintf(['\n\n--------------------- Simulation running ---------------------\n'])
     

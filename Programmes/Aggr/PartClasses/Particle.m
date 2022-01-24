@@ -15,7 +15,7 @@ classdef (Abstract) Particle
         Ws % Settling velocity (m.s⁻¹)
     end
     properties (Abstract, Constant)
-        Type
+        Type % MP or aggregate
     end
 
     methods
@@ -28,7 +28,8 @@ classdef (Abstract) Particle
             % PARAMETERS
             % size : double, particle size (m)
             % rhop : double, particle density (kg.m⁻³)
-            % rhow : double, water density ((kg.m⁻³)
+            % rhow : double, water density (kg.m⁻³)
+            % index : int, particle index (to identify it in a simulation)
             
             if nargin == 0 % default constructor
                 size = 0;

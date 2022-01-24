@@ -14,12 +14,17 @@ classdef Aggr < Particle
     methods
         %% Constructor
         function obj = Aggr(size, rhop, rhow, index, adherence)
-            %AGGRORGA Constructor
+            %AGGR Constructor
             %   If no argument is passed (default constructor), everything
             %   is set to 0.
             %
             % PARAMETERS
-            % adherence : 
+            % size : double, particle size (m)
+            % rhop : double, particle density (kg.m⁻³)
+            % rhow : double array, water density (kg.m⁻³)
+            % index : int, particle index (to identify it in a simulation)
+            % adherence : double, [0,1] probability to stick when touching
+            % other particle
             
             if nargin == 0 % default constructor
                 size = 0;
@@ -38,8 +43,13 @@ classdef Aggr < Particle
         
         function [obj, mp] = aggrMP(obj, mp)
             % AGGRMP aggregation of one MP particle into the aggregate
-            mp = mp.lock(obj);
-            obj.Content = [obj.Content mp];
+            %
+            % PARAMETERS
+            % obj : Aggr object
+            % mp : MP object
+            
+            mp = mp.lock(obj); % set MP as locked on the Aggr
+            obj.Content = [obj.Content mp]; % add MP to the content of the Aggr
         end
     end
 end

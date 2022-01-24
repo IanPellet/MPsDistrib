@@ -5,12 +5,14 @@ classdef MP < Particle
         Type = 'MP' % Type of particle, constant = 'MP'
     end
     properties
-        Locked = 0
+        % when a MP particle is free Locked = 0, when it aggregates with
+        % other particles, it's set to the index of the Aggr it's in
+        Locked = 0 
     end
     
     methods
         function obj = lock(obj, agg)
-            % Lock MP on OrgaAggr
+            %LOCK Lock MP on Aggr
             obj.Locked = agg.Index;
         end
     end
