@@ -4,3 +4,5 @@
 /Programmes/**/*.asv
 /Programmes/**/*.zip
 pathdef.m
+/Programmes/LibrairiesMatlab/*
+/Programmes/draftScript/*

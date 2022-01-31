@@ -1,5 +1,5 @@
 function [C,outputArg2] = StepTransport(u,Nu,C,schema);
-%UNTITLED2 Summary of this function goes here
+%% STEPTRANSPORT One step foward, Eulerian model
 %   Detailed explanation goes here
 global dt dz
 if strcmp(schema,'CentreDF') 

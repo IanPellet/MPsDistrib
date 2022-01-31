@@ -1,5 +1,5 @@
 function [rhow] = getCTDrhow(day,z)
-%GETCTDRHOW Get water density from CTD data
+%% GETCTDRHOW Get water density from CTD data
 %
 % PARAMETERS
 % day : string, sampling day {'10fev', '3fev'}

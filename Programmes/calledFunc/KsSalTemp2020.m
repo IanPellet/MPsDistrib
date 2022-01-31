@@ -1,12 +1,15 @@
-function [KZ_day,Row_day,z_day,z__day,Sal_day,Temp_day] = KsSalTemp2020(WindSpeed_kmh, date)
-%KSSALTEMP Summary of this function goes here
-% Find the day in the 2012RHOMA_arome database with the closest wind at RN2
+function [KZ_day,Row_day,z_day,z__day,Sal_day,Temp_day,Uz_day,Vz_day, Chl_day] = KsSalTemp2020(WindSpeed_kmh, date)
+%% KSSALTEMP2020 Get water column data corresponding to wind speed (2020 data)
+% Find the day in the 2020RHOMA_arome database with the closest wind at RN2
 % situation to return the values of diffusivity, salinity, temperature and
 % water density that day.
 %   WindSpeed_kmh : Wind Speed in km/h
 %   date : (datetime) sampling date
+
+
 origin = datetime(1900,1,1,0,0,0);
-load("waterCol_RN2_2020.mat", 'Sal', 'Temp', 'Kz', 'z0', 'TauX', 'TauY', 't');
+load("waterCol_RN2_2020.mat", 'Sal', 'Temp', 'Kz', 'z0', 'TauX', 'TauY', 'Uz', 'Vz', 'Chl', 't');
+
 t = days(t);
 
 if isnan(WindSpeed_kmh)
@@ -60,6 +63,11 @@ end
 KZ_day = Kz(iDay,:);
 Sal_day = Sal(iDay,:);
 Temp_day = Temp(iDay,:);
+
+Uz_day = Uz(iDay,:);
+Vz_day = Vz(iDay,:);
+Chl_day = Chl(iDay,:);
+
 z_day = z0(iDay,:);
 z__day = z_day(1:end-1) + diff(z_day(:))'/2;
  

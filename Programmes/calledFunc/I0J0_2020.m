@@ -1,8 +1,8 @@
-function [IJ_tab] = I0J0(LonLat_tab)
-%% I0J0 Get indices corresponding to lon-lat table (2012 data)
-    ModeleHydro='2012RHOMA_arome_003.nc';
-    SauvegardeModeleHydro=['DonneeBase' ModeleHydro(1:end-3)];
-    load(SauvegardeModeleHydro)
+function [IJ_tab] = I0J0_2020(LonLat_tab)
+%% I0J0_2020 Get indices corresponding to lon-lat table (2020 data)
+    ncFile = netcdf('../Data/rhoma2020/2020RHOMA_WRF6h_003.nc');
+    Lon = ncFile{'longitude'}(:,:);
+    Lat = ncFile{'latitude'}(:,:);
     
     IJ_tab = LonLat_tab;
     IJ_tab.Properties.VariableNames = [{'Station'},{'I0'},{'J0'}];

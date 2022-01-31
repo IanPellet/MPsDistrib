@@ -1,5 +1,5 @@
-function [KZ_day,Row_day,z_day,z__day] = KsSalTemp(WindSpeed_kmh, date)
-%KSSALTEMP Summary of this function goes here
+function [KZ_day,Row_day,z_day,z__day,Sal_day,Temp_day] = KsSalTemp(WindSpeed_kmh, date)
+%% KSSALTEMP Get water column data corresponding to wind speed (2012 data)
 % Find the day in the 2012RHOMA_arome database with the closest wind at RN2
 % situation to return the values of diffusivity, salinity, temperature and
 % water density that day.
@@ -59,9 +59,9 @@ KZ_day = Kz(iDay,:);
 Sal_day = Sal(iDay,:);
 Temp_day = Temp(iDay,:);
 z_day = z0(iDay,:);
-z__day = z_day(1:end-1) + diff(z_day(:))'/2;
+z__day = z_day(1:end-1) + gidiff(z_day(:))'/2;
  
-Row_day = CalculDensite(Temp_day,Sal_day); %source: edu.obs-mip.fr
+Row_day = CalculDensiteMP(Temp_day,Sal_day); %source: edu.obs-mip.fr
 
 
 end
